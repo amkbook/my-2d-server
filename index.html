@@ -153,11 +153,10 @@
       audio.play().catch(e => console.log(e));
     }
 
-    // မြန်မာစံတော်ချိန် အချိန်အတိအကျ သတိပေးချက်များ စစ်ဆေးခြင်း
-    function checkScheduledAnnouncements() {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
+  function checkScheduledAnnouncements() {
+    const now = new Date();
+    const mmTimeStr = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Yangon', hour12: false });
+    const [hours, minutes] = mmTimeStr.split(':').map(Number);
 
       // မနက် 11:45 မိနစ် ➔ min15.mp3
       if (hours === 11 && minutes === 45 && !announcedTimes['m1145']) {
