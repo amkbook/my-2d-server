@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2D Live Market App</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; padding-bottom: 80px; }
+    .container { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 15px; }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: flex; flex-direction: column; gap: 15px; }
+
+    .card { background: #1e293b; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #334155; }
+    .notice { background: #0284c7; color: white; padding: 10px; border-radius: 8px; font-size: 14px; text-align: center; }
+    
+    .live-title { font-size: 16px; color: #94a3b8; margin-bottom: 5px; }
+    .live-2d { font-size: 72px; font-weight: bold; color: #f59e0b; text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); margin: 10px 0; }
+    .time-badge { background: #334155; color: #38bdf8; padding: 4px 12px; border-radius: 20px; font-size: 12px; display: inline-block; }
+    
+    .set-info { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid #334155; }
+    .set-box { text-align: center; flex: 1; }
+    .set-label { font-size: 12px; color: #94a3b8; }
+    .set-value { font-size: 16px; font-weight: bold; color: #e2e8f0; margin-top: 2px; }
+
+    .audio-btn { background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 10px; cursor: pointer; }
+    
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .time-card { background: #1e293b; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #334155; }
+    .time-label { font-size: 12px; color: #94a3b8; }
+    .time-num { font-size: 22px; font-weight: bold; color: #facc15; margin-top: 4px; }
+
+    .chat-box { background: #1e293b; border-radius: 16px; padding: 15px; border: 1px solid #334155; display: flex; flex-direction: column; height: 260px; }
+    .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; padding-right: 5px; }
+    .msg { background: #334155; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
+    .msg-user { color: #38bdf8; font-weight: bold; margin-right: 5px; }
+    .chat-input-row { display: flex; gap: 8px; }
+    .chat-input-row input { flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; padding: 8px 12px; outline: none; }
+    .chat-input-row button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: space-around; padding: 10px 0; max-width: 450px; margin: 0 auto; z-index: 100; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; font-size: 11px; cursor: pointer; text-decoration: none; border: none; background: none; flex: 1; }
+    .nav-item.active { color: #38bdf8; font-weight: bold; }
+    .nav-icon { font-size: 18px; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- PAGE 1: Home (2D Live) -->
+    <div id="page-home" class="tab-content active">
+      <div id="notice" class="notice">2D Live မှ ကြိုဆိုပါသည်။</div>
+
+      <div class="card">
+        <div class="live-title">LIVE 2D RESULT</div>
+        <div id="live2D" class="live-2d">--</div>
+        <div id="updateTime" class="time-badge">Updating...</div>
+
+        <div class="set-info">
+          <div class="set-box">
+            <div class="set-label">SET Index</div>
+            <div id="setIndex" class="set-value">----.--</div>
+          </div>
+          <div class="set-box">
+            <div class="set-label">Value</div>
+            <div id="setValue" class="set-value">----.--</div>
+          </div>
+        </div>
+
+        <button class="audio-btn" onclick="speak2D()">🔊 ဂဏန်းအသံထွက်နားထောင်မည်</button>
+      </div>
+
+      <div class="grid-4">
+        <div class="time-card"><div class="time-label">09:00 AM</div><div id="t0900" class="time-num">--</div></div>
+        <div class="time-card"><div class="time-label">12:01 PM</div><div id="t1201" class="time-num">--</div></div>
+        <div class="time-card"><div class="time-label">02:00 PM</div><div id="t1400" class="time-num">--</div></div>
+        <div class="time-card"><div class="time-label">04:30 PM</div><div id="t1630" class="time-num">--</div></div>
+      </div>
+
+      <div class="chat-box">
+        <div class="live-title" style="margin-bottom: 5px;">Live Chatbox</div>
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="စကားပြောရန် စာရိုက်ပါ..." onkeypress="handleKeyPress(event)">
+          <button onclick="sendMessage()">ပို့မည်</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: Gold Price -->
+    <div id="page-gold" class="tab-content">
+      <div class="card"><h2>🪙 ရွှေဈေးနှုန်းများ</h2></div>
+    </div>
+
+    <!-- PAGE 3: 2D History -->
+    <div id="page-2d-history" class="tab-content">
+      <div class="card"><h2>📅 2D နေ့စဉ်မှတ်တမ်း</h2></div>
+    </div>
+
+    <!-- PAGE 4: 3D History -->
+    <div id="page-3d-history" class="tab-content">
+      <div class="card"><h2>🎯 3D နေ့စဉ်မှတ်တမ်း</h2></div>
+    </div>
+
+    <!-- PAGE 5: More -->
+    <div id="page-more" class="tab-content">
+      <div class="card"><h2>⚙️ More & နေ့စဉ်ဓာတ်ပုံများ</h2></div>
+    </div>
+
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('page-home', this)"><span class="nav-icon">🏠</span><span>Home</span></button>
+    <button class="nav-item" onclick="switchTab('page-gold', this)"><span class="nav-icon">🪙</span><span>ရွှေဈေး</span></button>
+    <button class="nav-item" onclick="switchTab('page-2d-history', this)"><span class="nav-icon">📅</span><span>2D မှတ်တမ်း</span></button>
+    <button class="nav-item" onclick="switchTab('page-3d-history', this)"><span class="nav-icon">🎯</span><span>3D မှတ်တမ်း</span></button>
+    <button class="nav-item" onclick="switchTab('page-more', this)"><span class="nav-icon">⚙️</span><span>More</span></button>
+  </div>
+
+  <script>
+    let current2D = "--";
+    let announcedTimes = {};
+
+    function switchTab(pageId, btn) {
+      document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // MP3 အသံဖိုင်ဖြင့် ဂဏန်း ၂ လုံး ဆက်တိုက် တန်းဖွင့်ပေးမည့် စနစ်
+    function speak2D() {
+      if (current2D !== "--" && current2D.length === 2) {
+        let d1 = current2D[0];
+        let d2 = current2D[1];
+
+        let audio1 = new Audio(`./sounds/${d1}.mp3`);
+        let audio2 = new Audio(`./sounds/${d2}.mp3`);
+
+        // ပထမဂဏန်း ပြီးသည်နှင့် ဒုတိယဂဏန်းကို တိုက်ရိုက် ဆက်ဖွင့်မည်
+        audio1.play().catch(e => console.log(e));
+        audio1.onended = function() {
+          audio2.play().catch(e => console.log(e));
+        };
+      }
+    }
+
+    // MP3 အသံဖိုင်ဖြင့် သတိပေးချက် ဖွင့်ပေးမည်
+    function playAnnouncement(filename) {
+      let audio = new Audio(`./sounds/${filename}.mp3`);
+      audio.play().catch(e => console.log(e));
+    }
+
+    // မြန်မာစံတော်ချိန် အချိန်အတိအကျ သတိပေးချက်များ စစ်ဆေးခြင်း
+    function checkScheduledAnnouncements() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+
+      // မနက် 11:45 မိနစ် ➔ min15.mp3
+      if (hours === 11 && minutes === 45 && !announcedTimes['m1145']) {
+        announcedTimes['m1145'] = true;
+        playAnnouncement('min15');
+      }
+
+      // မနက် 11:48 မိနစ် ➔ min3.mp3
+      if (hours === 11 && minutes === 48 && !announcedTimes['m1148']) {
+        announcedTimes['m1148'] = true;
+        playAnnouncement('min3');
+      }
+
+      // ညနေ 3:15 (15:15) မိနစ် ➔ min15.mp3
+      if (hours === 15 && minutes === 15 && !announcedTimes['e1515']) {
+        announcedTimes['e1515'] = true;
+        playAnnouncement('min15');
+      }
+
+      // ညနေ 3:27 (15:27) မိနစ် ➔ min3.mp3
+      if (hours === 15 && minutes === 27 && !announcedTimes['e1527']) {
+        announcedTimes['e1527'] = true;
+        playAnnouncement('min3');
+      }
+
+      // ညသန်းခေါင်ယံကျော်ရင် Record များကို Reset ပြန်လုပ်မည်
+      if (hours === 0 && minutes === 0) { 
+        announcedTimes = {}; 
+      }
+    }
+
+    async function fetchLiveData() {
+      try {
+        const res = await fetch('http://localhost:5000/api/live');
+        const data = await res.json();
+        
+        if(data.success) {
+          document.getElementById('setIndex').innerText = data.setIndex;
+          document.getElementById('setValue').innerText = data.value;
+          document.getElementById('live2D').innerText = data.live2D;
+          document.getElementById('updateTime').innerText = "Last Update: " + data.time;
+          document.getElementById('notice').innerText = data.notice;
+
+          // 2D ဂဏန်း ပြောင်းလဲတိုင်း အသံထွက်ဖတ်ပေးမည်
+          if(current2D !== data.live2D && data.live2D !== "--") {
+            current2D = data.live2D;
+            speak2D();
+          }
+        }
+      } catch(e) {}
+    }
+
+    async function fetchChat() {
+      try {
+        const res = await fetch('http://localhost:5000/api/chat');
+        const data = await res.json();
+        if(data.success) {
+          const chatDiv = document.getElementById('chatMessages');
+          chatDiv.innerHTML = data.messages.map(m => 
+            `<div class="msg"><span class="msg-user">${m.user}:</span> ${m.text}</div>`
+          ).join('');
+          chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+      } catch(e) {}
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if(!text) return;
+
+      await fetch('http://localhost:5000/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: "User", text: text })
+      });
+
+      input.value = "";
+      fetchChat();
+    }
+
+    function handleKeyPress(e) { if(e.key === 'Enter') sendMessage(); }
+
+    setInterval(fetchLiveData, 3000);
+    setInterval(fetchChat, 2000);
+    setInterval(checkScheduledAnnouncements, 1000); // ၁ စက္ကန့်တစ်ကြိမ် အချိန်စစ်ပေးမည်
+    fetchLiveData();
+    fetchChat();
+  </script>
+</body>
+</html>
