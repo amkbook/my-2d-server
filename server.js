@@ -12,16 +12,17 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Live 2D ဒေတာနှင့် ဈေးကွက် အချက်အလက်များ တိုက်ရိုက်ချိတ်ဆက်ရန် API
+// Live 2D ဒေတာအတွက် API (index.html နှင့် ကိုက်ညီသော live2D key ဖြင့် ပြင်ဆင်ထားသည်)
 app.get('/api/live', (req, res) => {
-    // ဤနေရာတွင် တိုက်ရိုက် Live ဒေတာများကို ထည့်သွင်းနိုင်သည် (ဥပမာ- Settrade သို့မဟုတ် အခြား API များ)
     res.json({
         success: true,
-        live: "58",           // အဓိက Live 2D ဂဏန်း
-        result: "58",         // အရန် Result ဂဏန်း (undefined မဖြစ်စေရန်)
-        setIndex: "1,250.00", // SET Index တန်ဖိုး
-        value: "38,382.54",   // Value တန်ဖိုး
-        time: new Date().toLocaleTimeString() // လက်ရှိအချိန်အလိုက် အလိုအလျောက်ပြောင်းရန်
+        live2D: "58",         // index.html မှ တောင်းဆိုနေသော နာမည်နှင့် တိုက်ဆိုင်စေရန်
+        live: "58",           
+        result: "58",         
+        setIndex: "1,250.00", 
+        value: "38,382.54",   
+        time: "12:00 PM",
+        notice: "2D Live မှ ကြိုဆိုပါသည်။"
     });
 });
 
