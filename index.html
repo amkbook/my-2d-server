@@ -191,7 +191,7 @@ let soundEnabled = true;
 
     async function fetchLiveData() {
       try {
-        const res = await fetch('http://localhost:5000/api/live');
+      const res = await fetch('https://my-2d-server-7s9z.onrender.com/api/live');
         const data = await res.json();
         
         if(data.success) {
@@ -212,7 +212,7 @@ let soundEnabled = true;
 
     async function fetchChat() {
       try {
-        const res = await fetch('http://localhost:5000/api/chat');
+        const res = await fetch('https://my-2d-server-7s9z.onrender.com/api/chat');
         const data = await res.json();
         if(data.success) {
           const chatDiv = document.getElementById('chatMessages');
@@ -229,7 +229,7 @@ let soundEnabled = true;
       const text = input.value.trim();
       if(!text) return;
 
-      await fetch('http://localhost:5000/api/chat', {
+      await fetch('https://my-2d-server-7s9z.onrender.com/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user: "User", text: text })
