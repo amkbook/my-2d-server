@@ -10,16 +10,20 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// SET Index နဲ့ Value တွေပါ အချိန်နဲ့အမျှ အလိုအလျောက် ပြောင်းလဲမည့် API
+// မြန်မာစံတော်ချိန် (Myanmar Time) အမှန်အတိုင်း ပြသရန် API
 app.get('/api/live', (req, res) => {
     const randomLive = Math.floor(Math.random() * 90 + 10).toString();
-    
-    // SET Index ကို အတက်အကျဖြစ်စေရန် ကျပန်းဖန်တီးခြင်း
     const randomSet = (1250 + Math.random() * 5).toFixed(2);
-    // Value ကို အတက်အကျဖြစ်စေရန် ကျပန်းဖန်တီးခြင်း (တောင်းဆိုထားသော 38,382.54 အနီးစပ်ဆုံး)
     const randomVal = (38382.00 + Math.random() * 2).toFixed(2);
     
-    const currentTime = new Date().toLocaleTimeString();
+    // မြန်မာစံတော်ချိန် (Asia/Yangon) အတူ အချိန်ဆွဲထုတ်ခြင်း
+    const currentTime = new Date().toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Yangon',
+        hour12: true,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
 
     res.json({
         success: true,
