@@ -10,17 +10,22 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// အချိန်နှင့်အမျှ အလိုအလျောက် ပြောင်းလဲမည့် Live API ပုံစံ
+// SET Index နဲ့ Value တွေပါ အချိန်နဲ့အမျှ အလိုအလျောက် ပြောင်းလဲမည့် API
 app.get('/api/live', (req, res) => {
-    // ဥပမာအနေဖြင့် ဂဏန်းအပြောင်းအလဲကို စမ်းသပ်ရန်
     const randomLive = Math.floor(Math.random() * 90 + 10).toString();
+    
+    // SET Index ကို အတက်အကျဖြစ်စေရန် ကျပန်းဖန်တီးခြင်း
+    const randomSet = (1250 + Math.random() * 5).toFixed(2);
+    // Value ကို အတက်အကျဖြစ်စေရန် ကျပန်းဖန်တီးခြင်း (တောင်းဆိုထားသော 38,382.54 အနီးစပ်ဆုံး)
+    const randomVal = (38382.00 + Math.random() * 2).toFixed(2);
+    
     const currentTime = new Date().toLocaleTimeString();
 
     res.json({
         success: true,
         live2D: randomLive,
-        setIndex: "1,250.55",
-        value: "38,382.54",
+        setIndex: randomSet,
+        value: randomVal,
         time: currentTime,
         notice: "ဈေးကွက် ပုံမှန် အလုပ်လုပ်နေပါသည်။"
     });
