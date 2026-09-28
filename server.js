@@ -48,3 +48,36 @@ app.get('/api/chat', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+const express = require('express');
+const axios = require('axios');
+const cheerio = require('cheerio');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+
+app.get('/api/set-live', async (req, res) => {
+    try {
+        // ထိုင်းစတော့ဈေးကွက် ဒေတာများကို ဤနေရာတွင် ရယူမည်
+        const setIndex = "1,350.25"; // ဥပမာပြထားသော တန်ဖိုး
+        const value = "၃၈,၃၈၂.၅၄";      // တန်ဖိုး (Value)
+
+        res.json({
+            success: true,
+            setIndex: setIndex,
+            value: value,
+            updatedAt: new Date().toLocaleTimeString()
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Live ဒေတာ ဆွဲထုတ်၍ မရပါ",
+            error: error.message
+        });
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
