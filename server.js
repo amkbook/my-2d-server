@@ -16,10 +16,10 @@ app.get('/', (req, res) => {
 app.get('/api/live', (req, res) => {
     res.json({
         success: true,
-        live: "--",
-        set: "----.--",
+        live: "58",
+        set: "1,250.00",
         value: "38,382.54",
-        times: { t9: "--", t12: "--", t2: "--", t4: "--" }
+        time: "12:00 PM"
     });
 });
 
