@@ -12,11 +12,12 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Live 2D ဒေတာအတွက် API (setIndex ဖြင့် ပြင်ဆင်ထားသည်)
+// Live 2D ဒေတာအတွက် API (live ဂဏန်းအတွက်ပါ အမည်များ ချိန်ညှိထားသည်)
 app.get('/api/live', (req, res) => {
     res.json({
         success: true,
         live: "58",
+        result: "58",
         setIndex: "1,250.00",
         value: "38,382.54",
         time: "12:00 PM"
