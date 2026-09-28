@@ -56,6 +56,7 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 
+// SET Live ဒေတာကို ထုတ်ပေးမယ့် API Endpoint
 app.get('/api/set-live', async (req, res) => {
     try {
         // ထိုင်းစတော့ဈေးကွက် ဒေတာများကို ဤနေရာတွင် ရယူမည်
@@ -80,4 +81,8 @@ app.get('/api/set-live', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 9cce5d8dd9ae35bf88f8ddab0885f3fb30bf11e0
