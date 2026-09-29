@@ -69,7 +69,8 @@
           </div>
         </div>
 
-  <button id="audio-btn" class="audio-btn" onclick="toggleSound()">🔊 ကိန်းစံသံထွက်အားစောင့်မည်</button>
+        <button id="audio-btn" class="audio-btn" onclick="toggleSound()">🔊 အသံဖွင့်ထားသည်</button>
+      </div>
 
       <div class="grid-4">
         <div class="time-card"><div class="time-label">09:00 AM</div><div id="t0900" class="time-num">--</div></div>
@@ -121,7 +122,8 @@
   <script>
     let current2D = "--";
     let announcedTimes = {};
-let soundEnabled = true;
+    let soundEnabled = true;
+
     function switchTab(pageId, btn) {
       document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -129,7 +131,7 @@ let soundEnabled = true;
       btn.classList.add('active');
     }
 
-    // MP3 အသံဖိုင်ဖြင့် ဂဏန်း ၂ လုံး ဆက်တိုက် တန်းဖွင့်ပေးမည့် စနစ်
+    // MP3 အသံဖိုင်ဖြင့် ဂဏန်း ၂ လုံးကို စက္ကန့်မခြားဘဲ ဆက်တိုက် တန်းဖွင့်ပေးမည့် စနစ်
     function speak2D() {
       if (current2D !== "--" && current2D.length === 2) {
         if (!soundEnabled) return;
@@ -139,7 +141,6 @@ let soundEnabled = true;
         let audio1 = new Audio(`./sounds/${d1}.mp3`);
         let audio2 = new Audio(`./sounds/${d2}.mp3`);
 
-        // ပထမဂဏန်း ပြီးသည်နှင့် ဒုတိယဂဏန်းကို တိုက်ရိုက် ဆက်ဖွင့်မည်
         audio1.play().catch(e => console.log(e));
         audio1.onended = function() {
           audio2.play().catch(e => console.log(e));
@@ -147,43 +148,33 @@ let soundEnabled = true;
       }
     }
 
-    // MP3 အသံဖိုင်ဖြင့် သတိပေးချက် ဖွင့်ပေးမည်
     function playAnnouncement(filename) {
+      if (!soundEnabled) return;
       let audio = new Audio(`./sounds/${filename}.mp3`);
       audio.play().catch(e => console.log(e));
     }
 
-    // မြန်မာစံတော်ချိန် အချိန်အတိအကျ သတိပေးချက်များ စစ်ဆေးခြင်း
     function checkScheduledAnnouncements() {
       const now = new Date();
       const hours = now.getHours();
       const minutes = now.getMinutes();
 
-      // မနက် 11:45 မိနစ် ➔ min15.mp3
       if (hours === 11 && minutes === 45 && !announcedTimes['m1145']) {
         announcedTimes['m1145'] = true;
         playAnnouncement('min15');
       }
-
-      // မနက် 11:48 မိနစ် ➔ min3.mp3
       if (hours === 11 && minutes === 48 && !announcedTimes['m1148']) {
         announcedTimes['m1148'] = true;
         playAnnouncement('min3');
       }
-
-      // ညနေ 3:15 (15:15) မိနစ် ➔ min15.mp3
       if (hours === 15 && minutes === 15 && !announcedTimes['e1515']) {
         announcedTimes['e1515'] = true;
         playAnnouncement('min15');
       }
-
-      // ညနေ 3:27 (15:27) မိနစ် ➔ min3.mp3
       if (hours === 15 && minutes === 27 && !announcedTimes['e1527']) {
         announcedTimes['e1527'] = true;
         playAnnouncement('min3');
       }
-
-      // ညသန်းခေါင်ယံကျော်ရင် Record များကို Reset ပြန်လုပ်မည်
       if (hours === 0 && minutes === 0) { 
         announcedTimes = {}; 
       }
@@ -191,7 +182,7 @@ let soundEnabled = true;
 
     async function fetchLiveData() {
       try {
-      const res = await fetch('https://my-2d-server-7s9z.onrender.com/api/live');
+        const res = await fetch('/api/live');
         const data = await res.json();
         
         if(data.success) {
@@ -201,7 +192,6 @@ let soundEnabled = true;
           document.getElementById('updateTime').innerText = "Last Update: " + data.time;
           document.getElementById('notice').innerText = data.notice;
 
-          // 2D ဂဏန်း ပြောင်းလဲတိုင်း အသံထွက်ဖတ်ပေးမည်
           if(current2D !== data.live2D && data.live2D !== "--") {
             current2D = data.live2D;
             speak2D();
@@ -212,7 +202,7 @@ let soundEnabled = true;
 
     async function fetchChat() {
       try {
-        const res = await fetch('https://my-2d-server-7s9z.onrender.com/api/chat');
+        const res = await fetch('/api/chat');
         const data = await res.json();
         if(data.success) {
           const chatDiv = document.getElementById('chatMessages');
@@ -229,7 +219,7 @@ let soundEnabled = true;
       const text = input.value.trim();
       if(!text) return;
 
-      await fetch('https://my-2d-server-7s9z.onrender.com/api/chat', {
+      await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user: "User", text: text })
@@ -243,20 +233,22 @@ let soundEnabled = true;
 
     setInterval(fetchLiveData, 3000);
     setInterval(fetchChat, 2000);
-    setInterval(checkScheduledAnnouncements, 1000); // ၁ စက္ကန့်တစ်ကြိမ် အချိန်စစ်ပေးမည်
+    setInterval(checkScheduledAnnouncements, 1000);
+    
     fetchLiveData();
     fetchChat();
+
     function toggleSound() {
-    soundEnabled = !soundEnabled;
-    const btn = document.getElementById('audio-btn'); 
-    if (btn) {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('audio-btn'); 
+      if (btn) {
         if (soundEnabled) {
             btn.innerHTML = "🔊 အသံဖွင့်ထားသည်";
         } else {
             btn.innerHTML = "🔇 အသံပိတ်ထားသည်";
         }
+      }
     }
-}
   </script>
 </body>
 </html>
