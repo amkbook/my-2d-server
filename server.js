@@ -24,7 +24,7 @@ app.get('/api/live', async (req, res) => {
     try {
         const url = 'https://www.set.or.th/en/home';
         const { data } = await axios.get(url, {
-            timeout: 8000, // အချိန်အကြာကြီး စောင့်မနေဘဲ 8 စက္ကန့်အတွင်း တုံ့ပြန်ရန်
+            timeout: 8000,
             headers: { 
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept-Language': 'en-US,en;q=0.9'
@@ -72,26 +72,25 @@ app.get('/api/live', async (req, res) => {
             }
         });
 
-        // Fallback တန်ဖိုးများ (Scrape လုပ်မရရင်တောင် App ဆက်လည်ပတ်စေရန်)
-        const finalSetIndex = setIndex || "1,602.37";
-        const finalValue = marketValue || "49,707.75";
+        let digit1 = "--";
+        let digit2 = "--";
+        let calculated2D = "--";
 
-        let digit1 = "0";
-        let digit2 = "0";
-
-        if (finalSetIndex.includes('.')) {
-            const indexParts = finalSetIndex.split('.');
+        if (setIndex.includes('.')) {
+            const indexParts = setIndex.split('.');
             const indexDecimal = indexParts[1]; 
             digit1 = indexDecimal.slice(-1);    
         }
 
-        if (finalValue.includes('.')) {
-            const valueParts = finalValue.split('.');
+        if (marketValue.includes('.')) {
+            const valueParts = marketValue.split('.');
             const valueInteger = valueParts[0].replace(/,/g, ''); 
             digit2 = valueInteger.slice(-1); 
         }
 
-        const calculated2D = digit1 + digit2; 
+        if (digit1 !== "--" && digit2 !== "--") {
+            calculated2D = digit1 + digit2;
+        }
 
         // မြန်မာစံတော်ချိန် (UTC +6:30)
         const now = new Date();
@@ -107,15 +106,15 @@ app.get('/api/live', async (req, res) => {
 
         res.json({
             success: true,
-            setIndex: finalSetIndex,
-            value: finalValue,
+            setIndex: setIndex || "--",
+            value: marketValue || "--",
             live2D: calculated2D,
-            notice: "2D Live အချက်အလက်များ အောင်မြင်စွာ ချိတ်ဆက်နေပါသည်။",
+            notice: "2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။",
             time: currentTime
         });
 
     } catch (error) {
-        // Error တက်ရင်တောင် app မရပ်သွားစေရန် success: true ဖြင့် လက်ရှိအချိန်ကိုပါ ထည့်ပေးထားသည်
+        // Error တက်ရင်သော်လည်းကောင်း၊ ဈေးကွက်ပိတ်ချိန်ဖြစ်၍ ဒေတာဖတ်မရရင်သော်လည်းကောင်း ဆာဗာမရပ်သွားစေဘဲ အချက်အလက်အလွတ် ပြန်ပေးရန်
         const now = new Date();
         const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
         const myanmarTime = new Date(utc + (3600000 * 6.5));
@@ -123,10 +122,10 @@ app.get('/api/live', async (req, res) => {
 
         res.json({
             success: true,
-            setIndex: "1,602.37",
-            value: "49,707.75",
-            live2D: "77",
-            notice: "ဆာဗာချိတ်ဆက်နေဆဲဖြစ်သည် (Offline Mode)...",
+            setIndex: "--",
+            value: "--",
+            live2D: "--",
+            notice: "ဈေးကွက်ပိတ်ထားသည် (သို့) ချိတ်ဆက်မှု စောင့်ဆိုင်းနေသည်...",
             time: currentTime
         });
     }
