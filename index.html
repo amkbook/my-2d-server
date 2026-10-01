@@ -6,7 +6,7 @@
   <title>2D Live Market App</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; padding-bottom: 80px; }
+    body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; padding-bottom: 80px; overflow-x: hidden; }
     .container { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 15px; }
     
     .tab-content { display: none; }
@@ -23,6 +23,13 @@
     .set-box { text-align: center; flex: 1; }
     .set-label { font-size: 12px; color: #94a3b8; }
     .set-value { font-size: 16px; font-weight: bold; color: #e2e8f0; margin-top: 2px; }
+
+    /* 2D ထွက်ပေါ်ရာ ပင်မရင်းမြစ်ဂဏန်းများကို အပြာရောင်တောက်တောက်ပပ ပြသရန် */
+    .source-digit {
+      color: #38bdf8 !important;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(56, 189, 248, 0.5);
+      font-weight: 900;
+    }
 
     .audio-btn { background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 10px; cursor: pointer; }
     
@@ -43,6 +50,21 @@
     .nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; font-size: 11px; cursor: pointer; text-decoration: none; border: none; background: none; flex: 1; }
     .nav-item.active { color: #38bdf8; font-weight: bold; }
     .nav-icon { font-size: 18px; margin-bottom: 2px; }
+
+    /* ငွေစက္ကူ ဝဲပျံကျသည့် Animation စတိုင်လ်များ */
+    .falling-money {
+      position: fixed;
+      top: -60px;
+      width: 55px;
+      height: auto;
+      z-index: 9999;
+      pointer-events: none;
+      animation: fallDown 4s linear infinite;
+    }
+    @keyframes fallDown {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(105vh) rotate(360deg); opacity: 0.85; }
+    }
   </style>
 </head>
 <body>
@@ -106,7 +128,7 @@
 
     <!-- PAGE 5: More -->
     <div id="page-more" class="tab-content">
-      <div class="card"><h2>⚙️️ More & နေ့စဉ်ဓာတ်ပုံများ</h2></div>
+      <div class="card"><h2>⚙ More & နေ့စဉ်ဓာတ်ပုံများ</h2></div>
     </div>
 
   </div>
@@ -116,7 +138,7 @@
     <button class="nav-item" onclick="switchTab('page-gold', this)"><span class="nav-icon">🪙</span><span>ရွှေဈေး</span></button>
     <button class="nav-item" onclick="switchTab('page-2d-history', this)"><span class="nav-icon">📅</span><span>2D မှတ်တမ်း</span></button>
     <button class="nav-item" onclick="switchTab('page-3d-history', this)"><span class="nav-icon">🎯</span><span>3D မှတ်တမ်း</span></button>
-    <button class="nav-item" onclick="switchTab('page-more', this)"><span class="nav-icon">⚙️️</span><span>More</span></button>
+    <button class="nav-item" onclick="switchTab('page-more', this)"><span class="nav-icon">⚙</span><span>More</span></button>
   </div>
 
   <script>
@@ -154,34 +176,102 @@
       audio.play().catch(e => console.log(e));
     }
 
+    // VS Code ၏ images ဖိုင်တွဲထဲတွင် ရှိသော ငွေစက္ကူပုံများစာရင်း
+    const moneyImages = [
+      './images/Myanmar-5-26-sm-removebg-preview.png',
+      './images/myanmar-money-10000-kyats-high-260nw-2445695....png'
+    ];
+
+    function startMoneyRain() {
+      if (window.isMoneyRainActive) return;
+      window.isMoneyRainActive = true;
+
+      const rainInterval = setInterval(() => {
+        const img = document.createElement('img');
+        const randomImg = moneyImages[Math.floor(Math.random() * moneyImages.length)];
+        img.src = randomImg;
+        img.classList.add('falling-money');
+        img.style.left = Math.random() * window.innerWidth + 'px';
+        document.body.appendChild(img);
+
+        setTimeout(() => {
+          img.remove();
+        }, 4000);
+      }, 250);
+
+      // ၁၅ စက္ကန့်တိတိ ကျဆင်းပြီးပါက ရပ်တန့်မည်
+      setTimeout(() => {
+        clearInterval(rainInterval);
+        window.isMoneyRainActive = false;
+      }, 15000);
+    }
+
     function checkScheduledAnnouncements() {
       const now = new Date();
       const hours = now.getHours();
       const minutes = now.getMinutes();
 
-      // မနက်ပိုင်း ၁၁:၄၅ (min15 အသံအတွက် - မူလအတိုင်း ထားရှိသည်)
+      // မနက်ပိုင်း ၁၁:၄၅
       if (hours === 11 && minutes === 45 && !announcedTimes['m1145']) {
         announcedTimes['m1145'] = true;
         playAnnouncement('min15');
       }
-      // မနက်ပိုင်း ၁၁:၅၈ တွင် min3 အသံ ကွက်တိထွက်စေရန် ပြင်ဆင်ထားသည်
+      // မနက်ပိုင်း ၁၁:၅၈
       if (hours === 11 && minutes === 58 && !announcedTimes['m1158']) {
         announcedTimes['m1158'] = true;
         playAnnouncement('min3');
       }
-      // နေ့လည်/ညနေပိုင်း ၁၅:၁၅ (min15 အသံအတွက်)
+      // ည ၁၂:၀၁ အတိကျရောက်ချိန်တွင် ငွေစက္ကူပုံများ ၁၅ စက္ကန့်ကြာ ဝဲပျံကျစေရန်
+      if (hours === 0 && minutes === 1 && !announcedTimes['m0001']) {
+        announcedTimes['m0001'] = true;
+        startMoneyRain();
+      }
+      // နေ့လည်/ညနေပိုင်း ၁၅:၁၅
       if (hours === 15 && minutes === 15 && !announcedTimes['e1515']) {
         announcedTimes['e1515'] = true;
         playAnnouncement('min15');
       }
-      // နေ့လည်/ညနေပိုင်း ၁၅:၂၇ (min3 အသံအတွက်)
+      // နေ့လည်/ညနေပိုင်း ၁၅:၂၇
       if (hours === 15 && minutes === 27 && !announcedTimes['e1527']) {
         announcedTimes['e1527'] = true;
         playAnnouncement('min3');
       }
-      if (hours === 0 && minutes === 0) { 
-        announcedTimes = {}; 
+      // ညနေ ၄:၃၀ အတိကျရောက်ချိန်တွင် ငွေစက္ကူပုံများ ၁၅ စက္ကန့်ကြာ ဝဲပျံကျစေရန်
+      if (hours === 16 && minutes === 30 && !announcedTimes['e1630']) {
+        announcedTimes['e1630'] = true;
+        startMoneyRain();
       }
+
+      // နေ့လယ် ၁၂:၀၂ သို့မဟုတ် ညနေ ၄:၃၁ ဖြစ်လျှင် cache များကို ပြန်လည်ရှင်းလင်းမည်
+      if ((hours === 0 && minutes === 2) || (hours === 16 && minutes === 31)) { 
+        announcedTimes['m0001'] = false;
+        announcedTimes['e1630'] = false;
+      }
+    }
+
+    // မူလရင်းမြစ် ဂဏန်းများကို အပြာရောင်တောက်တောက်ပပ ပုံစံဖော်ပြသည့် လုပ်ဆောင်ချက်
+    function formatSourceHighlight(rawText, type) {
+      if (!rawText || !rawText.includes('.')) return rawText;
+      let parts = rawText.split('.');
+      let intPart = parts[0];
+      let decPart = parts[1];
+
+      if (type === 'index') {
+        // Index အတွက် ဒသမနောက်ဆုံးဂဏန်းကို အပြာရောင်ပြောင်းမည်
+        if (decPart && decPart.length > 0) {
+          let lastDigit = decPart.slice(-1);
+          let restDec = decPart.slice(0, -1);
+          return `${intPart}.${restDec}<span class="source-digit">${lastDigit}</span>`;
+        }
+      } else if (type === 'value') {
+        // Value အတွက် အပြည့်ကိန်း၏ နောက်ဆုံးဂဏန်းကို အပြာရောင်ပြောင်းမည်
+        if (intPart && intPart.length > 0) {
+          let lastIntDigit = intPart.slice(-1);
+          let restInt = intPart.slice(0, -1);
+          return `${restInt}<span class="source-digit">${lastIntDigit}</span>.${decPart}`;
+        }
+      }
+      return rawText;
     }
 
     async function fetchLiveData() {
@@ -190,8 +280,10 @@
         const data = await res.json();
         
         if(data.success) {
-          document.getElementById('setIndex').innerText = data.setIndex;
-          document.getElementById('setValue').innerText = data.value;
+          // ပင်မရင်းမြစ်ဂဏန်းများကို သက်ဆိုင်ရာ highlight ထည့်သွင်းပြသခြင်း
+          document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
+          document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
+          
           document.getElementById('live2D').innerText = data.live2D;
           document.getElementById('updateTime').innerText = "Last Update: " + data.time;
           document.getElementById('notice').innerText = data.notice;
