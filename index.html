@@ -159,7 +159,6 @@
     let current2D = "--";
     let announcedTimes = {};
     let soundEnabled = true;
-    let isLiveActive = false; 
 
     function switchTab(pageId, btn) {
       document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
@@ -253,10 +252,9 @@
 
       // စနေ (6) နှင့် တနင်္ဂနွေ (0) ဖြစ်ပါက ဈေးကွက် အမြဲပိတ်ထားမည်
       if (dayOfWeek === 0 || dayOfWeek === 6) {
-        isLiveActive = false;
         updateMarketUI('closed');
         updateScheduleCards(null);
-        return;
+        return { shouldFetch: false };
       }
 
       // သတ်မှတ်ထားသော Live ချိန်နှစ်ချိန် (09:00 - 12:01) နှင့် (14:00 - 16:30) အတွင်းသာ Live အသက်ဝင်မည်
@@ -269,62 +267,28 @@
       let inAfternoonSession = (totalMinutes >= afternoonStart && totalMinutes <= afternoonEnd);
 
       if (inMorningSession || inAfternoonSession) {
-        isLiveActive = true;
         updateMarketUI('live');
 
-        // အချိန်ဇယားကတ်ပြားများ အသက်ဝင်ပုံပေါ်ရန်
-        if (totalMinutes >= morningStart && totalMinutes <= 540) { // 9:00 AM 
+        // အချိန်ဇယားကတ်ပြားများ အသက်ဝင်ပုံပေါ်ရန်နှင့် ဂဏန်းများ မှတ်တမ်းတင်ရန်
+        let currentVal = document.getElementById('live2D').innerText;
+        if (totalMinutes >= morningStart && totalMinutes <= 540) { // 09:00 AM 
           updateScheduleCards('card0900');
-          document.getElementById('t0900').innerText = document.getElementById('live2D').innerText;
+          if (currentVal !== "--") document.getElementById('t0900').innerText = currentVal;
         } else if (totalMinutes > 540 && totalMinutes <= morningEnd) { // 12:01 PM
           updateScheduleCards('card1201');
-          document.getElementById('t1201').innerText = document.getElementById('live2D').innerText;
+          if (currentVal !== "--") document.getElementById('t1201').innerText = currentVal;
         } else if (totalMinutes >= afternoonStart && totalMinutes <= 870) { // 02:00 PM
           updateScheduleCards('card1400');
-          document.getElementById('t1400').innerText = document.getElementById('live2D').innerText;
+          if (currentVal !== "--") document.getElementById('t1400').innerText = currentVal;
         } else if (totalMinutes > 870 && totalMinutes <= afternoonEnd) { // 04:30 PM
           updateScheduleCards('card1630');
-          document.getElementById('t1630').innerText = document.getElementById('live2D').innerText;
+          if (currentVal !== "--") document.getElementById('t1630').innerText = currentVal;
         }
+        return { shouldFetch: true };
       } else {
-        isLiveActive = false;
         updateMarketUI('closed');
         updateScheduleCards(null);
-      }
-
-      // အသံပိုင်းဆိုင်ရာ သတိပေးချက်များ
-      if (hours === 11 && minutes === 45 && !announcedTimes['m1145']) {
-        announcedTimes['m1145'] = true;
-        playAnnouncement('min15');
-      }
-      if (hours === 11 && minutes === 58 && !announcedTimes['m1158']) {
-        announcedTimes['m1158'] = true;
-        playAnnouncement('min3');
-      }
-
-      // နေ့လည် 12:01 အတိ - ငွေမိုးရွာခြင်း
-      if (hours === 12 && minutes === 1 && !announcedTimes['m1201']) {
-        announcedTimes['m1201'] = true;
-        startMoneyRain();
-      }
-
-      // ညနေ 4:30 အတိ - ငွေမိုးရွာခြင်း
-      if (hours === 16 && minutes === 30 && !announcedTimes['e1630']) {
-        announcedTimes['e1630'] = true;
-        startMoneyRain();
-      }
-
-      if (hours === 15 && minutes === 15 && !announcedTimes['e1515']) {
-        announcedTimes['e1515'] = true;
-        playAnnouncement('min15');
-      }
-      if (hours === 15 && minutes === 27 && !announcedTimes['e1527']) {
-        announcedTimes['e1527'] = true;
-        playAnnouncement('min3');
-      }
-
-      if (hours === 0 && minutes === 0) {
-        announcedTimes = {}; // နေ့စဉ် cache များကို ရှင်းလင်းမည်
+        return { shouldFetch: false };
       }
     }
 
@@ -351,7 +315,9 @@
     }
 
     async function fetchLiveData() {
-      if (!isLiveActive) return;
+      // အချိန်ကိုက် စစ်ဆေးချက်အရ ဖွင့်ရက်အတွင်း Live ချိန်ဟုတ်မဟုတ် စစ်မည်
+      const scheduleStatus = checkScheduledAnnouncements();
+      if (!scheduleStatus.shouldFetch) return;
 
       try {
         const res = await fetch('/api/live');
@@ -406,10 +372,13 @@
 
     setInterval(fetchLiveData, 3000);
     setInterval(fetchChat, 2000);
-    setInterval(checkScheduledAnnouncements, 1000);
+    
+    // တစ်စက္ကန့်တစ်ကြိမ် အချိန်နှင့် ဈေးကွက်အခြေအနေကို စစ်ဆေးမည်
+    setInterval(() => {
+      checkScheduledAnnouncements();
+    }, 1000);
     
     checkScheduledAnnouncements(); 
-    fetchLiveData();
     fetchChat();
 
     function toggleSound() {
