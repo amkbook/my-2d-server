@@ -18,7 +18,6 @@
     .live-title-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px; }
     .live-title { font-size: 16px; color: #94a3b8; }
     
-    /* ဈေးကွက် အခြေအနေပြ အညွှန်းသင်္ကေတများ */
     .status-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: bold; }
     .status-live { color: #ef4444; display: inline-flex; align-items: center; gap: 4px; }
     .spinner { width: 10px; height: 10px; border: 2px solid #ef4444; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
@@ -34,7 +33,6 @@
     .set-label { font-size: 12px; color: #94a3b8; }
     .set-value { font-size: 16px; font-weight: bold; color: #e2e8f0; margin-top: 2px; }
 
-    /* 2D ထွက်ပေါ်ရာ ပင်မရင်းမြစ်ဂဏန်းများကို အပြာရောင်တောက်တောက်ပပ ပြသရန် */
     .source-digit {
       color: #38bdf8 !important;
       text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(56, 189, 248, 0.5);
@@ -44,7 +42,8 @@
     .audio-btn { background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 10px; cursor: pointer; }
     
     .grid-4 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .time-card { background: #1e293b; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #334155; }
+    .time-card { background: #1e293b; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #334155; opacity: 0.4; transition: opacity 0.3s ease; }
+    .time-card.active-time { opacity: 1; border-color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
     .time-label { font-size: 12px; color: #94a3b8; }
     .time-num { font-size: 22px; font-weight: bold; color: #facc15; margin-top: 4px; }
 
@@ -61,7 +60,6 @@
     .nav-item.active { color: #38bdf8; font-weight: bold; }
     .nav-icon { font-size: 18px; margin-bottom: 2px; }
 
-    /* ငွေစက္ကူ ဝဲပျံကျသည့် Animation စတိုင်လ်များ */
     .falling-money {
       position: fixed;
       top: -60px;
@@ -88,8 +86,8 @@
       <div class="card">
         <div class="live-title-container">
           <div class="live-title">LIVE 2D RESULT</div>
-          <div id="marketStatus" class="status-indicator status-live">
-            <span class="spinner"></span> <span>Live</span>
+          <div id="marketStatus" class="status-indicator status-closed">
+            <span>✔ ဈေးကွက်ပိတ်သည်</span>
           </div>
         </div>
 
@@ -111,10 +109,10 @@
       </div>
 
       <div class="grid-4">
-        <div class="time-card"><div class="time-label">09:00 AM</div><div id="t0900" class="time-num">--</div></div>
-        <div class="time-card"><div class="time-label">12:01 PM</div><div id="t1201" class="time-num">--</div></div>
-        <div class="time-card"><div class="time-label">02:00 PM</div><div id="t1400" class="time-num">--</div></div>
-        <div class="time-card"><div class="time-label">04:30 PM</div><div id="t1630" class="time-num">--</div></div>
+        <div id="card0900" class="time-card"><div class="time-label">09:00 AM</div><div id="t0900" class="time-num">--</div></div>
+        <div id="card1201" class="time-card"><div class="time-label">12:01 PM</div><div id="t1201" class="time-num">--</div></div>
+        <div id="card1400" class="time-card"><div class="time-label">02:00 PM</div><div id="t1400" class="time-num">--</div></div>
+        <div id="card1630" class="time-card"><div class="time-label">04:30 PM</div><div id="t1630" class="time-num">--</div></div>
       </div>
 
       <div class="chat-box">
@@ -161,7 +159,7 @@
     let current2D = "--";
     let announcedTimes = {};
     let soundEnabled = true;
-    let isLiveActive = true; // Live ဆွဲယူမှုကို ထိန်းချုပ်ရန် Flag
+    let isLiveActive = false; 
 
     function switchTab(pageId, btn) {
       document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
@@ -170,7 +168,6 @@
       btn.classList.add('active');
     }
 
-    // MP3 အသံဖိုင်ဖြင့် ဂဏန်း ၂ လုံးကို စက္ကန့်မခြားဘဲ ဆက်တိုက် တန်းဖွင့်ပေးမည့် စနစ်
     function speak2D() {
       if (current2D !== "--" && current2D.length === 2) {
         if (!soundEnabled) return;
@@ -193,7 +190,6 @@
       audio.play().catch(e => console.log(e));
     }
 
-    // VS Code ၏ images ဖိုင်တွဲထဲတွင် ရှိသော ငွေစက္ကူပုံများစာရင်း
     const moneyImages = [
       './images/Myanmar-5-26-sm-removebg-preview.png',
       './images/myanmar-money-10000-kyats-high-260nw-2445695....png'
@@ -216,14 +212,12 @@
         }, 4000);
       }, 250);
 
-      // ၁၅ စက္ကန့်တိတိ ကျဆင်းပြီးပါက ရပ်တန့်မည်
       setTimeout(() => {
         clearInterval(rainInterval);
         window.isMoneyRainActive = false;
       }, 15000);
     }
 
-    // ဈေးကွက် အခြေအနေပြ UI ကို ပြောင်းလဲပေးသည့် လုပ်ဆောင်ချက်
     function updateMarketUI(status) {
       const statusEl = document.getElementById('marketStatus');
       if (status === 'live') {
@@ -235,71 +229,105 @@
       }
     }
 
+    function updateScheduleCards(activeSession) {
+      document.getElementById('card0900').classList.remove('active-time');
+      document.getElementById('card1201').classList.remove('active-time');
+      document.getElementById('card1400').classList.remove('active-time');
+      document.getElementById('card1630').classList.remove('active-time');
+
+      if (activeSession) {
+        const card = document.getElementById(activeSession);
+        if (card) card.classList.add('active-time');
+      }
+    }
+
     function checkScheduledAnnouncements() {
       const now = new Date();
       const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
       const myanmarTime = new Date(utc + (3600000 * 6.5));
       
+      const dayOfWeek = myanmarTime.getDay(); // 0 = တနင်္ဂနွေ, 6 = စနေ
       const hours = myanmarTime.getHours();
       const minutes = myanmarTime.getMinutes();
+      const totalMinutes = hours * 60 + minutes;
 
-      // မနက်ပိုင်း ၁၁:၄၅
+      // စနေ (6) နှင့် တနင်္ဂနွေ (0) ဖြစ်ပါက ဈေးကွက် အမြဲပိတ်ထားမည်
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        isLiveActive = false;
+        updateMarketUI('closed');
+        updateScheduleCards(null);
+        return;
+      }
+
+      // သတ်မှတ်ထားသော Live ချိန်နှစ်ချိန် (09:00 - 12:01) နှင့် (14:00 - 16:30) အတွင်းသာ Live အသက်ဝင်မည်
+      const morningStart = 9 * 60;       // 09:00 AM
+      const morningEnd = 12 * 60 + 1;    // 12:01 PM
+      const afternoonStart = 14 * 60;    // 02:00 PM
+      const afternoonEnd = 16 * 60 + 30; // 04:30 PM
+
+      let inMorningSession = (totalMinutes >= morningStart && totalMinutes <= morningEnd);
+      let inAfternoonSession = (totalMinutes >= afternoonStart && totalMinutes <= afternoonEnd);
+
+      if (inMorningSession || inAfternoonSession) {
+        isLiveActive = true;
+        updateMarketUI('live');
+
+        // အချိန်ဇယားကတ်ပြားများ အသက်ဝင်ပုံပေါ်ရန်
+        if (totalMinutes >= morningStart && totalMinutes <= 540) { // 9:00 AM 
+          updateScheduleCards('card0900');
+          document.getElementById('t0900').innerText = document.getElementById('live2D').innerText;
+        } else if (totalMinutes > 540 && totalMinutes <= morningEnd) { // 12:01 PM
+          updateScheduleCards('card1201');
+          document.getElementById('t1201').innerText = document.getElementById('live2D').innerText;
+        } else if (totalMinutes >= afternoonStart && totalMinutes <= 870) { // 02:00 PM
+          updateScheduleCards('card1400');
+          document.getElementById('t1400').innerText = document.getElementById('live2D').innerText;
+        } else if (totalMinutes > 870 && totalMinutes <= afternoonEnd) { // 04:30 PM
+          updateScheduleCards('card1630');
+          document.getElementById('t1630').innerText = document.getElementById('live2D').innerText;
+        }
+      } else {
+        isLiveActive = false;
+        updateMarketUI('closed');
+        updateScheduleCards(null);
+      }
+
+      // အသံပိုင်းဆိုင်ရာ သတိပေးချက်များ
       if (hours === 11 && minutes === 45 && !announcedTimes['m1145']) {
         announcedTimes['m1145'] = true;
         playAnnouncement('min15');
       }
-      // မနက်ပိုင်း ၁၁:၅၈
       if (hours === 11 && minutes === 58 && !announcedTimes['m1158']) {
         announcedTimes['m1158'] = true;
         playAnnouncement('min3');
       }
 
-      // နေ့လည် 12:01 အတိ - ငွေမိုးရွာခြင်း၊ Live ရပ်တန့်ခြင်း နှင့် အစိမ်းရောင်အမှန်ခြစ်ပြသခြင်း
-      if (hours === 12 && minutes === 1) {
-        isLiveActive = false;
-        updateMarketUI('closed');
-        if (!announcedTimes['m1201']) {
-          announcedTimes['m1201'] = true;
-          startMoneyRain();
-        }
+      // နေ့လည် 12:01 အတိ - ငွေမိုးရွာခြင်း
+      if (hours === 12 && minutes === 1 && !announcedTimes['m1201']) {
+        announcedTimes['m1201'] = true;
+        startMoneyRain();
       }
 
-      // နေ့လည် 02:00 တွင် Live ပြန်စဆွဲယူမည်
-      if (hours === 14 && minutes === 0) {
-        isLiveActive = true;
-        updateMarketUI('live');
+      // ညနေ 4:30 အတိ - ငွေမိုးရွာခြင်း
+      if (hours === 16 && minutes === 30 && !announcedTimes['e1630']) {
+        announcedTimes['e1630'] = true;
+        startMoneyRain();
       }
 
-      // ညနေ 4:30 အတိ - ငွေမိုးရွာခြင်း၊ Live ရပ်တန့်ခြင်း နှင့် အစိမ်းရောင်အမှန်ခြစ်ပြသခြင်း
-      if (hours === 16 && minutes === 30) {
-        isLiveActive = false;
-        updateMarketUI('closed');
-        if (!announcedTimes['e1630']) {
-          announcedTimes['e1630'] = true;
-          startMoneyRain();
-        }
-      }
-
-      // နောက်တစ်ရက် မနက် 09:00 တွင် Live ပြန်စဆွဲယူမည်
-      if (hours === 9 && minutes === 0) {
-        isLiveActive = true;
-        updateMarketUI('live');
-        announcedTimes = {}; // နေ့စဉ် cache များကို ရှင်းလင်းမည်
-      }
-
-      // နေ့လည်/ညနေပိုင်း ၁၅:၁၅
       if (hours === 15 && minutes === 15 && !announcedTimes['e1515']) {
         announcedTimes['e1515'] = true;
         playAnnouncement('min15');
       }
-      // နေ့လည်/ညနေပိုင်း ၁၅:၂၇
       if (hours === 15 && minutes === 27 && !announcedTimes['e1527']) {
         announcedTimes['e1527'] = true;
         playAnnouncement('min3');
       }
+
+      if (hours === 0 && minutes === 0) {
+        announcedTimes = {}; // နေ့စဉ် cache များကို ရှင်းလင်းမည်
+      }
     }
 
-    // မူလရင်းမြစ် ဂဏန်းများကို အပြာရောင်တောက်တောက်ပပ ပုံစံဖော်ပြသည့် လုပ်ဆောင်ချက်
     function formatSourceHighlight(rawText, type) {
       if (!rawText || !rawText.includes('.')) return rawText;
       let parts = rawText.split('.');
@@ -307,14 +335,12 @@
       let decPart = parts[1];
 
       if (type === 'index') {
-        // Index အတွက် ဒသမနောက်ဆုံးဂဏန်းကို အပြာရောင်ပြောင်းမည်
         if (decPart && decPart.length > 0) {
           let lastDigit = decPart.slice(-1);
           let restDec = decPart.slice(0, -1);
           return `${intPart}.${restDec}<span class="source-digit">${lastDigit}</span>`;
         }
       } else if (type === 'value') {
-        // Value အတွက် အပြည့်ကိန်း၏ နောက်ဆုံးဂဏန်းကို အပြာရောင်ပြောင်းမည်
         if (intPart && intPart.length > 0) {
           let lastIntDigit = intPart.slice(-1);
           let restInt = intPart.slice(0, -1);
@@ -325,7 +351,6 @@
     }
 
     async function fetchLiveData() {
-      // ဈေးကွက်ပိတ်ချိန် (Live ရပ်ထားချိန်) ဖြစ်ပါက ဆာဗာသို့ ဒေတာတောင်းခံမှုကို ရပ်ထားမည်
       if (!isLiveActive) return;
 
       try {
@@ -333,7 +358,6 @@
         const data = await res.json();
         
         if(data.success) {
-          // ပင်မရင်းမြစ်ဂဏန်းများကို သက်ဆိုင်ရာ highlight ထည့်သွင်းပြသခြင်း
           document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
           document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
           
@@ -384,6 +408,7 @@
     setInterval(fetchChat, 2000);
     setInterval(checkScheduledAnnouncements, 1000);
     
+    checkScheduledAnnouncements(); 
     fetchLiveData();
     fetchChat();
 
