@@ -114,7 +114,6 @@ app.get('/api/live', async (req, res) => {
         });
 
     } catch (error) {
-        // Error တက်ရင်သော်လည်းကောင်း၊ ဈေးကွက်ပိတ်ချိန်ဖြစ်၍ ဒေတာဖတ်မရရင်သော်လည်းကောင်း ဆာဗာမရပ်သွားစေဘဲ အချက်အလက်အလွတ် ပြန်ပေးရန်
         const now = new Date();
         const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
         const myanmarTime = new Date(utc + (3600000 * 6.5));
