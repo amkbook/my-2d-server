@@ -21,6 +21,7 @@
     /* ဈေးကွက် အခြေအနေပြ အညွှန်းသင်္ကေတများ */
     .status-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: bold; }
     .status-live { color: #ef4444; display: inline-flex; align-items: center; gap: 4px; }
+    .status-paused { color: #f59e0b; display: inline-flex; align-items: center; gap: 4px; }
     .spinner { width: 10px; height: 10px; border: 2px solid #ef4444; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
     .status-closed { color: #10b981; }
 
@@ -251,7 +252,12 @@
       if (status === 'live') {
         statusEl.className = 'status-indicator status-live';
         statusEl.innerHTML = '<span class="spinner"></span> <span>Live</span>';
+      } else if (status === 'paused') {
+        // နေ့လည်နားချိန် သို့မဟုတ် ညနေဈေးပိတ်ချိန် (အနီရောင် spinner ပျောက်ပြီး Live ရပ်နေမည့်ပုံစံ)
+        statusEl.className = 'status-indicator status-paused';
+        statusEl.innerHTML = '<span>⏸ Live Paused</span>';
       } else {
+        // စနေ တနင်္ဂနွေ ပိတ်ရက်များတွင်သာ အစိမ်းရောင် အမှန်ခြစ်ပြရန်
         statusEl.className = 'status-indicator status-closed';
         statusEl.innerHTML = '<span>✔ ဈေးကွက်ပိတ်သည်</span>';
       }
@@ -261,7 +267,7 @@
       const now = new Date();
       const day = now.getDay(); // 0 = Sunday, 6 = Saturday
       
-      // စနေ (6) တနင်္ဂနွေ (0) ဖြစ်ပါက ဈေးကွက်ပိတ်မည်
+      // စနေ (6) တနင်္ဂနွေ (0) ဖြစ်ပါက သီးသန့် ဈေးကွက်ပိတ်သည်ဟု ပြမည်
       if (day === 0 || day === 6) {
         isLiveActive = false;
         updateMarketUI('closed');
@@ -276,8 +282,8 @@
       const minutes = myanmarTime.getMinutes();
       const totalMinutes = hours * 60 + minutes;
 
-      // အချိန်ပိုင်း သတ်မှတ်ချက်များ (မိနစ်ဖြင့် တွက်ချက်ခြင်း)
-      // နံနက် 9:00 (540 မိနစ်) မှ နေ့လည် 12:01 (721 မိနစ်) အထိ
+      // ဖွင့်ရက်များအတွက် အချိန်ပိုင်း သတ်မှတ်ချက်များ (မိနစ်ဖြင့် တွက်ချက်ခြင်း)
+      // မနက် 9:00 (540 မိနစ်) မှ နေ့လည် 12:01 (721 မိနစ်) အထိ
       // ညနေ 2:00 (840 မိနစ်) မှ ညနေ 4:30 (870 မိနစ်) အထိ
       const morningStart = 9 * 60;       // 540
       const morningEnd = 12 * 60 + 1;    // 721
@@ -338,9 +344,9 @@
         }
 
       } else {
-        // သတ်မှတ်ချိန်ပြင်ပဖြစ်ပါက Live ရပ်တန့်မည်
+        // သတ်မှတ်ချိန်ပြင်ပ (နေ့လည် Live နားချိန် သို့မဟုတ် ညနေဈေးပိတ်ချိန်) ဖြစ်ပါက Live ရပ်တန့်မည်
         isLiveActive = false;
-        updateMarketUI('closed');
+        updateMarketUI('paused');
       }
 
       // နေ့စဉ် 09:00 AM ရောက်လျှင် ဇယားကွက်များနှင့် cache များကို အသစ်ပြန်စရန် ရှင်းလင်းမည်
@@ -356,8 +362,14 @@
     }
 
     function formatSourceHighlight(rawText, type) {
-      if (!rawText || !rawText.includes('.')) return rawText;
-      let parts = rawText.split('.');
+      if (!rawText) return rawText;
+      let textStr = String(rawText).trim();
+      
+      // comma (,) ပါသည်ဖြစ်စေ၊ မပါသည်ဖြစ်စေ (ဥပမာ 9876.56 သို့မဟုတ် 10,000.56) အကျုံးဝင်စေရန် သန့်စင်ခြင်း
+      let cleanText = textStr.replace(/,/g, '');
+      if (!cleanText.includes('.')) return textStr;
+
+      let parts = cleanText.split('.');
       let intPart = parts[0];
       let decPart = parts[1];
 
@@ -368,13 +380,15 @@
           return `${intPart}.${restDec}<span class="source-digit">${lastDigit}</span>`;
         }
       } else if (type === 'value') {
+        // ထောင်ဂဏန်း (ဥပမာ 9876) ဖြစ်စေ၊ သောင်းဂဏန်း (ဥပမာ 10000) ဖြစ်စေ နောက်ဆုံးဂဏန်းကို အပြာရောင်တောက်စေရန်
         if (intPart && intPart.length > 0) {
           let lastIntDigit = intPart.slice(-1);
           let restInt = intPart.slice(0, -1);
+          // အကယ်၍ comma ပြန်လိုပါက ထည့်သွင်းဖော်ပြနိုင်သည်၊ လက်ရှိတွင် တိုက်ရိုက်ခွဲထုတ်ပေးထားပါသည်
           return `${restInt}<span class="source-digit">${lastIntDigit}</span>.${decPart}`;
         }
       }
-      return rawText;
+      return textStr;
     }
 
     async function fetchLiveData() {
@@ -430,8 +444,8 @@
     }
 
     async function sendMessage() {
-      const input = document.getElementById('chatInput');
-      const text = input.value.trim();
+      const int = document.getElementById('chatInput');
+      const text = int.value.trim();
       if(!text) return;
 
       await fetch('/api/chat', {
@@ -440,7 +454,7 @@
         body: JSON.stringify({ user: "User", text: text })
       });
 
-      input.value = "";
+      int.value = "";
       fetchChat();
     }
 
