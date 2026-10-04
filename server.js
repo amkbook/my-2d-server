@@ -157,12 +157,17 @@ app.get('/api/live', async (req, res) => {
             second: '2-digit'
         });
 
+        // Front-end က `schedule` အနေနဲ့ လှမ်းယူလို့ရအောင် adminResults ကို schedule အနေနဲ့ပါ ထည့်ပေးထားသည်
         res.json({
             success: true,
             setIndex: setIndex || "--",
             value: marketValue || "--",
             live2D: calculated2D,
-            adminResults: adminResults, // Admin ထည့်ထားသော ဒေတာများကိုပါ တစ်ခါတည်း ပို့ပေးမည်
+            adminResults: adminResults,
+            schedule: {
+                t0930: adminResults["09:30 AM"],
+                t1400: adminResults["02:00 PM"]
+            },
             notice: "2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။",
             time: currentTime
         });
@@ -179,6 +184,10 @@ app.get('/api/live', async (req, res) => {
             value: "--",
             live2D: "--",
             adminResults: adminResults,
+            schedule: {
+                t0930: adminResults["09:30 AM"],
+                t1400: adminResults["02:00 PM"]
+            },
             notice: "ဈေးကွက်ပိတ်ထားသည် (ို့) ချိတ်ဆက်မှု စောင့်ဆိုင်းနေသည်...",
             time: currentTime
         });

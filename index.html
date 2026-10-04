@@ -133,7 +133,7 @@
             <div id="t0930_tw" class="row-val">--</div>
           </div>
           
-          <!-- ညာဘက်အကွက်သေး (12:01 PM) - Modern, Internet, TW အကွက်များအောက်တွင် 12:01 အကွက်အသေးအဖြစ် ပေါ်မည် -->
+          <!-- ညာဘက်အကွက်သေး (12:01 PM) -->
           <div class="market-row-item">
             <div class="row-time-label">12:01 PM</div>
             <div id="t1201_modern" class="row-val" style="grid-column: span 3;">--</div>
@@ -201,7 +201,6 @@
     let soundEnabled = true;
     let isLiveActive = false;
 
-    // LocalStorage မှ ယခင်သိမ်းထားသော တန်ဖိုးများကို ပြန်ဖတ်မည်
     let lastSavedData = JSON.parse(localStorage.getItem('last_market_data')) || {
       setIndex: "----.--",
       value: "----.--",
@@ -300,7 +299,7 @@
 
     function checkMarketSchedule() {
       const now = new Date();
-      const day = now.getDay(); // 0 = Sunday, 6 = Saturday
+      const day = now.getDay();
       
       if (day === 0 || day === 6) {
         isLiveActive = false;
@@ -316,7 +315,7 @@
       const minutes = myanmarTime.getMinutes();
       const totalMinutes = hours * 60 + minutes;
 
-      const morningStart = 9 * 60;       // 9:00 AM
+      const morningStart = 9 * 60;      // 9:00 AM
       const morningEnd = 12 * 60 + 1;    // 12:01 PM
       const afternoonStart = 14 * 60;    // 2:00 PM
       const afternoonEnd = 16 * 60 + 30; // 4:30 PM
@@ -337,7 +336,6 @@
           playAnnouncement('min3');
         }
 
-        // နေ့လည် 12:01 အတိ - စျေးကွက်ပိတ်အမှန်ခြစ်ပြပြီး 12:01 အကွက်သေးတွင် ရွှေရောင်ဂဏန်း ပုံသေပေါ်စေရန်
         if (hours === 12 && minutes === 1) {
           if (!announcedTimes['m1201']) {
             announcedTimes['m1201'] = true;
@@ -358,7 +356,6 @@
           playAnnouncement('min3');
         }
 
-        // ညနေ 4:30 အတိ - 4:30 အကွက်သေးတွင် ရွှေရောင်ဂဏန်း ပုံသေပေါ်စေရန်
         if (hours === 16 && minutes === 30) {
           if (!announcedTimes['e1630']) {
             announcedTimes['e1630'] = true;
@@ -416,39 +413,44 @@
       return textStr;
     }
 
+    // ဆာဗာမှ Live ဒေတာနှင့် Admin ဇယားကွက် ဒေတာများကိုပါ တစ်ပါတည်း လှမ်းဆွဲခြင်း
     async function fetchLiveData() {
-      if (!isLiveActive) return;
-
       try {
         const res = await fetch('/api/live');
         const data = await res.json();
         
-        if(data.success && data.live2D && data.live2D !== "--") {
-          localStorage.setItem('last_market_data', JSON.stringify(data));
-          
-          document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
-          document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
-          
-          document.getElementById('live2D').innerText = data.live2D;
-          document.getElementById('updateTime').innerText = "Last Update: " + data.time;
-          document.getElementById('notice').innerText = data.notice;
+        if(data.success) {
+          // Live ပင်မမျက်နှာပြင် ဒေတာများ update လုပ်ရန်
+          if (data.live2D && data.live2D !== "--") {
+            localStorage.setItem('last_market_data', JSON.stringify(data));
+            
+            document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
+            document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
+            
+            document.getElementById('live2D').innerText = data.live2D;
+            document.getElementById('updateTime').innerText = "Last Update: " + data.time;
+            document.getElementById('notice').innerText = data.notice;
 
-          const now = new Date();
-          const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-          const myanmarTime = new Date(utc + (3600000 * 6.5));
-          const h = myanmarTime.getHours();
-          const m = myanmarTime.getMinutes();
-
-          // မနက်ပိုင်း live ချိန်များအတွက် 09:30 အကွက်ရှည်ထဲသို့ တိုက်ရိုက်ဖြည့်သွင်းခြင်း
-          if (h === 9 && m >= 30) {
-            document.getElementById('t0930_modern').innerText = data.live2D;
-          } else if (h === 14 && m >= 0) {
-            document.getElementById('t1400_modern').innerText = data.live2D;
+            if(current2D !== data.live2D) {
+              current2D = data.live2D;
+              speak2D();
+            }
           }
 
-          if(current2D !== data.live2D) {
-            current2D = data.live2D;
-            speak2D();
+          // Admin Control Panel မှ သိမ်းဆည်းထားသော 09:30 AM နှင့် 02:00 PM ဇယားကွက် အချက်အလက်များကို ထည့်သွင်းခြင်း
+          if (data.schedule) {
+            // 09:30 AM
+            if(data.schedule.t0930) {
+              document.getElementById('t0930_modern').innerText = data.schedule.t0930.modern || "--";
+              document.getElementById('t0930_internet').innerText = data.schedule.t0930.internet || "--";
+              document.getElementById('t0930_tw').innerText = data.schedule.t0930.tw || "--";
+            }
+            // 02:00 PM
+            if(data.schedule.t1400) {
+              document.getElementById('t1400_modern').innerText = data.schedule.t1400.modern || "--";
+              document.getElementById('t1400_internet').innerText = data.schedule.t1400.internet || "--";
+              document.getElementById('t1400_tw').innerText = data.schedule.t1400.tw || "--";
+            }
           }
         }
       } catch(e) {}
