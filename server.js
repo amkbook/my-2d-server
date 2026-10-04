@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Admin Control Panel စာမျက်နှာအတွက် သီးသန့် route (admin.html ဖန်တီးမည့်အခါ သုံးရန်)
+// Admin Control Panel စာမျက်နှာအတွက် သီးသန့် route
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
@@ -30,6 +30,10 @@ let adminResults = {
     "09:30 AM": { modern: "--", internet: "--", tw: "--" },
     "02:00 PM": { modern: "--", internet: "--", tw: "--" }
 };
+
+// နေ့စဉ်မှတ်တမ်း (Calendar History) သိမ်းဆည်းရန် Array
+let historyRecords = [];
+let lastArchivedDate = ""; // တစ်နေ့လျှင် တစ်ကြိမ်သာ သိမ်းဆည်းရန် မှတ်သားရန်
 
 // 1. Admin Login API
 app.post('/api/admin/login', (req, res) => {
@@ -69,6 +73,14 @@ app.get('/api/admin/data', (req, res) => {
     res.json({
         success: true,
         adminResults
+    });
+});
+
+// 4. နေ့စဉ်မှတ်တမ်း (History) ရယူရန် API
+app.get('/api/history', (req, res) => {
+    res.json({
+        success: true,
+        history: historyRecords
     });
 });
 
@@ -157,7 +169,42 @@ app.get('/api/live', async (req, res) => {
             second: '2-digit'
         });
 
-        // Front-end က `schedule` အနေနဲ့ လှမ်းယူလို့ရအောင် adminResults ကို schedule အနေနဲ့ပါ ထည့်ပေးထားသည်
+        const currentHour = myanmarTime.getHours();
+        const currentMinute = myanmarTime.getMinutes();
+        const dateString = myanmarTime.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+        const dayOfWeek = myanmarTime.toLocaleDateString('en-US', { weekday: 'long' });
+        // မြန်မာလို နေ့အမည်ပြောင်းရန် (လိုအပ်ပါက)
+        const daysMap = {
+            "Sunday": "တနင်္ဂနွေ", "Monday": "တနင်္လာ", "Tuesday": "အင်္ဂါ",
+            "Wednesday": "ဗုဒ္ဓဟူး", "Thursday": "ကြာသပတေး", "Friday": "သောကြာ", "Saturday": "စနေ"
+        };
+        const myanmarDay = daysMap[dayOfWeek] || dayOfWeek;
+
+        // ညနေ 4:30 ကျော်လွန်ပြီး ဈေးကွက်ပိတ်ချိန် (သို့ 4:30 အမှန်ခြစ်ပေါ်ချိန်) တစ်နေ့လျှင် တစ်ကြိမ် History သို့ အလိုအလျောက် သိမ်းဆည်းရန်
+        // ဥပမာ: 16:30 (4:30 PM) နှင့်အထက်ရောက်ပြီးcalculated2D ရနေပြီဆိုလျှင်
+        if ((currentHour > 16 || (currentHour === 16 && currentMinute >= 30)) && calculated2D !== "--") {
+            if (lastArchivedDate !== dateString) {
+                const newRecord = {
+                    dateFormatted: `${myanmarDay} - ${dateString}`,
+                    t1201: calculated2D, // သို့မဟုတ် ထိုအချိန်ကပေါက်သော 12:01 / 4:30 ရလဒ်
+                    t430: calculated2D,
+                    setIndex: setIndex || "--",
+                    value: marketValue || "--",
+                    schedule: {
+                        t0930: { ...adminResults["09:30 AM"] },
+                        t1400: { ...adminResults["02:00 PM"] }
+                    }
+                };
+                // အသစ်ကို ထိပ်ဆုံးမှ ထည့်မည်
+                historyRecords.unshift(newRecord);
+                lastArchivedDate = dateString;
+            }
+        }
+
         res.json({
             success: true,
             setIndex: setIndex || "--",

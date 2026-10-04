@@ -18,7 +18,6 @@
     .live-title-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px; }
     .live-title { font-size: 16px; color: #94a3b8; }
     
-    /* ဈေးကွက် အခြေအနေပြ အညွှန်းသင်္ကေတများ */
     .status-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: bold; }
     .status-live { color: #ef4444; display: inline-flex; align-items: center; gap: 4px; }
     .status-paused { color: #f59e0b; display: inline-flex; align-items: center; gap: 4px; }
@@ -35,7 +34,6 @@
     .set-label { font-size: 12px; color: #94a3b8; }
     .set-value { font-size: 16px; font-weight: bold; color: #e2e8f0; margin-top: 2px; }
 
-    /* 2D ထွက်ပေါ်ရာ ပင်မရင်းမြစ်ဂဏန်းများကို အပြာရောင်တောက်တောက်ပပ ပြသရန် */
     .source-digit {
       color: #38bdf8 !important;
       text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(56, 189, 248, 0.5);
@@ -44,7 +42,6 @@
 
     .audio-btn { background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 10px; cursor: pointer; }
     
-    /* ဇယားကွက်အသစ် ဒီဇိုင်း (Modern, Internet, TW များနှင့် အတန်းရှည်/အတို ပုံစံ) */
     .schedule-table-container { background: #1e293b; border-radius: 12px; padding: 12px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
     .table-header-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 13px; font-weight: bold; color: #38bdf8; padding-bottom: 6px; border-bottom: 1px solid #334155; }
     
@@ -61,12 +58,23 @@
     .chat-input-row input { flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; padding: 8px 12px; outline: none; }
     .chat-input-row button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
+    /* Calendar History Styles */
+    .calendar-container { background: #1e293b; border-radius: 16px; padding: 15px; border: 1px solid #334155; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .calendar-header button { background: #334155; color: #38bdf8; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .calendar-header h3 { font-size: 16px; color: #f8fafc; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+    .calendar-day-name { font-size: 12px; color: #94a3b8; font-weight: bold; padding-bottom: 5px; }
+    .calendar-cell { background: #0f172a; border: 1px solid #334155; border-radius: 8px; min-height: 55px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4px; }
+    .calendar-cell.empty { background: transparent; border: none; }
+    .cal-date { font-size: 11px; color: #94a3b8; }
+    .cal-val { font-size: 14px; font-weight: bold; color: #f59e0b; margin-top: 2px; }
+
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: space-around; padding: 10px 0; max-width: 450px; margin: 0 auto; z-index: 100; }
     .nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; font-size: 11px; cursor: pointer; text-decoration: none; border: none; background: none; flex: 1; }
     .nav-item.active { color: #38bdf8; font-weight: bold; }
     .nav-icon { font-size: 18px; margin-bottom: 2px; }
 
-    /* ငွေစက္ကူ ဝဲပျံကျသည့် Animation စတိုင်လ်များ */
     .falling-money {
       position: fixed;
       top: -60px;
@@ -115,7 +123,6 @@
         <button id="audio-btn" class="audio-btn" onclick="toggleSound()">🔊 အသံဖွင့်ထားသည်</button>
       </div>
 
-      <!-- ပုံစံအသစ် ဇယားကွက် (Modern, Internet, TW နှင့် အတန်းရှည်/အတို များ) -->
       <div class="schedule-table-container">
         <div class="table-header-row">
           <div></div>
@@ -125,7 +132,6 @@
         </div>
         
         <div class="table-row-group">
-          <!-- ပထမအတန်းရှည် (09:30 AM) -->
           <div class="market-row-item">
             <div class="row-time-label">09:30 AM</div>
             <div id="t0930_modern" class="row-val">--</div>
@@ -133,13 +139,11 @@
             <div id="t0930_tw" class="row-val">--</div>
           </div>
           
-          <!-- ညာဘက်အကွက်သေး (12:01 PM) -->
           <div class="market-row-item">
             <div class="row-time-label">12:01 PM</div>
             <div id="t1201_modern" class="row-val" style="grid-column: span 3;">--</div>
           </div>
 
-          <!-- ဒုတိယအတန်းရှည် (02:00 PM) -->
           <div class="market-row-item">
             <div class="row-time-label">02:00 PM</div>
             <div id="t1400_modern" class="row-val">--</div>
@@ -147,7 +151,6 @@
             <div id="t1400_tw" class="row-val">--</div>
           </div>
 
-          <!-- ညာဘက်အကွက်သေး (04:30 PM) -->
           <div class="market-row-item">
             <div class="row-time-label">04:30 PM</div>
             <div id="t1630_modern" class="row-val" style="grid-column: span 3;">--</div>
@@ -170,9 +173,25 @@
       <div class="card"><h2>🪙 ရွှေဈေးနှုန်းများ</h2></div>
     </div>
 
-    <!-- PAGE 3: 2D History -->
+    <!-- PAGE 3: 2D History (Calendar Archive) -->
     <div id="page-2d-history" class="tab-content">
-      <div class="card"><h2>📅 2D နေ့စဉ်မှတ်တမ်း</h2></div>
+      <div class="calendar-container">
+        <div class="calendar-header">
+          <button onclick="changeMonth(-1)">❮ ပြီးခဲ့သည့်လ</button>
+          <h3 id="calendarMonthTitle">လ၊ နှစ်</h3>
+          <button onclick="changeMonth(1)">နောက်လ ❯</button>
+        </div>
+        <div class="calendar-grid" id="calendarHeaderGrid">
+          <div class="calendar-day-name">တနင်္လာ</div>
+          <div class="calendar-day-name">အင်္ဂါ</div>
+          <div class="calendar-day-name">ဗုဒ္ဓဟူး</div>
+          <div class="calendar-day-name">ကြာသပတေး</div>
+          <div class="calendar-day-name">သောကြာ</div>
+          <div class="calendar-day-name" style="color: #ef4444;">စနေ</div>
+          <div class="calendar-day-name" style="color: #ef4444;">တနင်္ဂနွေ</div>
+        </div>
+        <div class="calendar-grid" id="calendarDaysGrid" style="margin-top: 5px;"></div>
+      </div>
     </div>
 
     <!-- PAGE 4: 3D History -->
@@ -200,6 +219,9 @@
     let announcedTimes = {};
     let soundEnabled = true;
     let isLiveActive = false;
+
+    let selectedYear = new Date().getFullYear();
+    let selectedMonth = new Date().getMonth();
 
     let lastSavedData = JSON.parse(localStorage.getItem('last_market_data')) || {
       setIndex: "----.--",
@@ -231,6 +253,61 @@
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       document.getElementById(pageId).classList.add('active');
       btn.classList.add('active');
+
+      if (pageId === 'page-2d-history') {
+        renderCalendar(selectedYear, selectedMonth);
+      }
+    }
+
+    // Calendar History Rendering
+    async function renderCalendar(year, month) {
+      const monthNames = ["ဇန်နဝါရီ", "ဖေဖော်ဝါရီ", "မတ်", "ဧပြီ", "မေ", "ဇွန်", "ဇူလိုင်", "သြဂုတ်", "စက်တင်ဘာ", "အောက်တိုဘာ", "နိုဝင်ဘာ", "ဒီဇင်ဘာ"];
+      document.getElementById('calendarMonthTitle').innerText = `${monthNames[month]} ${year}`;
+
+      let historyData = {};
+      try {
+        const res = await fetch(`/api/history?year=${year}&month=${month + 1}`);
+        const data = await res.json();
+        if (data.success) {
+          historyData = data.history || {};
+        }
+      } catch (e) {}
+
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      let startingDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      const grid = document.getElementById('calendarDaysGrid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i < startingDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'calendar-cell empty';
+        grid.appendChild(emptyCell);
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell';
+        
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const val = historyData[dateStr] || '--';
+
+        cell.innerHTML = `<div class="cal-date">${day}</div><div class="cal-val">${val}</div>`;
+        grid.appendChild(cell);
+      }
+    }
+
+    function changeMonth(direction) {
+      selectedMonth += direction;
+      if (selectedMonth > 11) {
+        selectedMonth = 0;
+        selectedYear++;
+      } else if (selectedMonth < 0) {
+        selectedMonth = 11;
+        selectedYear--;
+      }
+      renderCalendar(selectedYear, selectedMonth);
     }
 
     function speak2D() {
@@ -413,14 +490,12 @@
       return textStr;
     }
 
-    // ဆာဗာမှ Live ဒေတာနှင့် Admin ဇယားကွက် ဒေတာများကိုပါ တစ်ပါတည်း လှမ်းဆွဲခြင်း
     async function fetchLiveData() {
       try {
         const res = await fetch('/api/live');
         const data = await res.json();
         
         if(data.success) {
-          // Live ပင်မမျက်နှာပြင် ဒေတာများ update လုပ်ရန်
           if (data.live2D && data.live2D !== "--") {
             localStorage.setItem('last_market_data', JSON.stringify(data));
             
@@ -437,15 +512,12 @@
             }
           }
 
-          // Admin Control Panel မှ သိမ်းဆည်းထားသော 09:30 AM နှင့် 02:00 PM ဇယားကွက် အချက်အလက်များကို ထည့်သွင်းခြင်း
           if (data.schedule) {
-            // 09:30 AM
             if(data.schedule.t0930) {
               document.getElementById('t0930_modern').innerText = data.schedule.t0930.modern || "--";
               document.getElementById('t0930_internet').innerText = data.schedule.t0930.internet || "--";
               document.getElementById('t0930_tw').innerText = data.schedule.t0930.tw || "--";
             }
-            // 02:00 PM
             if(data.schedule.t1400) {
               document.getElementById('t1400_modern').innerText = data.schedule.t1400.modern || "--";
               document.getElementById('t1400_internet').innerText = data.schedule.t1400.internet || "--";
