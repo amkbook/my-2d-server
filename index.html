@@ -58,17 +58,21 @@
     .chat-input-row input { flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; padding: 8px 12px; outline: none; }
     .chat-input-row button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-    /* Calendar History Styles */
-    .calendar-container { background: #1e293b; border-radius: 16px; padding: 15px; border: 1px solid #334155; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .calendar-header button { background: #334155; color: #38bdf8; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-    .calendar-header h3 { font-size: 16px; color: #f8fafc; }
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-    .calendar-day-name { font-size: 12px; color: #94a3b8; font-weight: bold; padding-bottom: 5px; }
-    .calendar-cell { background: #0f172a; border: 1px solid #334155; border-radius: 8px; min-height: 55px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4px; }
-    .calendar-cell.empty { background: transparent; border: none; }
-    .cal-date { font-size: 11px; color: #94a3b8; }
-    .cal-val { font-size: 14px; font-weight: bold; color: #f59e0b; margin-top: 2px; }
+    /* 2D History List Styles (ပုံ 9654_2.jpg ပုံစံတူ) */
+    .history-list-container { display: flex; flex-direction: column; gap: 20px; }
+    .history-card { background: #1e3a8a; border-radius: 14px; padding: 15px; border: 2px solid #3b82f6; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 12px; }
+    .history-date-badge { background: #000000; color: #f8fafc; text-align: center; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; border: 1px solid #334155; align-self: center; margin-bottom: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+    
+    .history-top-results { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .history-res-box { background: #1e40af; border: 2px solid #60a5fa; border-radius: 10px; text-align: center; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .history-res-title { font-size: 12px; color: #bfdbfe; font-weight: bold; }
+    .history-res-val { font-size: 32px; font-weight: bold; color: #ffffff; }
+    .history-res-sub { display: flex; justify-content: space-around; background: #1e3a8a; border-radius: 6px; padding: 4px; font-size: 11px; color: #e2e8f0; border-top: 1px solid #3b82f6; }
+
+    .history-sub-table { background: #1e40af; border: 2px solid #60a5fa; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .history-sub-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 12px; font-weight: bold; color: #bfdbfe; border-bottom: 1px solid #3b82f6; padding-bottom: 4px; }
+    .history-sub-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 14px; font-weight: bold; color: #ffffff; align-items: center; padding: 2px 0; }
+    .history-sub-label { text-align: left; padding-left: 6px; font-size: 12px; color: #facc15; }
 
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: space-around; padding: 10px 0; max-width: 450px; margin: 0 auto; z-index: 100; }
     .nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; font-size: 11px; cursor: pointer; text-decoration: none; border: none; background: none; flex: 1; }
@@ -173,24 +177,16 @@
       <div class="card"><h2>🪙 ရွှေဈေးနှုန်းများ</h2></div>
     </div>
 
-    <!-- PAGE 3: 2D History (Calendar Archive) -->
+    <!-- PAGE 3: 2D History (List View - ပုံ 9654_2.jpg အတိုင်း) -->
     <div id="page-2d-history" class="tab-content">
-      <div class="calendar-container">
-        <div class="calendar-header">
-          <button onclick="changeMonth(-1)">❮ ပြီးခဲ့သည့်လ</button>
-          <h3 id="calendarMonthTitle">လ၊ နှစ်</h3>
-          <button onclick="changeMonth(1)">နောက်လ ❯</button>
-        </div>
-        <div class="calendar-grid" id="calendarHeaderGrid">
-          <div class="calendar-day-name">တနင်္လာ</div>
-          <div class="calendar-day-name">အင်္ဂါ</div>
-          <div class="calendar-day-name">ဗုဒ္ဓဟူး</div>
-          <div class="calendar-day-name">ကြာသပတေး</div>
-          <div class="calendar-day-name">သောကြာ</div>
-          <div class="calendar-day-name" style="color: #ef4444;">စနေ</div>
-          <div class="calendar-day-name" style="color: #ef4444;">တနင်္ဂနွေ</div>
-        </div>
-        <div class="calendar-grid" id="calendarDaysGrid" style="margin-top: 5px;"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;">
+        <span style="font-size: 20px; font-weight: bold; color: #ffffff; cursor: pointer;" onclick="switchTab('page-home', document.querySelector('.nav-item'))">←</span>
+        <div class="live-title" style="font-size: 18px; font-weight: bold; color: #ffffff;">2D Calendar</div>
+        <span style="font-size: 18px; color: #ffffff; cursor: pointer;">🔍</span>
+      </div>
+      
+      <div id="historyListContainer" class="history-list-container">
+        <!-- နေ့စဉ်မှတ်တမ်း Card များ ဤနေရာတွင် အလိုအလျောက် ပေါ်လာမည် -->
       </div>
     </div>
 
@@ -219,9 +215,6 @@
     let announcedTimes = {};
     let soundEnabled = true;
     let isLiveActive = false;
-
-    let selectedYear = new Date().getFullYear();
-    let selectedMonth = new Date().getMonth();
 
     let lastSavedData = JSON.parse(localStorage.getItem('last_market_data')) || {
       setIndex: "----.--",
@@ -255,59 +248,58 @@
       btn.classList.add('active');
 
       if (pageId === 'page-2d-history') {
-        renderCalendar(selectedYear, selectedMonth);
+        fetchHistoryList();
       }
     }
 
-    // Calendar History Rendering
-    async function renderCalendar(year, month) {
-      const monthNames = ["ဇန်နဝါရီ", "ဖေဖော်ဝါရီ", "မတ်", "ဧပြီ", "မေ", "ဇွန်", "ဇူလိုင်", "သြဂုတ်", "စက်တင်ဘာ", "အောက်တိုဘာ", "နိုဝင်ဘာ", "ဒီဇင်ဘာ"];
-      document.getElementById('calendarMonthTitle').innerText = `${monthNames[month]} ${year}`;
-
-      let historyData = {};
+    // နေ့စဉ်မှတ်တမ်း List များကို ဆာဗာမှ လှမ်းဆွဲ၍ ပုံ 9654_2.jpg အတိုင်း ဖော်ပြရန်
+    async function fetchHistoryList() {
       try {
-        const res = await fetch(`/api/history?year=${year}&month=${month + 1}`);
+        const res = await fetch('/api/history');
         const data = await res.json();
-        if (data.success) {
-          historyData = data.history || {};
+        if (data.success && data.history) {
+          const container = document.getElementById('historyListContainer');
+          if (data.history.length === 0) {
+            container.innerHTML = `<div class="card" style="color: #94a3b8; padding: 30px;">ယခုထိ သိမ်းဆည်းထားသော မှတ်တမ်း မရှိသေးပါ။ ညနေ 4:30 အမှန်ခြစ်ပေါ်ချိန်တွင် အလိုအလျောက် မှတ်တမ်းဝင်ပါမည်။</div>`;
+            return;
+          }
+
+          container.innerHTML = data.history.map(item => `
+            <div class="history-card">
+              <div class="history-date-badge">${item.dateFormatted || 'နေ့စွဲ'}</div>
+              <div class="history-top-results">
+                <div class="history-res-box">
+                  <div class="history-res-title">12:01 PM</div>
+                  <div class="history-res-val">${item.t1201 || '--'}</div>
+                  <div class="history-res-sub"><span>${item.setIndex || '--'}</span><span>${item.value || '--'}</span></div>
+                </div>
+                <div class="history-res-box">
+                  <div class="history-res-title">4:30 PM</div>
+                  <div class="history-res-val">${item.t430 || '--'}</div>
+                  <div class="history-res-sub"><span>${item.setIndex || '--'}</span><span>${item.value || '--'}</span></div>
+                </div>
+              </div>
+              <div class="history-sub-table">
+                <div class="history-sub-header">
+                  <div></div><div>Modern</div><div>Internet</div><div>TW</div>
+                </div>
+                <div class="history-sub-row">
+                  <div class="history-sub-label">09:30 AM</div>
+                  <div>${item.schedule?.t0930?.modern || '--'}</div>
+                  <div>${item.schedule?.t0930?.internet || '--'}</div>
+                  <div>${item.schedule?.t0930?.tw || '--'}</div>
+                </div>
+                <div class="history-sub-row">
+                  <div class="history-sub-label">02:00 PM</div>
+                  <div>${item.schedule?.t1400?.modern || '--'}</div>
+                  <div>${item.schedule?.t1400?.internet || '--'}</div>
+                  <div>${item.schedule?.t1400?.tw || '--'}</div>
+                </div>
+              </div>
+            </div>
+          `).join('');
         }
       } catch (e) {}
-
-      const firstDayIndex = new Date(year, month, 1).getDay();
-      let startingDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-      const totalDays = new Date(year, month + 1, 0).getDate();
-
-      const grid = document.getElementById('calendarDaysGrid');
-      grid.innerHTML = '';
-
-      for (let i = 0; i < startingDay; i++) {
-        const emptyCell = document.createElement('div');
-        emptyCell.className = 'calendar-cell empty';
-        grid.appendChild(emptyCell);
-      }
-
-      for (let day = 1; day <= totalDays; day++) {
-        const cell = document.createElement('div');
-        cell.className = 'calendar-cell';
-        
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const val = historyData[dateStr] || '--';
-
-        cell.innerHTML = `<div class="cal-date">${day}</div><div class="cal-val">${val}</div>`;
-        grid.appendChild(cell);
-      }
-    }
-
-    function changeMonth(direction) {
-      selectedMonth += direction;
-      if (selectedMonth > 11) {
-        selectedMonth = 0;
-        selectedYear++;
-      } else if (selectedMonth < 0) {
-        selectedMonth = 11;
-        selectedYear--;
-      }
-      renderCalendar(selectedYear, selectedMonth);
     }
 
     function speak2D() {

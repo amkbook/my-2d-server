@@ -31,7 +31,7 @@ let adminResults = {
     "02:00 PM": { modern: "--", internet: "--", tw: "--" }
 };
 
-// နေ့စဉ်မှတ်တမ်း (Calendar History) သိမ်းဆည်းရန် Array
+// နေ့စဉ်မှတ်တမ်း (Calendar History) သိမ်းဆည်းရန် Array (အများဆုံး ၁၀၀ သာ သိမ်းမည် - Memory သက်သာစေရန်)
 let historyRecords = [];
 let lastArchivedDate = ""; // တစ်နေ့လျှင် တစ်ကြိမ်သာ သိမ်းဆည်းရန် မှတ်သားရန်
 
@@ -177,20 +177,19 @@ app.get('/api/live', async (req, res) => {
             year: 'numeric'
         });
         const dayOfWeek = myanmarTime.toLocaleDateString('en-US', { weekday: 'long' });
-        // မြန်မာလို နေ့အမည်ပြောင်းရန် (လိုအပ်ပါက)
+        
         const daysMap = {
             "Sunday": "တနင်္ဂနွေ", "Monday": "တနင်္လာ", "Tuesday": "အင်္ဂါ",
             "Wednesday": "ဗုဒ္ဓဟူး", "Thursday": "ကြာသပတေး", "Friday": "သောကြာ", "Saturday": "စနေ"
         };
         const myanmarDay = daysMap[dayOfWeek] || dayOfWeek;
 
-        // ညနေ 4:30 ကျော်လွန်ပြီး ဈေးကွက်ပိတ်ချိန် (သို့ 4:30 အမှန်ခြစ်ပေါ်ချိန်) တစ်နေ့လျှင် တစ်ကြိမ် History သို့ အလိုအလျောက် သိမ်းဆည်းရန်
-        // ဥပမာ: 16:30 (4:30 PM) နှင့်အထက်ရောက်ပြီးcalculated2D ရနေပြီဆိုလျှင်
+        // ညနေ 4:30 ကျော်လွန်ပြီး ဈေးကွက်ပိတ်ချိန်တွင် တစ်နေ့လျှင် တစ်ကြိမ် History သို့ အလိုအလျောက် သိမ်းဆည်းရန်
         if ((currentHour > 16 || (currentHour === 16 && currentMinute >= 30)) && calculated2D !== "--") {
             if (lastArchivedDate !== dateString) {
                 const newRecord = {
                     dateFormatted: `${myanmarDay} - ${dateString}`,
-                    t1201: calculated2D, // သို့မဟုတ် ထိုအချိန်ကပေါက်သော 12:01 / 4:30 ရလဒ်
+                    t1201: calculated2D, 
                     t430: calculated2D,
                     setIndex: setIndex || "--",
                     value: marketValue || "--",
@@ -199,8 +198,15 @@ app.get('/api/live', async (req, res) => {
                         t1400: { ...adminResults["02:00 PM"] }
                     }
                 };
+                
                 // အသစ်ကို ထိပ်ဆုံးမှ ထည့်မည်
                 historyRecords.unshift(newRecord);
+                
+                // မှတ်တမ်း ၁၀၀ ထက် ကျော်လွန်သွားပါက ဟိုးအောက်ဆုံးမှ (အဟောင်းဆုံး) မှတ်တမ်းကို အလိုအလျောက် ဖယ်ရှားမည်
+                if (historyRecords.length > 100) {
+                    historyRecords.pop();
+                }
+
                 lastArchivedDate = dateString;
             }
         }
