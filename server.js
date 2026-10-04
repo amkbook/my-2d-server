@@ -176,6 +176,7 @@ app.get('/api/live', async (req, res) => {
             month: 'long',
             year: 'numeric'
         });
+        const dayOfWeekIndex = myanmarTime.getDay(); // 0 = Sunday, 6 = Saturday
         const dayOfWeek = myanmarTime.toLocaleDateString('en-US', { weekday: 'long' });
         
         const daysMap = {
@@ -184,30 +185,35 @@ app.get('/api/live', async (req, res) => {
         };
         const myanmarDay = daysMap[dayOfWeek] || dayOfWeek;
 
-        // ညနေ 4:30 ကျော်လွန်ပြီး ဈေးကွက်ပိတ်ချိန်တွင် တစ်နေ့လျှင် တစ်ကြိမ် History သို့ အလိုအလျောက် သိမ်းဆည်းရန်
-        if ((currentHour > 16 || (currentHour === 16 && currentMinute >= 30)) && calculated2D !== "--") {
-            if (lastArchivedDate !== dateString) {
-                const newRecord = {
-                    dateFormatted: `${myanmarDay} - ${dateString}`,
-                    t1201: calculated2D, 
-                    t430: calculated2D,
-                    setIndex: setIndex || "--",
-                    value: marketValue || "--",
-                    schedule: {
-                        t0930: { ...adminResults["09:30 AM"] },
-                        t1400: { ...adminResults["02:00 PM"] }
-                    }
-                };
-                
-                // အသစ်ကို ထိပ်ဆုံးမှ ထည့်မည်
-                historyRecords.unshift(newRecord);
-                
-                // မှတ်တမ်း ၁၀၀ ထက် ကျော်လွန်သွားပါက ဟိုးအောက်ဆုံးမှ (အဟောင်းဆုံး) မှတ်တမ်းကို အလိုအလျောက် ဖယ်ရှားမည်
-                if (historyRecords.length > 100) {
-                    historyRecords.pop();
-                }
+        // စနေ (6)၊ တနင်္ဂနွေ (0) သို့မဟုတ် ဈေးကွက်ပိတ်ရက် (SET Index / Value မရှိခြင်း) ဖြစ်ပါက History တွင် လုံးဝမသိမ်းပါ
+        const isWeekend = (dayOfWeekIndex === 0 || dayOfWeekIndex === 6);
 
-                lastArchivedDate = dateString;
+        // ညနေ 4:30 ကျော်လွန်ပြီး ဈေးကွက်ပိတ်ချိန်၊ ရက်မှန်ကန်ပြီး ဈေးကွက်အမှန်တကယ် ပွင့်ခဲ့မှသာ (SET Index & Value ရှိမှသာ) History သို့ သိမ်းမည်
+        if ((currentHour > 16 || (currentHour === 16 && currentMinute >= 30)) && calculated2D !== "--") {
+            if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
+                if (lastArchivedDate !== dateString) {
+                    const newRecord = {
+                        dateFormatted: `${myanmarDay} - ${dateString}`,
+                        t1201: calculated2D, 
+                        t430: calculated2D,
+                        setIndex: setIndex || "--",
+                        value: marketValue || "--",
+                        schedule: {
+                            t0930: { ...adminResults["09:30 AM"] },
+                            t1400: { ...adminResults["02:00 PM"] }
+                        }
+                    };
+                    
+                    // အသစ်ကို ထိပ်ဆုံးမှ ထည့်မည်
+                    historyRecords.unshift(newRecord);
+                    
+                    // မှတ်တမ်း ၁၀၀ ထက် ကျော်လွန်သွားပါက ဟိုးအောက်ဆုံးမှ (အဟောင်းဆုံး) မှတ်တမ်းကို အလိုအလျောက် ဖယ်ရှားမည်
+                    if (historyRecords.length > 100) {
+                        historyRecords.pop();
+                    }
+
+                    lastArchivedDate = dateString;
+                }
             }
         }
 
