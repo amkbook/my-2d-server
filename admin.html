@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Admin Control Panel</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="w-full max-w-md bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-700">
+        <h1 class="text-2xl font-bold text-center mb-6 text-yellow-400">2D Admin Control Panel</h1>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1">Admin Password</label>
+                <input type="password" id="passwordInput" placeholder="စကားဝှက်ထည့်ပါ" 
+                    class="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-yellow-400 text-white">
+            </div>
+            <button onclick="adminLogin()" 
+                class="w-full bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-bold py-2 rounded-lg transition">
+                လော့ဂ်အင်ဝင်မည်
+            </button>
+            <p id="loginError" class="text-red-400 text-sm text-center hidden">စကားဝှက် မှားယွင်းနေပါသည်။</p>
+        </div>
+
+        <!-- Control Panel Form (Login ပြီးမှ ပေါ်မည်) -->
+        <div id="controlSection" class="hidden space-y-6">
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+                <h2 class="text-lg font-semibold text-yellow-400 mb-3">ဇယားကွက် ဂဏန်းများ ထိန်းချုပ်ရန်</h2>
+                
+                <!-- Session Selection -->
+                <div class="mb-4">
+                    <label class="block text-sm text-slate-300 mb-1">အချိန်အကွက် (Session)</label>
+                    <select id="sessionSelect" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
+                        <option value="09:30 AM">09:30 AM</option>
+                        <option value="02:00 PM">02:00 PM</option>
+                    </select>
+                </div>
+
+                <!-- Modern Input -->
+                <div class="mb-3">
+                    <label class="block text-sm text-slate-300 mb-1">Modern ဂဏန်း</label>
+                    <input type="text" id="modernInput" placeholder="ဥပမာ - 45" 
+                        class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
+                </div>
+
+                <!-- Internet Input -->
+                <div class="mb-3">
+                    <label class="block text-sm text-slate-300 mb-1">Internet ဂဏန်း</label>
+                    <input type="text" id="internetInput" placeholder="ဥပမာ - 78" 
+                        class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
+                </div>
+
+                <!-- TW Input -->
+                <div class="mb-4">
+                    <label class="block text-sm text-slate-300 mb-1">TW ဂဏန်း</label>
+                    <input type="text" id="twInput" placeholder="ဥပမာ - 12" 
+                        class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
+                </div>
+
+                <button onclick="saveData()" 
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2 rounded-lg transition">
+                    အချက်အလက် သိမ်းဆည်းမည် (Save)
+                </button>
+            </div>
+
+            <p id="saveStatus" class="text-green-400 text-sm text-center hidden"></p>
+            
+            <div class="text-center">
+                <a href="/" target="_blank" class="text-blue-400 hover:underline text-sm">ပင်မ 2D Live စာမျက်နှာသို့ သွားရန် →</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPassword = "";
+
+        async function adminLogin() {
+            const pwd = document.getElementById('passwordInput').value;
+            const errorText = document.getElementById('loginError');
+
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    currentPassword = pwd;
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('controlSection').classList.remove('hidden');
+                } else {
+                    errorText.classList.remove('hidden');
+                }
+            } catch (err) {
+                alert('ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။');
+            }
+        }
+
+        async function saveData() {
+            const session = document.getElementById('sessionSelect').value;
+            const modern = document.getElementById('modernInput').value;
+            const internet = document.getElementById('internetInput').value;
+            const tw = document.getElementById('twInput').value;
+            const statusText = document.getElementById('saveStatus');
+
+            try {
+                const response = await fetch('/api/admin/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        password: currentPassword,
+                        session: session,
+                        modern: modern,
+                        internet: internet,
+                        tw: tw
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    statusText.innerText = data.message;
+                    statusText.classList.remove('hidden');
+                    setTimeout(() => statusText.classList.add('hidden'), 4000);
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိသွားပါသည်။');
+            }
+        }
+    </script>
+</body>
+</html>

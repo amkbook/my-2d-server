@@ -6,6 +6,7 @@ const path = require('path');
 
 const app = express();
 app.use(cors());
+app.use(express.json()); // Global JSON body parser
 app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 3000;
@@ -14,10 +15,62 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Admin Control Panel စာမျက်နှာအတွက် သီးသန့် route (admin.html ဖန်တီးမည့်အခါ သုံးရန်)
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 // Chat messages သိမ်းဆည်းရန် Array
 let chatMessages = [
     { user: "System", text: "2D Live Market App သို့ ကြိုဆိုပါသည်။" }
 ];
+
+// Admin မှ ထိန်းချုပ်မည့် 09:30 AM နှင့် 02:00 PM ဇယားကွက်အချက်အလက်များ သိမ်းဆည်းရန် Store
+let adminResults = {
+    "09:30 AM": { modern: "--", internet: "--", tw: "--" },
+    "02:00 PM": { modern: "--", internet: "--", tw: "--" }
+};
+
+// 1. Admin Login API
+app.post('/api/admin/login', (req, res) => {
+    const { password } = req.body;
+    if (password === '2dpro153791') {
+        res.json({ success: true, message: "Login successful" });
+    } else {
+        res.status(401).json({ success: false, message: "စကားဝှက် (Password) မှားယွင်းနေပါသည်။" });
+    }
+});
+
+// 2. Admin Data Save API (09:30 AM / 02:00 PM ကိန်းဂဏန်းများ သိမ်းရန်)
+app.post('/api/admin/save', (req, res) => {
+    const { password, session, modern, internet, tw } = req.body;
+    
+    if (password !== '2dpro153791') {
+        return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
+    }
+
+    if (session && adminResults[session]) {
+        if (modern !== undefined && modern !== "") adminResults[session].modern = modern;
+        if (internet !== undefined && internet !== "") adminResults[session].internet = internet;
+        if (tw !== undefined && tw !== "") adminResults[session].tw = tw;
+
+        return res.json({ 
+            success: true, 
+            message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။`, 
+            adminResults 
+        });
+    }
+
+    res.status(400).json({ success: false, message: "မှားယွင်းနေသော Session ဖြစ်ပါသည်။" });
+});
+
+// 3. Admin သိမ်းဆည်းထားသော အချက်အလက်များကို Frontend မှ ဖတ်ရှုရန် API
+app.get('/api/admin/data', (req, res) => {
+    res.json({
+        success: true,
+        adminResults
+    });
+});
 
 // SET market data ကို တိုက်ရိုက် Scrape လုပ်မည့် Endpoint
 app.get('/api/live', async (req, res) => {
@@ -109,6 +162,7 @@ app.get('/api/live', async (req, res) => {
             setIndex: setIndex || "--",
             value: marketValue || "--",
             live2D: calculated2D,
+            adminResults: adminResults, // Admin ထည့်ထားသော ဒေတာများကိုပါ တစ်ခါတည်း ပို့ပေးမည်
             notice: "2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။",
             time: currentTime
         });
@@ -124,7 +178,8 @@ app.get('/api/live', async (req, res) => {
             setIndex: "--",
             value: "--",
             live2D: "--",
-            notice: "ဈေးကွက်ပိတ်ထားသည် (သို့) ချိတ်ဆက်မှု စောင့်ဆိုင်းနေသည်...",
+            adminResults: adminResults,
+            notice: "ဈေးကွက်ပိတ်ထားသည် (ို့) ချိတ်ဆက်မှု စောင့်ဆိုင်းနေသည်...",
             time: currentTime
         });
     }
@@ -139,7 +194,7 @@ app.get('/api/chat', (req, res) => {
 });
 
 // Chat POST Endpoint
-app.post('/api/chat', express.json(), (req, res) => {
+app.post('/api/chat', (req, res) => {
     const { user, text } = req.body;
     if (text) {
         chatMessages.push({ user: user || "User", text: text });
