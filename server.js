@@ -6,7 +6,7 @@ const path = require('path');
 
 const app = express();
 app.use(cors());
-app.use(express.json()); // Global JSON body parser
+app.use(express.json());
 app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 3000;
@@ -15,36 +15,31 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Admin Control Panel စာမျက်နှာအတွက် သီးသန့် route
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// Chat messages သိမ်းဆည်းရန် Array
 let chatMessages = [
     { user: "System", text: "2D Live Market App သို့ ကြိုဆိုပါသည်။" }
 ];
 
-// Admin မှ ထိန်းချုပ်မည့် 09:30 AM နှင့် 02:00 PM ဇယားကွက်အချက်အလက်များ သိမ်းဆည်းရန် Store
 let adminResults = {
     "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
     "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false }
 };
 
-let currentAdminDate = ""; // ရက်စွဲအသောင်းပြောင်းလဲပါက အလိုအလျောက် ရှင်းလင်းရန်
+let currentAdminDate = "";
 
-// မြန်မာစံတော်ချိန် ရယူရန် Helper Function
 function getMyanmarTime() {
     const now = new Date();
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     return new Date(utc + (3600000 * 6.5));
 }
 
-// နေ့စဉ်မှတ်တမ်း (Calendar History) သိမ်းဆည်းရန် Array
 let historyRecords = [];
-let lastArchivedDate = ""; 
+let lastArchivedDate1201 = ""; 
+let lastArchivedDate430 = "";  
 
-// 1. Admin Login API
 app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
     if (password === '2dpro153791') {
@@ -54,7 +49,6 @@ app.post('/api/admin/login', (req, res) => {
     }
 });
 
-// 2. Admin Data Save API (တစ်ရက်လျှင် တစ်ကြိမ်သာ သိမ်းဆည်းခွင့်ပြုရန်နှင့် Lock ချရန်)
 app.post('/api/admin/save', (req, res) => {
     const { password, session, modern, internet, tw } = req.body;
     
@@ -65,7 +59,6 @@ app.post('/api/admin/save', (req, res) => {
     const myanmarTime = getMyanmarTime();
     const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
 
-    // ရက်အသစ်သို့ ပြောင်းသွားပါက ဒေတာများကို ရှင်းလင်းပေးမည် (Reset for a new day)
     if (currentAdminDate !== todayDateStr) {
         currentAdminDate = todayDateStr;
         adminResults = {
@@ -75,7 +68,6 @@ app.post('/api/admin/save', (req, res) => {
     }
 
     if (session && adminResults[session]) {
-        // တစ်ကြိမ် သိမ်းပြီးသား (Locked) ဖြစ်နေပါက ထပ်မံပြင်ဆင်ခွင့် မပြုတော့ပါ
         if (adminResults[session].isLocked) {
             return res.status(400).json({ 
                 success: false, 
@@ -87,7 +79,6 @@ app.post('/api/admin/save', (req, res) => {
         if (internet !== undefined && internet !== "") adminResults[session].internet = internet;
         if (tw !== undefined && tw !== "") adminResults[session].tw = tw;
 
-        // တန်ဖိုးတစ်ခုခု ဖြည့်သွင်းပြီးပါက Lock ချလိုက်မည် (တစ်ရက်မှာ တစ်ကြိမ်သာ သတ်မှတ်နိုင်ရန်)
         if (adminResults[session].modern !== "--" || adminResults[session].internet !== "--" || adminResults[session].tw !== "--") {
             adminResults[session].isLocked = true;
         }
@@ -102,12 +93,10 @@ app.post('/api/admin/save', (req, res) => {
     res.status(400).json({ success: false, message: "မှားယွင်းနေသော Session ဖြစ်ပါသည်။" });
 });
 
-// 3. Admin သိမ်းဆည်းထားသော အချက်အလက်များကို Frontend မှ ဖတ်ရှုရန် API
 app.get('/api/admin/data', (req, res) => {
     const myanmarTime = getMyanmarTime();
     const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
     
-    // ရက်စွဲကူးပြောင်းသွားပါက စစ်ဆေးပေးမည်
     if (currentAdminDate !== todayDateStr) {
         currentAdminDate = todayDateStr;
         adminResults = {
@@ -122,7 +111,6 @@ app.get('/api/admin/data', (req, res) => {
     });
 });
 
-// 4. နေ့စဉ်မှတ်တမ်း (History) ရယူရန် API
 app.get('/api/history', (req, res) => {
     res.json({
         success: true,
@@ -130,7 +118,6 @@ app.get('/api/history', (req, res) => {
     });
 });
 
-// SET market data ကို တိုက်ရိုက် Scrape လုပ်မည့် Endpoint
 app.get('/api/live', async (req, res) => {
     try {
         const url = 'https://www.set.or.th/en/home';
@@ -147,7 +134,6 @@ app.get('/api/live', async (req, res) => {
         let setIndex = '';
         let marketValue = '';
 
-        // 1. SET Index ကို ရှာဖွေခြင်း
         $('.mkt-info-value, .value, h3, span').each((i, el) => {
             const text = $(el).text().trim();
             if (text.includes('.') && text.length >= 6 && text.length <= 10 && !setIndex) {
@@ -157,7 +143,6 @@ app.get('/api/live', async (req, res) => {
             }
         });
 
-        // 2. ပင်မ SET တန်း၏ Value (M.Baht) ကို တိကျစွာ ရှာဖွေခြင်း
         $('tr, div, li').each((i, el) => {
             const rowText = $(el).text().trim();
             
@@ -226,31 +211,73 @@ app.get('/api/live', async (req, res) => {
             "Wednesday": "ဗုဒ္ဓဟူး", "Thursday": "ကြာသပတေး", "Friday": "သောကြာ", "Saturday": "စနေ"
         };
         const myanmarDay = daysMap[dayOfWeek] || dayOfWeek;
-
         const isWeekend = (dayOfWeekIndex === 0 || dayOfWeekIndex === 6);
 
+        // 12:01 PM မှတ်တမ်းတင်ခြင်း
+        if ((currentHour === 12 && currentMinute >= 1) || currentHour > 12) {
+            if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
+                if (lastArchivedDate1201 !== dateString) {
+                    let existingRecord = historyRecords.find(r => r.dateStr === dateString);
+                    if (!existingRecord) {
+                        existingRecord = {
+                            dateStr: dateString,
+                            dateFormatted: `${myanmarDay}\n${dateString}`,
+                            t1201: calculated2D, 
+                            t430: "--",
+                            setIndex1201: setIndex,
+                            value1201: marketValue,
+                            setIndex430: "--",
+                            value430: "--",
+                            schedule: {
+                                t0930: { ...adminResults["09:30 AM"] },
+                                t1400: { ...adminResults["02:00 PM"] }
+                            }
+                        };
+                        historyRecords.unshift(existingRecord);
+                    } else {
+                        existingRecord.t1201 = calculated2D;
+                        existingRecord.setIndex1201 = setIndex;
+                        existingRecord.value1201 = marketValue;
+                    }
+                    if (historyRecords.length > 100) historyRecords.pop();
+                    lastArchivedDate1201 = dateString;
+                }
+            }
+        }
+
+        // 4:30 PM မှတ်တမ်းတင်ခြင်း
         if ((currentHour > 16 || (currentHour === 16 && currentMinute >= 30)) && calculated2D !== "--") {
             if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
-                if (lastArchivedDate !== dateString) {
-                    const newRecord = {
-                        dateFormatted: `${myanmarDay}\n${dateString}`,
-                        t1201: calculated2D, 
-                        t430: calculated2D,
-                        setIndex: setIndex || "--",
-                        value: marketValue || "--",
-                        schedule: {
-                            t0930: { ...adminResults["09:30 AM"] },
-                            t1400: { ...adminResults["02:00 PM"] }
+                if (lastArchivedDate430 !== dateString) {
+                    let existingRecord = historyRecords.find(r => r.dateStr === dateString);
+                    if (!existingRecord) {
+                        existingRecord = {
+                            dateStr: dateString,
+                            dateFormatted: `${myanmarDay}\n${dateString}`,
+                            t1201: calculated2D, 
+                            t430: calculated2D,
+                            setIndex1201: setIndex,
+                            value1201: marketValue,
+                            setIndex430: setIndex,
+                            value430: marketValue,
+                            schedule: {
+                                t0930: { ...adminResults["09:30 AM"] },
+                                t1400: { ...adminResults["02:00 PM"] }
+                            }
+                        };
+                        historyRecords.unshift(existingRecord);
+                    } else {
+                        existingRecord.t430 = calculated2D;
+                        existingRecord.setIndex430 = setIndex;
+                        existingRecord.value430 = marketValue;
+                        if (!existingRecord.t1201 || existingRecord.t1201 === "--") {
+                            existingRecord.t1201 = calculated2D;
+                            existingRecord.setIndex1201 = setIndex;
+                            existingRecord.value1201 = marketValue;
                         }
-                    };
-                    
-                    historyRecords.unshift(newRecord);
-                    
-                    if (historyRecords.length > 100) {
-                        historyRecords.pop();
                     }
-
-                    lastArchivedDate = dateString;
+                    if (historyRecords.length > 100) historyRecords.pop();
+                    lastArchivedDate430 = dateString;
                 }
             }
         }
@@ -283,13 +310,12 @@ app.get('/api/live', async (req, res) => {
                 t0930: adminResults["09:30 AM"],
                 t1400: adminResults["02:00 PM"]
             },
-            notice: "ဈေးကွက်ပိတ်ထားသည် (ို့) ချိတ်ဆက်မှု စောင့်ဆိုင်းနေသည်...",
+            notice: "ဈေးကွက်ပိတ်ထားသည် (သို့) ချိတ်ဆက်မှု စောင့်ဆိုင်းနေသည်...",
             time: currentTime
         });
     }
 });
 
-// Chat GET Endpoint
 app.get('/api/chat', (req, res) => {
     res.json({
         success: true,
@@ -297,7 +323,6 @@ app.get('/api/chat', (req, res) => {
     });
 });
 
-// Chat POST Endpoint
 app.post('/api/chat', (req, res) => {
     const { user, text } = req.body;
     if (text) {
