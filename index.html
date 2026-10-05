@@ -58,7 +58,7 @@
     .chat-input-row input { flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; padding: 8px 12px; outline: none; }
     .chat-input-row button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-    /* 2D History List Styles (ပုံ 9654_2.jpg ပုံစံတူ) */
+    /* 2D History List Styles */
     .history-list-container { display: flex; flex-direction: column; gap: 20px; }
     .history-card { background: #1e3a8a; border-radius: 14px; padding: 15px; border: 2px solid #3b82f6; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 12px; }
     .history-date-badge { background: #000000; color: #f8fafc; text-align: center; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; border: 1px solid #334155; align-self: center; margin-bottom: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
@@ -177,7 +177,7 @@
       <div class="card"><h2>🪙 ရွှေဈေးနှုန်းများ</h2></div>
     </div>
 
-    <!-- PAGE 3: 2D History (List View - ပုံ 9654_2.jpg အတိုင်း) -->
+    <!-- PAGE 3: 2D History -->
     <div id="page-2d-history" class="tab-content">
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;">
         <span style="font-size: 20px; font-weight: bold; color: #ffffff; cursor: pointer;" onclick="switchTab('page-home', document.querySelector('.nav-item'))">←</span>
@@ -185,9 +185,7 @@
         <span style="font-size: 18px; color: #ffffff; cursor: pointer;">🔍</span>
       </div>
       
-      <div id="historyListContainer" class="history-list-container">
-        <!-- နေ့စဉ်မှတ်တမ်း Card များ ဤနေရာတွင် အလိုအလျောက် ပေါ်လာမည် -->
-      </div>
+      <div id="historyListContainer" class="history-list-container"></div>
     </div>
 
     <!-- PAGE 4: 3D History -->
@@ -252,7 +250,6 @@
       }
     }
 
-    // နေ့စဉ်မှတ်တမ်း List များကို ဆာဗာမှ လှမ်းဆွဲ၍ ပုံ 9654_2.jpg အတိုင်း ဖော်ပြရန်
     async function fetchHistoryList() {
       try {
         const res = await fetch('/api/history');
@@ -260,7 +257,7 @@
         if (data.success && data.history) {
           const container = document.getElementById('historyListContainer');
           if (data.history.length === 0) {
-            container.innerHTML = `<div class="card" style="color: #94a3b8; padding: 30px;">ယခုထိ သိမ်းဆည်းထားသော မှတ်တမ်း မရှိသေးပါ။ ညနေ 4:30 အမှန်ခြစ်ပေါ်ချိန်တွင် အလိုအလျောက် မှတ်တမ်းဝင်ပါမည်။</div>`;
+            container.innerHTML = `<div class="card" style="color: #94a3b8; padding: 30px;">ယခုထိ သိမ်းဆည်းထားသော မှတ်တမ်း မရှိသေးပါ။ နေ့လည် 12:01 နှင့် ညနေ 4:30 ချိန်များတွင် အလိုအလျောက် မှတ်တမ်းဝင်ပါမည်။</div>`;
             return;
           }
 
@@ -271,12 +268,12 @@
                 <div class="history-res-box">
                   <div class="history-res-title">12:01 PM</div>
                   <div class="history-res-val">${item.t1201 || '--'}</div>
-                  <div class="history-res-sub"><span>${item.setIndex || '--'}</span><span>${item.value || '--'}</span></div>
+                  <div class="history-res-sub"><span>${item.setIndex1201 || item.setIndex || '--'}</span><span>${item.value1201 || item.value || '--'}</span></div>
                 </div>
                 <div class="history-res-box">
                   <div class="history-res-title">4:30 PM</div>
                   <div class="history-res-val">${item.t430 || '--'}</div>
-                  <div class="history-res-sub"><span>${item.setIndex || '--'}</span><span>${item.value || '--'}</span></div>
+                  <div class="history-res-sub"><span>${item.setIndex430 || item.setIndex || '--'}</span><span>${item.value430 || item.value || '--'}</span></div>
                 </div>
               </div>
               <div class="history-sub-table">
@@ -382,30 +379,37 @@
       
       const hours = myanmarTime.getHours();
       const minutes = myanmarTime.getMinutes();
-      const totalMinutes = hours * 60 + minutes;
+      const seconds = myanmarTime.getSeconds();
+      const totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
-      const morningStart = 9 * 60;      // 9:00 AM
-      const morningEnd = 12 * 60 + 1;    // 12:01 PM
-      const afternoonStart = 14 * 60;    // 2:00 PM
-      const afternoonEnd = 16 * 60 + 30; // 4:30 PM
+      const morningStart = 9 * 3600 + 30 * 60;
+      const morningEnd = 12 * 3600 + 1 * 60;
+      const afternoonStart = 14 * 3600;
+      const afternoonEnd = 16 * 3600 + 30 * 60;
 
-      let inMorningLive = (totalMinutes >= morningStart && totalMinutes <= morningEnd);
-      let inAfternoonLive = (totalMinutes >= afternoonStart && totalMinutes <= afternoonEnd);
+      let inMorningLive = (totalSeconds >= morningStart && totalSeconds < morningEnd);
+      let inAfternoonLive = (totalSeconds >= afternoonStart && totalSeconds < afternoonEnd);
+
+      if (totalSeconds >= morningEnd && totalSeconds < afternoonStart) {
+        updateMarketUI('paused');
+      } else if (totalSeconds >= afternoonEnd || totalSeconds < morningStart) {
+        updateMarketUI('closed');
+      }
 
       if (inMorningLive || inAfternoonLive) {
         isLiveActive = true;
         updateMarketUI('live');
 
-        if (hours === 11 && minutes === 45 && !announcedTimes['m1145']) {
+        if (hours === 11 && minutes === 45 && seconds === 0 && !announcedTimes['m1145']) {
           announcedTimes['m1145'] = true;
           playAnnouncement('min15');
         }
-        if (hours === 11 && minutes === 58 && !announcedTimes['m1158']) {
+        if (hours === 11 && minutes === 58 && seconds === 0 && !announcedTimes['m1158']) {
           announcedTimes['m1158'] = true;
           playAnnouncement('min3');
         }
 
-        if (hours === 12 && minutes === 1) {
+        if (hours === 12 && minutes === 1 && seconds === 0) {
           if (!announcedTimes['m1201']) {
             announcedTimes['m1201'] = true;
             startMoneyRain();
@@ -416,16 +420,16 @@
           }
         }
 
-        if (hours === 15 && minutes === 15 && !announcedTimes['e1515']) {
+        if (hours === 15 && minutes === 15 && seconds === 0 && !announcedTimes['e1515']) {
           announcedTimes['e1515'] = true;
           playAnnouncement('min15');
         }
-        if (hours === 15 && minutes === 27 && !announcedTimes['e1527']) {
+        if (hours === 15 && minutes === 27 && seconds === 0 && !announcedTimes['e1527']) {
           announcedTimes['e1527'] = true;
           playAnnouncement('min3');
         }
 
-        if (hours === 16 && minutes === 30) {
+        if (hours === 16 && minutes === 30 && seconds === 0) {
           if (!announcedTimes['e1630']) {
             announcedTimes['e1630'] = true;
             startMoneyRain();
@@ -438,10 +442,14 @@
 
       } else {
         isLiveActive = false;
-        updateMarketUI('paused');
+        if (totalSeconds >= morningEnd && totalSeconds < afternoonStart) {
+          updateMarketUI('paused');
+        } else {
+          updateMarketUI('closed');
+        }
       }
 
-      if (hours === 9 && minutes === 0 && !announcedTimes['reset_0900']) {
+      if (hours === 9 && minutes === 0 && seconds === 0 && !announcedTimes['reset_0900']) {
         announcedTimes = { 'reset_0900': true };
         document.getElementById('t0930_modern').innerText = "--";
         document.getElementById('t0930_internet').innerText = "--";
@@ -483,6 +491,8 @@
     }
 
     async function fetchLiveData() {
+      if (!isLiveActive) return;
+
       try {
         const res = await fetch('/api/live');
         const data = await res.json();

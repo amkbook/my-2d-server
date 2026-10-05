@@ -27,13 +27,22 @@ let chatMessages = [
 
 // Admin မှ ထိန်းချုပ်မည့် 09:30 AM နှင့် 02:00 PM ဇယားကွက်အချက်အလက်များ သိမ်းဆည်းရန် Store
 let adminResults = {
-    "09:30 AM": { modern: "--", internet: "--", tw: "--" },
-    "02:00 PM": { modern: "--", internet: "--", tw: "--" }
+    "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
+    "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false }
 };
 
-// နေ့စဉ်မှတ်တမ်း (Calendar History) သိမ်းဆည်းရန် Array (အများဆုံး ၁၀၀ သာ သိမ်းမည် - Memory သက်သာစေရန်)
+let currentAdminDate = ""; // ရက်စွဲအသောင်းပြောင်းလဲပါက အလိုအလျောက် ရှင်းလင်းရန်
+
+// မြန်မာစံတော်ချိန် ရယူရန် Helper Function
+function getMyanmarTime() {
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    return new Date(utc + (3600000 * 6.5));
+}
+
+// နေ့စဉ်မှတ်တမ်း (Calendar History) သိမ်းဆည်းရန် Array
 let historyRecords = [];
-let lastArchivedDate = ""; // တစ်နေ့လျှင် တစ်ကြိမ်သာ သိမ်းဆည်းရန် မှတ်သားရန်
+let lastArchivedDate = ""; 
 
 // 1. Admin Login API
 app.post('/api/admin/login', (req, res) => {
@@ -45,7 +54,7 @@ app.post('/api/admin/login', (req, res) => {
     }
 });
 
-// 2. Admin Data Save API (09:30 AM / 02:00 PM ကိန်းဂဏန်းများ သိမ်းရန်)
+// 2. Admin Data Save API (တစ်ရက်လျှင် တစ်ကြိမ်သာ သိမ်းဆည်းခွင့်ပြုရန်နှင့် Lock ချရန်)
 app.post('/api/admin/save', (req, res) => {
     const { password, session, modern, internet, tw } = req.body;
     
@@ -53,14 +62,39 @@ app.post('/api/admin/save', (req, res) => {
         return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
     }
 
+    const myanmarTime = getMyanmarTime();
+    const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
+
+    // ရက်အသစ်သို့ ပြောင်းသွားပါက ဒေတာများကို ရှင်းလင်းပေးမည် (Reset for a new day)
+    if (currentAdminDate !== todayDateStr) {
+        currentAdminDate = todayDateStr;
+        adminResults = {
+            "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
+            "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false }
+        };
+    }
+
     if (session && adminResults[session]) {
+        // တစ်ကြိမ် သိမ်းပြီးသား (Locked) ဖြစ်နေပါက ထပ်မံပြင်ဆင်ခွင့် မပြုတော့ပါ
+        if (adminResults[session].isLocked) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `${session} အတွက် ဂဏန်းများကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်)။` 
+            });
+        }
+
         if (modern !== undefined && modern !== "") adminResults[session].modern = modern;
         if (internet !== undefined && internet !== "") adminResults[session].internet = internet;
         if (tw !== undefined && tw !== "") adminResults[session].tw = tw;
 
+        // တန်ဖိုးတစ်ခုခု ဖြည့်သွင်းပြီးပါက Lock ချလိုက်မည် (တစ်ရက်မှာ တစ်ကြိမ်သာ သတ်မှတ်နိုင်ရန်)
+        if (adminResults[session].modern !== "--" || adminResults[session].internet !== "--" || adminResults[session].tw !== "--") {
+            adminResults[session].isLocked = true;
+        }
+
         return res.json({ 
             success: true, 
-            message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။`, 
+            message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။`, 
             adminResults 
         });
     }
@@ -70,6 +104,18 @@ app.post('/api/admin/save', (req, res) => {
 
 // 3. Admin သိမ်းဆည်းထားသော အချက်အလက်များကို Frontend မှ ဖတ်ရှုရန် API
 app.get('/api/admin/data', (req, res) => {
+    const myanmarTime = getMyanmarTime();
+    const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
+    
+    // ရက်စွဲကူးပြောင်းသွားပါက စစ်ဆေးပေးမည်
+    if (currentAdminDate !== todayDateStr) {
+        currentAdminDate = todayDateStr;
+        adminResults = {
+            "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
+            "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false }
+        };
+    }
+
     res.json({
         success: true,
         adminResults
@@ -157,11 +203,7 @@ app.get('/api/live', async (req, res) => {
             calculated2D = digit1 + digit2;
         }
 
-        // မြန်မာစံတော်ချိန် (UTC +6:30)
-        const now = new Date();
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const myanmarTime = new Date(utc + (3600000 * 6.5));
-        
+        const myanmarTime = getMyanmarTime();
         const currentTime = myanmarTime.toLocaleTimeString('en-US', {
             hour12: true,
             hour: '2-digit',
@@ -176,7 +218,7 @@ app.get('/api/live', async (req, res) => {
             month: 'long',
             year: 'numeric'
         });
-        const dayOfWeekIndex = myanmarTime.getDay(); // 0 = Sunday, 6 = Saturday
+        const dayOfWeekIndex = myanmarTime.getDay();
         const dayOfWeek = myanmarTime.toLocaleDateString('en-US', { weekday: 'long' });
         
         const daysMap = {
@@ -185,15 +227,13 @@ app.get('/api/live', async (req, res) => {
         };
         const myanmarDay = daysMap[dayOfWeek] || dayOfWeek;
 
-        // စနေ (6)၊ တနင်္ဂနွေ (0) သို့မဟုတ် ဈေးကွက်ပိတ်ရက် (SET Index / Value မရှိခြင်း) ဖြစ်ပါက History တွင် လုံးဝမသိမ်းပါ
         const isWeekend = (dayOfWeekIndex === 0 || dayOfWeekIndex === 6);
 
-        // ညနေ 4:30 ကျော်လွန်ပြီး ဈေးကွက်ပိတ်ချိန်၊ ရက်မှန်ကန်ပြီး ဈေးကွက်အမှန်တကယ် ပွင့်ခဲ့မှသာ (SET Index & Value ရှိမှသာ) History သို့ သိမ်းမည်
         if ((currentHour > 16 || (currentHour === 16 && currentMinute >= 30)) && calculated2D !== "--") {
             if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
                 if (lastArchivedDate !== dateString) {
                     const newRecord = {
-                        dateFormatted: `${myanmarDay} - ${dateString}`,
+                        dateFormatted: `${myanmarDay}\n${dateString}`,
                         t1201: calculated2D, 
                         t430: calculated2D,
                         setIndex: setIndex || "--",
@@ -204,10 +244,8 @@ app.get('/api/live', async (req, res) => {
                         }
                     };
                     
-                    // အသစ်ကို ထိပ်ဆုံးမှ ထည့်မည်
                     historyRecords.unshift(newRecord);
                     
-                    // မှတ်တမ်း ၁၀၀ ထက် ကျော်လွန်သွားပါက ဟိုးအောက်ဆုံးမှ (အဟောင်းဆုံး) မှတ်တမ်းကို အလိုအလျောက် ဖယ်ရှားမည်
                     if (historyRecords.length > 100) {
                         historyRecords.pop();
                     }
@@ -232,9 +270,7 @@ app.get('/api/live', async (req, res) => {
         });
 
     } catch (error) {
-        const now = new Date();
-        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const myanmarTime = new Date(utc + (3600000 * 6.5));
+        const myanmarTime = getMyanmarTime();
         const currentTime = myanmarTime.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
         res.json({

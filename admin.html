@@ -34,7 +34,7 @@
                 <!-- Session Selection -->
                 <div class="mb-4">
                     <label class="block text-sm text-slate-300 mb-1">အချိန်အကွက် (Session)</label>
-                    <select id="sessionSelect" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
+                    <select id="sessionSelect" onchange="onSessionChange()" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
                         <option value="09:30 AM">09:30 AM</option>
                         <option value="02:00 PM">02:00 PM</option>
                     </select>
@@ -61,10 +61,11 @@
                         class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
                 </div>
 
-                <button onclick="saveData()" 
+                <button id="saveBtn" onclick="saveData()" 
                     class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2 rounded-lg transition">
                     အချက်အလက် သိမ်းဆည်းမည် (Save)
                 </button>
+                <p id="lockNotice" class="text-orange-400 text-xs text-center mt-2 hidden">⚠️ ဤအချိန်အကွက်အတွက် ဂဏန်းများကို သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်၍မရပါ (Locked)။</p>
             </div>
 
             <p id="saveStatus" class="text-green-400 text-sm text-center hidden"></p>
@@ -77,6 +78,7 @@
 
     <script>
         let currentPassword = "";
+        let cachedAdminData = null;
 
         async function adminLogin() {
             const pwd = document.getElementById('passwordInput').value;
@@ -94,12 +96,62 @@
                     currentPassword = pwd;
                     document.getElementById('loginSection').classList.add('hidden');
                     document.getElementById('controlSection').classList.remove('hidden');
+                    loadAdminData(); // ဝင်လိုက်တာနဲ့ လက်ရှိဒေတာတွေကို ဆွဲထုတ်မည်
                 } else {
                     errorText.classList.remove('hidden');
                 }
             } catch (err) {
                 alert('ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။');
             }
+        }
+
+        async function loadAdminData() {
+            try {
+                const response = await fetch('/api/admin/data');
+                const data = await response.json();
+                if (data.success) {
+                    cachedAdminData = data.adminResults;
+                    updateFormFields();
+                }
+            } catch (err) {
+                console.error("Data load error:", err);
+            }
+        }
+
+        function updateFormFields() {
+            if (!cachedAdminData) return;
+            const session = document.getElementById('sessionSelect').value;
+            const sessionData = cachedAdminData[session] || { modern: "--", internet: "--", tw: "--", isLocked: false };
+
+            const modernInput = document.getElementById('modernInput');
+            const internetInput = document.getElementById('internetInput');
+            const twInput = document.getElementById('twInput');
+            const saveBtn = document.getElementById('saveBtn');
+            const lockNotice = document.getElementById('lockNotice');
+
+            modernInput.value = sessionData.modern !== "--" ? sessionData.modern : "";
+            internetInput.value = sessionData.internet !== "--" ? sessionData.internet : "";
+            twInput.value = sessionData.tw !== "--" ? sessionData.tw : "";
+
+            if (sessionData.isLocked) {
+                modernInput.disabled = true;
+                internetInput.disabled = true;
+                twInput.disabled = true;
+                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                saveBtn.disabled = true;
+                lockNotice.classList.remove('hidden');
+            } else {
+                modernInput.disabled = false;
+                internetInput.disabled = false;
+                twInput.disabled = false;
+                saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                saveBtn.disabled = false;
+                lockNotice.classList.add('hidden');
+            }
+        }
+
+        function onSessionChange() {
+            updateFormFields();
         }
 
         async function saveData() {
@@ -124,6 +176,8 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    cachedAdminData = data.adminResults;
+                    updateFormFields();
                     statusText.innerText = data.message;
                     statusText.classList.remove('hidden');
                     setTimeout(() => statusText.classList.add('hidden'), 4000);
