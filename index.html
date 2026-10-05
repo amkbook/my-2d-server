@@ -22,7 +22,7 @@
     .status-live { color: #ef4444; display: inline-flex; align-items: center; gap: 4px; }
     .status-paused { color: #f59e0b; display: inline-flex; align-items: center; gap: 4px; }
     .spinner { width: 10px; height: 10px; border: 2px solid #ef4444; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
-    .status-closed { color: #10b981; }
+    .status-closed { color: #10b981; display: inline-flex; align-items: center; gap: 4px; }
 
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -459,10 +459,26 @@
 
       } else {
         isLiveActive = false;
-        if (totalSeconds >= morningEnd && totalSeconds < afternoonStart) {
-          updateMarketUI('paused');
+        
+        // နေ့လည် ၁၂:၀၁:၀၀ အတိ ရောက်လျှင် သို့မဟုတ် ကျော်သွားပါက အစိမ်းရောင် အမှန်ခြစ်ပြပြီး Last Update ကို 12:01:00 တွင် ရပ်တန့်ထားရန်
+        if ((hours === 12 && minutes === 1 && seconds === 0) || (hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
+          const statusEl = document.getElementById('marketStatus');
+          statusEl.className = 'status-indicator status-closed';
+          statusEl.innerHTML = '<span>✔ ဈေးကွက်ပိတ်သည်</span>';
+          document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
+        }
+        // ညနေ ၄:၃၀:၀၀ အတိ ရောက်လျှင် သို့မဟုတ် ကျော်သွားပါက အစိမ်းရောင် အမှန်ခြစ်ပြပြီး Last Update ကို 04:30:00 တွင် ရပ်တန့်ထားရန်
+        else if ((hours === 16 && minutes === 30 && seconds === 0) || (hours === 16 && minutes >= 30) || hours > 16) {
+          const statusEl = document.getElementById('marketStatus');
+          statusEl.className = 'status-indicator status-closed';
+          statusEl.innerHTML = '<span>✔ ဈေးကွက်ပိတ်သည်</span>';
+          document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
         } else {
-          updateMarketUI('closed');
+          if (totalSeconds >= morningEnd && totalSeconds < afternoonStart) {
+            updateMarketUI('paused');
+          } else {
+            updateMarketUI('closed');
+          }
         }
       }
 
