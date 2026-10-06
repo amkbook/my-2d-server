@@ -23,7 +23,7 @@ let chatMessages = [
     { user: "System", text: "2D Live Market App သို့ ကြိုဆိုပါသည်။" }
 ];
 
-// နေ့ရက်အလိုက် Admin ဒေတာများကို Server ဘက်တွင် အမြဲတမ်း မှတ်သားသိမ်းဆည်းမည့် Object
+// နေ့ရက်အလိုက် Admin နှင့် Auto 2D ဒေတာများကို Server ဘက်တွင် အမြဲတမ်း မှတ်သားသိမ်းဆည်းမည့် Object
 let storedDataByDate = {};
 
 function getMyanmarTime() {
@@ -32,7 +32,7 @@ function getMyanmarTime() {
     return new Date(utc + (3600000 * 6.5));
 }
 
-// ယနေ့အတွက် Admin ဒေတာများကို ပုံဖော်ပေးသည့် Helper Function (တစ်ရက်စာအတွက် တစ်ကြိမ်သာ သီးသန့်ခွဲခြားထိန်းသိမ်းမည်)
+// ယနေ့အတွက် ဒေတာများကို ပုံဖော်ပေးသည့် Helper Function (09:30, 12:01, 02:00, 04:30 အကွက်များပါဝင်မည်)
 function getTodayAdminResults() {
     const myanmarTime = getMyanmarTime();
     const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
@@ -40,7 +40,9 @@ function getTodayAdminResults() {
     if (!storedDataByDate[todayDateStr]) {
         storedDataByDate[todayDateStr] = {
             "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
-            "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false }
+            "12:01 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true },
+            "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false },
+            "04:30 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true }
         };
     }
 
@@ -207,8 +209,17 @@ app.get('/api/live', async (req, res) => {
 
         const adminResults = getTodayAdminResults();
 
-        // 12:01 PM မှတ်တမ်းတင်ခြင်း (နေ့လည် 12:01 အတိတွင် t1201 နှင့် 09:30 AM admin ဂဏန်းတို့ကိုသာ အရင်ဝင်မည်)
+        // 12:01 PM အလိုအလျောက် ဇယားကွက်ထဲသို့ ဖြည့်သွင်းခြင်း (Modern, Internet, TW နေရာများတွင် calculated2D ကို ဖြည့်မည်)
         if ((currentHour === 12 && currentMinute >= 1) || currentHour > 12) {
+            if (!isWeekend && calculated2D !== "--") {
+                if (adminResults["12:01 PM"].modern === "--" && !adminResults["12:01 PM"].isLocked) {
+                    adminResults["12:01 PM"].modern = calculated2D;
+                    adminResults["12:01 PM"].internet = calculated2D;
+                    adminResults["12:01 PM"].tw = calculated2D;
+                    adminResults["12:01 PM"].isLocked = true;
+                }
+            }
+
             if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
                 if (lastArchivedDate1201 !== dateString) {
                     let existingRecord = historyRecords.find(r => r.dateStr === dateString);
@@ -224,7 +235,9 @@ app.get('/api/live', async (req, res) => {
                             value430: "--",
                             schedule: {
                                 t0930: { ...adminResults["09:30 AM"] },
-                                t1400: { modern: "--", internet: "--", tw: "--", isLocked: false }
+                                t1201: { ...adminResults["12:01 PM"] },
+                                t1400: { modern: "--", internet: "--", tw: "--", isLocked: false },
+                                t1630: { ...adminResults["04:30 PM"] }
                             }
                         };
                         historyRecords.unshift(existingRecord);
@@ -232,7 +245,7 @@ app.get('/api/live', async (req, res) => {
                         existingRecord.t1201 = calculated2D;
                         existingRecord.setIndex1201 = setIndex;
                         existingRecord.value1201 = marketValue;
-                        existingRecord.schedule.t0930 = { ...adminResults["09:30 AM"] };
+                        existingRecord.schedule.t1201 = { ...adminResults["12:01 PM"] };
                     }
                     if (historyRecords.length > 100) historyRecords.pop();
                     lastArchivedDate1201 = dateString;
@@ -240,8 +253,17 @@ app.get('/api/live', async (req, res) => {
             }
         }
 
-        // 4:30 PM မှတ်တမ်းတင်ခြင်း (ညနေ 4:30 အတိရောက်မှ t430 နှင့် 02:00 PM admin ဂဏန်းများကို ပေါင်းစပ်ထည့်မည်)
-        if ((currentHour > 16 || (currentHour === 16 && currentMinute >= 30)) && calculated2D !== "--") {
+        // 4:30 PM အလိုအလျောက် ဇယားကွက်ထဲသို့ ဖြည့်သွင်းခြင်း
+        if ((currentHour > 16 || (currentHour === 16 && currentMinute >= 30))) {
+            if (!isWeekend && calculated2D !== "--") {
+                if (adminResults["04:30 PM"].modern === "--" && !adminResults["04:30 PM"].isLocked) {
+                    adminResults["04:30 PM"].modern = calculated2D;
+                    adminResults["04:30 PM"].internet = calculated2D;
+                    adminResults["04:30 PM"].tw = calculated2D;
+                    adminResults["04:30 PM"].isLocked = true;
+                }
+            }
+
             if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
                 if (lastArchivedDate430 !== dateString) {
                     let existingRecord = historyRecords.find(r => r.dateStr === dateString);
@@ -257,7 +279,9 @@ app.get('/api/live', async (req, res) => {
                             value430: marketValue,
                             schedule: {
                                 t0930: { ...adminResults["09:30 AM"] },
-                                t1400: { ...adminResults["02:00 PM"] }
+                                t1201: { ...adminResults["12:01 PM"] },
+                                t1400: { ...adminResults["02:00 PM"] },
+                                t1630: { ...adminResults["04:30 PM"] }
                             }
                         };
                         historyRecords.unshift(existingRecord);
@@ -265,8 +289,7 @@ app.get('/api/live', async (req, res) => {
                         existingRecord.t430 = calculated2D;
                         existingRecord.setIndex430 = setIndex;
                         existingRecord.value430 = marketValue;
-                        existingRecord.schedule.t0930 = { ...adminResults["09:30 AM"] };
-                        existingRecord.schedule.t1400 = { ...adminResults["02:00 PM"] };
+                        existingRecord.schedule.t1630 = { ...adminResults["04:30 PM"] };
                     }
                     if (historyRecords.length > 100) historyRecords.pop();
                     lastArchivedDate430 = dateString;
@@ -282,7 +305,9 @@ app.get('/api/live', async (req, res) => {
             adminResults: adminResults,
             schedule: {
                 t0930: adminResults["09:30 AM"],
-                t1400: adminResults["02:00 PM"]
+                t1201: adminResults["12:01 PM"],
+                t1400: adminResults["02:00 PM"],
+                t1630: adminResults["04:30 PM"]
             },
             notice: "2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။",
             time: currentTime
@@ -301,7 +326,9 @@ app.get('/api/live', async (req, res) => {
             adminResults: adminResults,
             schedule: {
                 t0930: adminResults["09:30 AM"],
-                t1400: adminResults["02:00 PM"]
+                t1201: adminResults["12:01 PM"],
+                t1400: adminResults["02:00 PM"],
+                t1630: adminResults["04:30 PM"]
             },
             notice: "ဈေးကွက်ပိတ်ထားသည် (သို့) ချိတ်ဆက်မှု စောင့်ဆိုင်းနေသည်...",
             time: currentTime

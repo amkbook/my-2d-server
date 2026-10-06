@@ -40,6 +40,12 @@
       font-weight: 900;
     }
 
+    /* Auto ဝင်လာသော 12:01 နှင့် 04:30 အတွက် အစိမ်းရောင် စတိုင် */
+    .green-val {
+      color: #10b981 !important;
+      text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    }
+
     .audio-btn { background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 10px; cursor: pointer; }
     
     .schedule-table-container { background: #1e293b; border-radius: 12px; padding: 12px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
@@ -150,7 +156,7 @@
           
           <div class="market-row-item">
             <div class="row-time-label">12:01 PM</div>
-            <div id="t1201_modern" class="row-val" style="grid-column: span 3;">--</div>
+            <div id="t1201_modern" class="row-val green-val" style="grid-column: span 3;">--</div>
           </div>
 
           <div class="market-row-item">
@@ -162,7 +168,7 @@
 
           <div class="market-row-item">
             <div class="row-time-label">04:30 PM</div>
-            <div id="t1630_modern" class="row-val" style="grid-column: span 3;">--</div>
+            <div id="t1630_modern" class="row-val green-val" style="grid-column: span 3;">--</div>
           </div>
         </div>
       </div>
@@ -259,12 +265,12 @@
               <div class="history-top-results">
                 <div class="history-res-box">
                   <div class="history-res-title">12:01 PM</div>
-                  <div class="history-res-val">${item.t1201 || '--'}</div>
+                  <div class="history-res-val green-val">${item.t1201 || '--'}</div>
                   <div class="history-res-sub"><span>${item.setIndex1201 || item.setIndex || '--'}</span><span>${item.value1201 || item.value || '--'}</span></div>
                 </div>
                 <div class="history-res-box">
                   <div class="history-res-title">4:30 PM</div>
-                  <div class="history-res-val">${item.t430 || '--'}</div>
+                  <div class="history-res-val green-val">${item.t430 || '--'}</div>
                   <div class="history-res-sub"><span>${item.setIndex430 || item.setIndex || '--'}</span><span>${item.value430 || item.value || '--'}</span></div>
                 </div>
               </div>
@@ -407,7 +413,8 @@
             startMoneyRain();
             let currentVal = document.getElementById('live2D').innerText;
             if (currentVal !== "--") {
-              document.getElementById('t1201_modern').innerText = currentVal;
+              const t1201El = document.getElementById('t1201_modern');
+              t1201El.innerText = currentVal;
             }
           }
         }
@@ -427,7 +434,8 @@
             startMoneyRain();
             let currentVal = document.getElementById('live2D').innerText;
             if (currentVal !== "--") {
-              document.getElementById('t1630_modern').innerText = currentVal;
+              const t1630El = document.getElementById('t1630_modern');
+              t1630El.innerText = currentVal;
             }
           }
         }
@@ -507,11 +515,19 @@
             document.getElementById('t0930_internet').innerText = s0930.internet !== "--" ? s0930.internet : "--";
             document.getElementById('t0930_tw').innerText = s0930.tw !== "--" ? s0930.tw : "--";
           }
+          const s1201 = data.adminResults["12:01 PM"];
+          if (s1201) {
+            document.getElementById('t1201_modern').innerText = s1201.modern !== "--" ? s1201.modern : "--";
+          }
           const s1400 = data.adminResults["02:00 PM"];
           if (s1400) {
             document.getElementById('t1400_modern').innerText = s1400.modern !== "--" ? s1400.modern : "--";
             document.getElementById('t1400_internet').innerText = s1400.internet !== "--" ? s1400.internet : "--";
             document.getElementById('t1400_tw').innerText = s1400.tw !== "--" ? s1400.tw : "--";
+          }
+          const s1630 = data.adminResults["04:30 PM"];
+          if (s1630) {
+            document.getElementById('t1630_modern').innerText = s1630.modern !== "--" ? s1630.modern : "--";
           }
         }
       } catch (e) {
