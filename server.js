@@ -23,17 +23,33 @@ let chatMessages = [
     { user: "System", text: "2D Live Market App သို့ ကြိုဆိုပါသည်။" }
 ];
 
-let adminResults = {
-    "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
-    "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false }
-};
-
+// နေ့ရက်အလိုက် Admin ဒေတာများကို Server ဘက်တွင် အမြဲတမ်း မှတ်သားသိမ်းဆည်းမည့် Object
+let storedDataByDate = {};
 let currentAdminDate = "";
 
 function getMyanmarTime() {
     const now = new Date();
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     return new Date(utc + (3600000 * 6.5));
+}
+
+// ယနေ့အတွက် Admin ဒေတာများကို ပုံဖော်ပေးသည့် Helper Function
+function getTodayAdminResults() {
+    const myanmarTime = getMyanmarTime();
+    const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
+
+    if (currentAdminDate !== todayDateStr) {
+        currentAdminDate = todayDateStr;
+    }
+
+    if (!storedDataByDate[currentAdminDate]) {
+        storedDataByDate[currentAdminDate] = {
+            "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
+            "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false }
+        };
+    }
+
+    return storedDataByDate[currentAdminDate];
 }
 
 let historyRecords = [];
@@ -56,16 +72,7 @@ app.post('/api/admin/save', (req, res) => {
         return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
     }
 
-    const myanmarTime = getMyanmarTime();
-    const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
-
-    if (currentAdminDate !== todayDateStr) {
-        currentAdminDate = todayDateStr;
-        adminResults = {
-            "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
-            "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false }
-        };
-    }
+    let adminResults = getTodayAdminResults();
 
     if (session && adminResults[session]) {
         if (adminResults[session].isLocked) {
@@ -94,17 +101,7 @@ app.post('/api/admin/save', (req, res) => {
 });
 
 app.get('/api/admin/data', (req, res) => {
-    const myanmarTime = getMyanmarTime();
-    const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
-    
-    if (currentAdminDate !== todayDateStr) {
-        currentAdminDate = todayDateStr;
-        adminResults = {
-            "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
-            "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false }
-        };
-    }
-
+    const adminResults = getTodayAdminResults();
     res.json({
         success: true,
         adminResults
@@ -213,6 +210,8 @@ app.get('/api/live', async (req, res) => {
         const myanmarDay = daysMap[dayOfWeek] || dayOfWeek;
         const isWeekend = (dayOfWeekIndex === 0 || dayOfWeekIndex === 6);
 
+        const adminResults = getTodayAdminResults();
+
         // 12:01 PM မှတ်တမ်းတင်ခြင်း
         if ((currentHour === 12 && currentMinute >= 1) || currentHour > 12) {
             if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
@@ -299,6 +298,7 @@ app.get('/api/live', async (req, res) => {
     } catch (error) {
         const myanmarTime = getMyanmarTime();
         const currentTime = myanmarTime.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const adminResults = getTodayAdminResults();
 
         res.json({
             success: true,
