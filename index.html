@@ -460,14 +460,12 @@
       } else {
         isLiveActive = false;
         
-        // နေ့လည် ၁၂:၀၁:၀၀ အတိ ရောက်လျှင် သို့မဟုတ် ကျော်သွားပါက အစိမ်းရောင် အမှန်ခြစ်ပြပြီး Last Update ကို 12:01:00 တွင် ရပ်တန့်ထားရန်
         if ((hours === 12 && minutes === 1 && seconds === 0) || (hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
           const statusEl = document.getElementById('marketStatus');
           statusEl.className = 'status-indicator status-closed';
           statusEl.innerHTML = '<span>✔ ဈေးကွက်ပိတ်သည်</span>';
           document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
         }
-        // ညနေ ၄:၃၀:၀၀ အတိ ရောက်လျှင် သို့မဟုတ် ကျော်သွားပါက အစိမ်းရောင် အမှန်ခြစ်ပြပြီး Last Update ကို 04:30:00 တွင် ရပ်တန့်ထားရန်
         else if ((hours === 16 && minutes === 30 && seconds === 0) || (hours === 16 && minutes >= 30) || hours > 16) {
           const statusEl = document.getElementById('marketStatus');
           statusEl.className = 'status-indicator status-closed';
@@ -523,112 +521,9 @@
       return textStr;
     }
 
-    // Admin မှ Save ထားသော Schedule ဂဏန်းများကို ပင်မစာမျက်နှာတွင် အမြဲဆွဲထုတ်ပြသရန်
+    // Admin မှ Save ထားသော Schedule ဂဏန်းများနှင့် 12:01 / 4:30 ဇယားကွက်အချက်အလက်များကို ဆွဲထုတ်ပြသရန်
     async function fetchScheduleData() {
       try {
         const res = await fetch('/api/admin/data');
         const data = await res.json();
         if (data.success && data.adminResults) {
-          const s0930 = data.adminResults["09:30 AM"];
-          if (s0930) {
-            document.getElementById('t0930_modern').innerText = s0930.modern !== "--" ? s0930.modern : "--";
-            document.getElementById('t0930_internet').innerText = s0930.internet !== "--" ? s0930.internet : "--";
-            document.getElementById('t0930_tw').innerText = s0930.tw !== "--" ? s0930.tw : "--";
-          }
-          const s1400 = data.adminResults["02:00 PM"];
-          if (s1400) {
-            document.getElementById('t1400_modern').innerText = s1400.modern !== "--" ? s1400.modern : "--";
-            document.getElementById('t1400_internet').innerText = s1400.internet !== "--" ? s1400.internet : "--";
-            document.getElementById('t1400_tw').innerText = s1400.tw !== "--" ? s1400.tw : "--";
-          }
-        }
-      } catch (e) {
-        console.error("Schedule fetch error:", e);
-      }
-    }
-
-    async function fetchLiveData() {
-      // ဈေးကွက်ပိတ်နေလျှင်ပင် Admin Schedule ဒေတာများကို ပုံမှန်ဆွဲထုတ်ပြသနိုင်ရန် ဤနေရာတွင် fetchScheduleData ကို ခေါ်ပေးပါသည်
-      fetchScheduleData();
-
-      if (!isLiveActive) return;
-
-      try {
-        const res = await fetch('/api/live');
-        const data = await res.json();
-        
-        if(data.success) {
-          if (data.live2D && data.live2D !== "--") {
-            localStorage.setItem('last_market_data', JSON.stringify(data));
-            
-            document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
-            document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
-            
-            document.getElementById('live2D').innerText = data.live2D;
-            document.getElementById('updateTime').innerText = "Last Update: " + data.time;
-            document.getElementById('notice').innerText = data.notice;
-
-            if(current2D !== data.live2D) {
-              current2D = data.live2D;
-              speak2D();
-            }
-          }
-        }
-      } catch(e) {}
-    }
-
-    async function fetchChat() {
-      try {
-        const res = await fetch('/api/chat');
-        const data = await res.json();
-        if(data.success) {
-          const chatDiv = document.getElementById('chatMessages');
-          chatDiv.innerHTML = data.messages.map(m => 
-            `<div class="msg"><span class="msg-user">${m.user}:</span> ${m.text}</div>`
-          ).join('');
-          chatDiv.scrollTop = chatDiv.scrollHeight;
-        }
-      } catch(e) {}
-    }
-
-    async function sendMessage() {
-      const int = document.getElementById('chatInput');
-      const text = int.value.trim();
-      if(!text) return;
-
-      await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user: "User", text: text })
-      });
-
-      int.value = "";
-      fetchChat();
-    }
-
-    function handleKeyPress(e) { if(e.key === 'Enter') sendMessage(); }
-
-    setInterval(fetchLiveData, 3000);
-    setInterval(fetchChat, 2000);
-    setInterval(checkMarketSchedule, 1000);
-    setInterval(fetchScheduleData, 5000); // ၅ စက္ကန့်တစ်ကြိမ် Schedule ဒေတာကို အပ်ဒိတ်လုပ်နေမည်
-    
-    checkMarketSchedule();
-    fetchLiveData();
-    fetchChat();
-    fetchScheduleData(); // စဖွင့်ချင်းချက်ချင်း ခေါ်ယူမည်
-
-    function toggleSound() {
-      soundEnabled = !soundEnabled;
-      const btn = document.getElementById('audio-btn'); 
-      if (btn) {
-        if (soundEnabled) {
-            btn.innerHTML = "🔊 အသံဖွင့်ထားသည်";
-        } else {
-            btn.innerHTML = "🔇 အသံပိတ်ထားသည်";
-        }
-      }
-    }
-  </script>
-</body>
-</html>

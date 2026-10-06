@@ -150,8 +150,9 @@
             }
         }
 
-        function onSessionChange() {
-            updateFormFields();
+        async function onSessionChange() {
+            // Session ပြောင်းတဲ့အခါ Server ဆီက ဒေတာအသစ်ကိုပါ တစ်ခါတည်း ထပ်မံဆွဲထုတ်မည်
+            await loadAdminData();
         }
 
         async function saveData() {

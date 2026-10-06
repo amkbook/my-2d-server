@@ -25,7 +25,6 @@ let chatMessages = [
 
 // နေ့ရက်အလိုက် Admin ဒေတာများကို Server ဘက်တွင် အမြဲတမ်း မှတ်သားသိမ်းဆည်းမည့် Object
 let storedDataByDate = {};
-let currentAdminDate = "";
 
 function getMyanmarTime() {
     const now = new Date();
@@ -33,23 +32,19 @@ function getMyanmarTime() {
     return new Date(utc + (3600000 * 6.5));
 }
 
-// ယနေ့အတွက် Admin ဒေတာများကို ပုံဖော်ပေးသည့် Helper Function
+// ယနေ့အတွက် Admin ဒေတာများကို ပုံဖော်ပေးသည့် Helper Function (တစ်ရက်စာအတွက် တစ်ကြိမ်သာ သီးသန့်ခွဲခြားထိန်းသိမ်းမည်)
 function getTodayAdminResults() {
     const myanmarTime = getMyanmarTime();
     const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
 
-    if (currentAdminDate !== todayDateStr) {
-        currentAdminDate = todayDateStr;
-    }
-
-    if (!storedDataByDate[currentAdminDate]) {
-        storedDataByDate[currentAdminDate] = {
+    if (!storedDataByDate[todayDateStr]) {
+        storedDataByDate[todayDateStr] = {
             "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
             "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false }
         };
     }
 
-    return storedDataByDate[currentAdminDate];
+    return storedDataByDate[todayDateStr];
 }
 
 let historyRecords = [];
@@ -212,7 +207,7 @@ app.get('/api/live', async (req, res) => {
 
         const adminResults = getTodayAdminResults();
 
-        // 12:01 PM မှတ်တမ်းတင်ခြင်း
+        // 12:01 PM မှတ်တမ်းတင်ခြင်း (နေ့လည် 12:01 အတိတွင် t1201 နှင့် 09:30 AM admin ဂဏန်းတို့ကိုသာ အရင်ဝင်မည်)
         if ((currentHour === 12 && currentMinute >= 1) || currentHour > 12) {
             if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
                 if (lastArchivedDate1201 !== dateString) {
@@ -229,7 +224,7 @@ app.get('/api/live', async (req, res) => {
                             value430: "--",
                             schedule: {
                                 t0930: { ...adminResults["09:30 AM"] },
-                                t1400: { ...adminResults["02:00 PM"] }
+                                t1400: { modern: "--", internet: "--", tw: "--", isLocked: false }
                             }
                         };
                         historyRecords.unshift(existingRecord);
@@ -237,6 +232,7 @@ app.get('/api/live', async (req, res) => {
                         existingRecord.t1201 = calculated2D;
                         existingRecord.setIndex1201 = setIndex;
                         existingRecord.value1201 = marketValue;
+                        existingRecord.schedule.t0930 = { ...adminResults["09:30 AM"] };
                     }
                     if (historyRecords.length > 100) historyRecords.pop();
                     lastArchivedDate1201 = dateString;
@@ -244,7 +240,7 @@ app.get('/api/live', async (req, res) => {
             }
         }
 
-        // 4:30 PM မှတ်တမ်းတင်ခြင်း
+        // 4:30 PM မှတ်တမ်းတင်ခြင်း (ညနေ 4:30 အတိရောက်မှ t430 နှင့် 02:00 PM admin ဂဏန်းများကို ပေါင်းစပ်ထည့်မည်)
         if ((currentHour > 16 || (currentHour === 16 && currentMinute >= 30)) && calculated2D !== "--") {
             if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
                 if (lastArchivedDate430 !== dateString) {
@@ -253,10 +249,10 @@ app.get('/api/live', async (req, res) => {
                         existingRecord = {
                             dateStr: dateString,
                             dateFormatted: `${myanmarDay}\n${dateString}`,
-                            t1201: calculated2D, 
+                            t1201: "--", 
                             t430: calculated2D,
-                            setIndex1201: setIndex,
-                            value1201: marketValue,
+                            setIndex1201: "--",
+                            value1201: "--",
                             setIndex430: setIndex,
                             value430: marketValue,
                             schedule: {
@@ -269,11 +265,8 @@ app.get('/api/live', async (req, res) => {
                         existingRecord.t430 = calculated2D;
                         existingRecord.setIndex430 = setIndex;
                         existingRecord.value430 = marketValue;
-                        if (!existingRecord.t1201 || existingRecord.t1201 === "--") {
-                            existingRecord.t1201 = calculated2D;
-                            existingRecord.setIndex1201 = setIndex;
-                            existingRecord.value1201 = marketValue;
-                        }
+                        existingRecord.schedule.t0930 = { ...adminResults["09:30 AM"] };
+                        existingRecord.schedule.t1400 = { ...adminResults["02:00 PM"] };
                     }
                     if (historyRecords.length > 100) historyRecords.pop();
                     lastArchivedDate430 = dateString;
