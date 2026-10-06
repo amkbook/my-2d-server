@@ -3,6 +3,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
 const path = require('path');
+const mongoose = require('mongoose');
 
 const app = express();
 app.use(cors());
@@ -10,6 +11,36 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 3000;
+
+// MongoDB သို့ ချိတ်ဆက်ခြင်း (Render ပေါ်တွင် ဒေတာ အမြဲသိမ်းရန်)
+const MONGO_URI = 'mongodb+srv://amkbook9_db_user:IJVUDOG7XoE1R1GZ@cluster0.aqs0zyr.mongodb.net/my2dapp?retryWrites=true&w=majority&appName=Cluster0';
+
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('MongoDB successfully connected!'))
+    .catch(err => console.error('MongoDB connection error:', err));
+
+// MongoDB Schema & Model for Day Data (Admin results & History)
+const dataSchema = new mongoose.Schema({
+    dateStr: { type: String, required: true, unique: true }, 
+    dateFormatted: String,
+    t1201: { type: String, default: "--" },
+    t430: { type: String, default: "--" },
+    setIndex1201: { type: String, default: "--" },
+    value1201: { type: String, default: "--" },
+    setIndex430: { type: String, default: "--" },
+    value430: { type: String, default: "--" },
+    schedule: {
+        type: Object,
+        default: {
+            "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
+            "12:01 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true },
+            "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false },
+            "04:30 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true }
+        }
+    }
+});
+
+const DayData = mongoose.model('DayData', dataSchema);
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -23,35 +54,33 @@ let chatMessages = [
     { user: "System", text: "2D Live Market App သို့ ကြိုဆိုပါသည်။" }
 ];
 
-// နေ့ရက်အလိုက် Admin နှင့် Auto 2D ဒေတာများကို Server ဘက်တွင် အမြဲတမ်း မှတ်သားသိမ်းဆည်းမည့် Object
-let storedDataByDate = {};
-
 function getMyanmarTime() {
     const now = new Date();
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     return new Date(utc + (3600000 * 6.5));
 }
 
-// ယနေ့အတွက် ဒေတာများကို ပုံဖော်ပေးသည့် Helper Function (09:30, 12:01, 02:00, 04:30 အကွက်များပါဝင်မည်)
-function getTodayAdminResults() {
+// ယနေ့အတွက် ဒေတာကို Database မှ ရယူရန် (သို့မဟုတ် အသစ်ဖန်တီးရန်) Helper Function
+async function getTodayAdminResults() {
     const myanmarTime = getMyanmarTime();
     const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
 
-    if (!storedDataByDate[todayDateStr]) {
-        storedDataByDate[todayDateStr] = {
-            "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
-            "12:01 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true },
-            "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false },
-            "04:30 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true }
-        };
+    let record = await DayData.findOne({ dateStr: todayDateStr });
+    if (!record) {
+        record = new DayData({
+            dateStr: todayDateStr,
+            dateFormatted: todayDateStr,
+            schedule: {
+                "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
+                "12:01 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true },
+                "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false },
+                "04:30 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true }
+            }
+        });
+        await record.save();
     }
-
-    return storedDataByDate[todayDateStr];
+    return record;
 }
-
-let historyRecords = [];
-let lastArchivedDate1201 = ""; 
-let lastArchivedDate430 = "";  
 
 app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
@@ -62,54 +91,72 @@ app.post('/api/admin/login', (req, res) => {
     }
 });
 
-app.post('/api/admin/save', (req, res) => {
-    const { password, session, modern, internet, tw } = req.body;
-    
-    if (password !== '2dpro153791') {
-        return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
-    }
+app.post('/api/admin/save', async (req, res) => {
+    try {
+        const { password, session, modern, internet, tw } = req.body;
+        
+        if (password !== '2dpro153791') {
+            return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
+        }
 
-    let adminResults = getTodayAdminResults();
+        let todayRecord = await getTodayAdminResults();
+        let adminResults = todayRecord.schedule;
 
-    if (session && adminResults[session]) {
-        if (adminResults[session].isLocked) {
-            return res.status(400).json({ 
-                success: false, 
-                message: `${session} အတွက် ဂဏန်းများကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်)။` 
+        if (session && adminResults[session]) {
+            if (adminResults[session].isLocked) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `${session} အတွက် ဂဏန်းများကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်)။` 
+                });
+            }
+
+            if (modern !== undefined && modern !== "") adminResults[session].modern = modern;
+            if (internet !== undefined && internet !== "") adminResults[session].internet = internet;
+            if (tw !== undefined && tw !== "") adminResults[session].tw = tw;
+
+            if (adminResults[session].modern !== "--" || adminResults[session].internet !== "--" || adminResults[session].tw !== "--") {
+                adminResults[session].isLocked = true;
+            }
+
+            todayRecord.markModified('schedule');
+            await todayRecord.save();
+
+            return res.json({ 
+                success: true, 
+                message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။`, 
+                adminResults 
             });
         }
 
-        if (modern !== undefined && modern !== "") adminResults[session].modern = modern;
-        if (internet !== undefined && internet !== "") adminResults[session].internet = internet;
-        if (tw !== undefined && tw !== "") adminResults[session].tw = tw;
-
-        if (adminResults[session].modern !== "--" || adminResults[session].internet !== "--" || adminResults[session].tw !== "--") {
-            adminResults[session].isLocked = true;
-        }
-
-        return res.json({ 
-            success: true, 
-            message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။`, 
-            adminResults 
-        });
+        res.status(400).json({ success: false, message: "မှားယွင်းနေသော Session ဖြစ်ပါသည်။" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error occurred" });
     }
-
-    res.status(400).json({ success: false, message: "မှားယွင်းနေသော Session ဖြစ်ပါသည်။" });
 });
 
-app.get('/api/admin/data', (req, res) => {
-    const adminResults = getTodayAdminResults();
-    res.json({
-        success: true,
-        adminResults
-    });
+app.get('/api/admin/data', async (req, res) => {
+    try {
+        const todayRecord = await getTodayAdminResults();
+        res.json({
+            success: true,
+            adminResults: todayRecord.schedule
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 });
 
-app.get('/api/history', (req, res) => {
-    res.json({
-        success: true,
-        history: historyRecords
-    });
+app.get('/api/history', async (req, res) => {
+    try {
+        const historyRecords = await DayData.find().sort({ _id: -1 }).limit(100);
+        res.json({
+            success: true,
+            history: historyRecords
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 });
 
 app.get('/api/live', async (req, res) => {
@@ -207,9 +254,10 @@ app.get('/api/live', async (req, res) => {
         const myanmarDay = daysMap[dayOfWeek] || dayOfWeek;
         const isWeekend = (dayOfWeekIndex === 0 || dayOfWeekIndex === 6);
 
-        const adminResults = getTodayAdminResults();
+        let todayRecord = await getTodayAdminResults();
+        let adminResults = todayRecord.schedule;
 
-        // 12:01 PM အလိုအလျောက် ဇယားကွက်ထဲသို့ ဖြည့်သွင်းခြင်း (Modern, Internet, TW နေရာများတွင် calculated2D ကို ဖြည့်မည်)
+        // 12:01 PM အလိုအလျောက် ဇယားကွက်ထဲသို့ ဖြည့်သွင်းခြင်း
         if ((currentHour === 12 && currentMinute >= 1) || currentHour > 12) {
             if (!isWeekend && calculated2D !== "--") {
                 if (adminResults["12:01 PM"].modern === "--" && !adminResults["12:01 PM"].isLocked) {
@@ -221,35 +269,10 @@ app.get('/api/live', async (req, res) => {
             }
 
             if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
-                if (lastArchivedDate1201 !== dateString) {
-                    let existingRecord = historyRecords.find(r => r.dateStr === dateString);
-                    if (!existingRecord) {
-                        existingRecord = {
-                            dateStr: dateString,
-                            dateFormatted: `${myanmarDay}\n${dateString}`,
-                            t1201: calculated2D, 
-                            t430: "--",
-                            setIndex1201: setIndex,
-                            value1201: marketValue,
-                            setIndex430: "--",
-                            value430: "--",
-                            schedule: {
-                                t0930: { ...adminResults["09:30 AM"] },
-                                t1201: { ...adminResults["12:01 PM"] },
-                                t1400: { modern: "--", internet: "--", tw: "--", isLocked: false },
-                                t1630: { ...adminResults["04:30 PM"] }
-                            }
-                        };
-                        historyRecords.unshift(existingRecord);
-                    } else {
-                        existingRecord.t1201 = calculated2D;
-                        existingRecord.setIndex1201 = setIndex;
-                        existingRecord.value1201 = marketValue;
-                        existingRecord.schedule.t1201 = { ...adminResults["12:01 PM"] };
-                    }
-                    if (historyRecords.length > 100) historyRecords.pop();
-                    lastArchivedDate1201 = dateString;
-                }
+                todayRecord.t1201 = calculated2D;
+                todayRecord.setIndex1201 = setIndex;
+                todayRecord.value1201 = marketValue;
+                todayRecord.dateFormatted = `${myanmarDay}\n${dateString}`;
             }
         }
 
@@ -265,37 +288,15 @@ app.get('/api/live', async (req, res) => {
             }
 
             if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
-                if (lastArchivedDate430 !== dateString) {
-                    let existingRecord = historyRecords.find(r => r.dateStr === dateString);
-                    if (!existingRecord) {
-                        existingRecord = {
-                            dateStr: dateString,
-                            dateFormatted: `${myanmarDay}\n${dateString}`,
-                            t1201: "--", 
-                            t430: calculated2D,
-                            setIndex1201: "--",
-                            value1201: "--",
-                            setIndex430: setIndex,
-                            value430: marketValue,
-                            schedule: {
-                                t0930: { ...adminResults["09:30 AM"] },
-                                t1201: { ...adminResults["12:01 PM"] },
-                                t1400: { ...adminResults["02:00 PM"] },
-                                t1630: { ...adminResults["04:30 PM"] }
-                            }
-                        };
-                        historyRecords.unshift(existingRecord);
-                    } else {
-                        existingRecord.t430 = calculated2D;
-                        existingRecord.setIndex430 = setIndex;
-                        existingRecord.value430 = marketValue;
-                        existingRecord.schedule.t1630 = { ...adminResults["04:30 PM"] };
-                    }
-                    if (historyRecords.length > 100) historyRecords.pop();
-                    lastArchivedDate430 = dateString;
-                }
+                todayRecord.t430 = calculated2D;
+                todayRecord.setIndex430 = setIndex;
+                todayRecord.value430 = marketValue;
+                todayRecord.dateFormatted = `${myanmarDay}\n${dateString}`;
             }
         }
+
+        todayRecord.markModified('schedule');
+        await todayRecord.save();
 
         res.json({
             success: true,
@@ -316,7 +317,13 @@ app.get('/api/live', async (req, res) => {
     } catch (error) {
         const myanmarTime = getMyanmarTime();
         const currentTime = myanmarTime.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const adminResults = getTodayAdminResults();
+        
+        let adminResults = {
+            "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
+            "12:01 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true },
+            "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false },
+            "04:30 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true }
+        };
 
         res.json({
             success: true,
