@@ -110,13 +110,13 @@
       <div class="card">
         <div class="live-title-container">
           <div class="live-title">LIVE 2D RESULT</div>
-          <div id="marketStatus" class="status-indicator status-live">
-            <span class="spinner"></span> <span>Live</span>
+          <div id="marketStatus" class="status-indicator status-closed">
+            <span>✔ စျေးကွက်ပိတ်ချိန်</span>
           </div>
         </div>
 
         <div id="live2D" class="live-2d">--</div>
-        <div id="updateTime" class="time-badge">Updating...</div>
+        <div id="updateTime" class="time-badge">Market Closed</div>
 
         <div class="set-info">
           <div class="set-box">
@@ -230,31 +230,6 @@
     let announcedTimes = {};
     let soundEnabled = true;
     let isLiveActive = false;
-
-    let lastSavedData = JSON.parse(localStorage.getItem('last_market_data')) || {
-      setIndex: "----.--",
-      value: "----.--",
-      live2D: "--",
-      time: "Market Closed",
-      notice: "ဈေးကွက်ပိတ်ချိန် ဖြစ်ပါသည်။"
-    };
-
-    function renderSavedData(data) {
-      if (data.setIndex && data.setIndex !== "----.--") {
-        document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
-      }
-      if (data.value && data.value !== "----.--") {
-        document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
-      }
-      if (data.live2D && data.live2D !== "--") {
-        document.getElementById('live2D').innerText = data.live2D;
-      }
-      if (data.notice) {
-        document.getElementById('notice').innerText = data.notice;
-      }
-    }
-
-    renderSavedData(lastSavedData);
 
     function switchTab(pageId, btn) {
       document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
@@ -376,7 +351,7 @@
         statusEl.innerHTML = '<span>⏸ Live Paused</span>';
       } else {
         statusEl.className = 'status-indicator status-closed';
-        statusEl.innerHTML = '<span>✔ ဈေးကွက်ပိတ်သည်</span>';
+        statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
       }
     }
 
@@ -463,13 +438,13 @@
         if ((hours === 12 && minutes === 1 && seconds === 0) || (hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
           const statusEl = document.getElementById('marketStatus');
           statusEl.className = 'status-indicator status-closed';
-          statusEl.innerHTML = '<span>✔ ဈေးကွက်ပိတ်သည်</span>';
+          statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
           document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
         }
         else if ((hours === 16 && minutes === 30 && seconds === 0) || (hours === 16 && minutes >= 30) || hours > 16) {
           const statusEl = document.getElementById('marketStatus');
           statusEl.className = 'status-indicator status-closed';
-          statusEl.innerHTML = '<span>✔ ဈေးကွက်ပိတ်သည်</span>';
+          statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
           document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
         } else {
           if (totalSeconds >= morningEnd && totalSeconds < afternoonStart) {
@@ -521,9 +496,111 @@
       return textStr;
     }
 
-    // Admin မှ Save ထားသော Schedule ဂဏန်းများနှင့် 12:01 / 4:30 ဇယားကွက်အချက်အလက်များကို ဆွဲထုတ်ပြသရန်
     async function fetchScheduleData() {
       try {
         const res = await fetch('/api/admin/data');
         const data = await res.json();
         if (data.success && data.adminResults) {
+          const s0930 = data.adminResults["09:30 AM"];
+          if (s0930) {
+            document.getElementById('t0930_modern').innerText = s0930.modern !== "--" ? s0930.modern : "--";
+            document.getElementById('t0930_internet').innerText = s0930.internet !== "--" ? s0930.internet : "--";
+            document.getElementById('t0930_tw').innerText = s0930.tw !== "--" ? s0930.tw : "--";
+          }
+          const s1400 = data.adminResults["02:00 PM"];
+          if (s1400) {
+            document.getElementById('t1400_modern').innerText = s1400.modern !== "--" ? s1400.modern : "--";
+            document.getElementById('t1400_internet').innerText = s1400.internet !== "--" ? s1400.internet : "--";
+            document.getElementById('t1400_tw').innerText = s1400.tw !== "--" ? s1400.tw : "--";
+          }
+        }
+      } catch (e) {
+        console.error("Schedule fetch error:", e);
+      }
+    }
+
+    async function fetchLiveData() {
+      if (!isLiveActive) {
+        fetchScheduleData();
+        return;
+      }
+
+      fetchScheduleData();
+
+      try {
+        const res = await fetch('/api/live');
+        const data = await res.json();
+        
+        if(data.success) {
+          if (data.live2D && data.live2D !== "--") {
+            document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
+            document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
+            
+            document.getElementById('live2D').innerText = data.live2D;
+            document.getElementById('updateTime').innerText = "Last Update: " + data.time;
+            document.getElementById('notice').innerText = data.notice;
+
+            if(current2D !== data.live2D) {
+              current2D = data.live2D;
+              speak2D();
+            }
+          }
+        }
+      } catch(e) {}
+    }
+
+    async function fetchChat() {
+      try {
+        const res = await fetch('/api/chat');
+        const data = await res.json();
+        if(data.success) {
+          const chatDiv = document.getElementById('chatMessages');
+          chatDiv.innerHTML = data.messages.map(m => 
+            `<div class="msg"><span class="msg-user">${m.user}:</span> ${m.text}</div>`
+          ).join('');
+          chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+      } catch(e) {}
+    }
+
+    async function sendMessage() {
+      const int = document.getElementById('chatInput');
+      const text = int.value.trim();
+      if(!text) return;
+
+      await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: "User", text: text })
+      });
+
+      int.value = "";
+      fetchChat();
+    }
+
+    function handleKeyPress(e) { if(e.key === 'Enter') sendMessage(); }
+
+    checkMarketSchedule();
+    fetchScheduleData();
+    fetchLiveData();
+    fetchChat();
+
+    setInterval(checkMarketSchedule, 1000);
+    setInterval(fetchLiveData, 3000);
+    setInterval(fetchChat, 2000);
+    setInterval(fetchScheduleData, 5000);
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('audio-btn'); 
+      if (btn) {
+        if (soundEnabled) {
+            btn.innerHTML = "🔊 အသံဖွင့်ထားသည်";
+        } else {
+            btn.innerHTML = "🔇 အသံပိတ်ထားသည်";
+        }
+      }
+    }
+  </script>
+</body>
+</html>
