@@ -118,6 +118,8 @@ app.post('/api/admin/save', async (req, res) => {
                 adminResults[session].isLocked = true;
             }
 
+            // Admin မှ သိမ်းလိုက်သော အချက်အလက်များကို DayData ရဲ့ schedule ထဲသို့ တိုက်ရိုက် မှတ်တမ်းတင်မည်
+            todayRecord.schedule = adminResults;
             todayRecord.markModified('schedule');
             await todayRecord.save();
 
@@ -295,6 +297,7 @@ app.get('/api/live', async (req, res) => {
             }
         }
 
+        todayRecord.schedule = adminResults;
         todayRecord.markModified('schedule');
         await todayRecord.save();
 
@@ -321,15 +324,12 @@ app.get('/api/live', async (req, res) => {
         let todayRecord = await getTodayAdminResults();
         let adminResults = todayRecord.schedule;
 
-        // ဈေးကွက်ပိတ်ချိန် (သို့) Error တက်တဲ့အခါ Database ထဲမှာ ရှိပြီးသား နောက်ဆုံး သိမ်းထားတဲ့ တန်ဖိုးများကို ပြန်သုံးမည်
         let fallback2D = "--";
         let fallbackSetIndex = "--";
         let fallbackValue = "--";
 
         const currentHour = myanmarTime.getHours();
-        const currentMinute = myanmarTime.getMinutes();
 
-        // နေ့လည် ၁၂:၀၁ နောက်ပိုင်းဖြစ်လျှင် သို့မဟုတ် ညနေပိုင်းဖြစ်လျှင် ၁၂:၀၁ ဂဏန်းကို ထုတ်ပြမည်
         if (currentHour >= 12) {
             if (todayRecord.t1201 && todayRecord.t1201 !== "--") {
                 fallback2D = todayRecord.t1201;
