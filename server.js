@@ -160,6 +160,10 @@ app.get('/api/history', async (req, res) => {
 });
 
 app.get('/api/live', async (req, res) => {
+    let setIndex = '';
+    let marketValue = '';
+    let calculated2D = '--';
+
     try {
         const url = 'https://www.set.or.th/en/home';
         const { data } = await axios.get(url, {
@@ -171,9 +175,6 @@ app.get('/api/live', async (req, res) => {
         });
         
         const $ = cheerio.load(data);
-
-        let setIndex = '';
-        let marketValue = '';
 
         $('.mkt-info-value, .value, h3, span').each((i, el) => {
             const text = $(el).text().trim();
@@ -211,7 +212,6 @@ app.get('/api/live', async (req, res) => {
 
         let digit1 = "--";
         let digit2 = "--";
-        let calculated2D = "--";
 
         if (setIndex.includes('.')) {
             const indexParts = setIndex.split('.');
@@ -318,18 +318,33 @@ app.get('/api/live', async (req, res) => {
         const myanmarTime = getMyanmarTime();
         const currentTime = myanmarTime.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
         
-        let adminResults = {
-            "09:30 AM": { modern: "--", internet: "--", tw: "--", isLocked: false },
-            "12:01 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true },
-            "02:00 PM": { modern: "--", internet: "--", tw: "--", isLocked: false },
-            "04:30 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true }
-        };
+        let todayRecord = await getTodayAdminResults();
+        let adminResults = todayRecord.schedule;
+
+        // ဈေးကွက်ပိတ်ချိန် (သို့) Error တက်တဲ့အခါ Database ထဲမှာ ရှိပြီးသား နောက်ဆုံး သိမ်းထားတဲ့ တန်ဖိုးများကို ပြန်သုံးမည်
+        let fallback2D = "--";
+        let fallbackSetIndex = "--";
+        let fallbackValue = "--";
+
+        const currentHour = myanmarTime.getHours();
+        const currentMinute = myanmarTime.getMinutes();
+
+        // နေ့လည် ၁၂:၀၁ နောက်ပိုင်းဖြစ်လျှင် သို့မဟုတ် ညနေပိုင်းဖြစ်လျှင် ၁၂:၀၁ ဂဏန်းကို ထုတ်ပြမည်
+        if (currentHour >= 12) {
+            if (todayRecord.t1201 && todayRecord.t1201 !== "--") {
+                fallback2D = todayRecord.t1201;
+                fallbackSetIndex = todayRecord.setIndex1201 || "--";
+                fallbackValue = todayRecord.value1201 || "--";
+            } else if (adminResults["12:01 PM"].modern && adminResults["12:01 PM"].modern !== "--") {
+                fallback2D = adminResults["12:01 PM"].modern;
+            }
+        }
 
         res.json({
             success: true,
-            setIndex: "--",
-            value: "--",
-            live2D: "--",
+            setIndex: fallbackSetIndex,
+            value: fallbackValue,
+            live2D: fallback2D,
             adminResults: adminResults,
             schedule: {
                 t0930: adminResults["09:30 AM"],
@@ -337,7 +352,7 @@ app.get('/api/live', async (req, res) => {
                 t1400: adminResults["02:00 PM"],
                 t1630: adminResults["04:30 PM"]
             },
-            notice: "ဈေးကွက်ပိတ်ထားသည် (သို့) ချိတ်ဆက်မှု စောင့်ဆိုင်းနေသည်...",
+            notice: "ဈေးကွက်ပိတ်ထားသည် (သို့) နေ့လည်ပိတ်ချိန် ရလဒ်...",
             time: currentTime
         });
     }
