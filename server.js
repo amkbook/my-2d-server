@@ -13,7 +13,7 @@ app.use(express.static(__dirname));
 const PORT = process.env.PORT || 3000;
 
 // MongoDB သို့ ချိတ်ဆက်ခြင်း (Render ပေါ်တွင် ဒေတာ အမြဲသိမ်းရန်)
-const MONGO_URI = 'mongodb+srv://amkbook9_db_user:IJVUDOG7XoE1R1GZ@cluster0.aqs0zyr.mongodb.net/my2dapp?retryWrites=true&w=majority&appName=Cluster0';
+const MONGO_URI = 'mongodb+srv://clean2duser:cleanpass123@cluster0.aqs0zyr.mongodb.net/my2dapp?retryWrites=true&w=majority&appName=Cluster0';
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('MongoDB successfully connected!'))
