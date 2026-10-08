@@ -7,10 +7,23 @@ const mongoose = require('mongoose');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '16kb' }));
 app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 3000;
+
+const LIVE_FETCH_INTERVAL_MS = 3000;
+let liveCache = {
+    setIndex: "--",
+    value: "--",
+    live2D: "--",
+    adminResults: null,
+    schedule: null,
+    notice: "2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။",
+    time: "--",
+    updatedAt: 0
+};
+let liveFetchRunning = false;
 
 // MongoDB သို့ ချိတ်ဆက်ခြင်း (Render ပေါ်တွင် ဒေတာ အမြဲသိမ်းရန်)
 const MONGO_URI = 'mongodb+srv://clean2duser:cleanpass123@cluster0.aqs0zyr.mongodb.net/my2dapp?retryWrites=true&w=majority&appName=Cluster0';
@@ -21,7 +34,7 @@ mongoose.connect(MONGO_URI)
 
 // MongoDB Schema & Model for Day Data (Admin results & History)
 const dataSchema = new mongoose.Schema({
-    dateStr: { type: String, required: true, unique: true }, 
+    dateStr: { type: String, required: true, unique: true },
     dateFormatted: String,
     t1201: { type: String, default: "--" },
     t430: { type: String, default: "--" },
@@ -66,6 +79,7 @@ async function getTodayAdminResults() {
     const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
 
     let record = await DayData.findOne({ dateStr: todayDateStr });
+
     if (!record) {
         record = new DayData({
             dateStr: todayDateStr,
@@ -77,26 +91,35 @@ async function getTodayAdminResults() {
                 "04:30 PM": { modern: "--", internet: "--", tw: "--", isLocked: false, isAuto: true }
             }
         });
+
         await record.save();
     }
+
     return record;
 }
 
 app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
+
     if (password === '2dpro153791') {
         res.json({ success: true, message: "Login successful" });
     } else {
-        res.status(401).json({ success: false, message: "စကားဝှက် (Password) မှားယွင်းနေပါသည်။" });
+        res.status(401).json({
+            success: false,
+            message: "စကားဝှက် (Password) မှားယွင်းနေပါသည်။"
+        });
     }
 });
 
 app.post('/api/admin/save', async (req, res) => {
     try {
         const { password, session, modern, internet, tw } = req.body;
-        
+
         if (password !== '2dpro153791') {
-            return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
+            return res.status(401).json({
+                success: false,
+                message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)"
+            });
         }
 
         let todayRecord = await getTodayAdminResults();
@@ -104,17 +127,29 @@ app.post('/api/admin/save', async (req, res) => {
 
         if (session && adminResults[session]) {
             if (adminResults[session].isLocked) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: `${session} အတွက် ဂဏန်းများကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်)။` 
+                return res.status(400).json({
+                    success: false,
+                    message: `${session} အတွက် ဂဏန်းများကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)`
                 });
             }
 
-            if (modern !== undefined && modern !== "") adminResults[session].modern = modern;
-            if (internet !== undefined && internet !== "") adminResults[session].internet = internet;
-            if (tw !== undefined && tw !== "") adminResults[session].tw = tw;
+            if (modern !== undefined && modern !== "") {
+                adminResults[session].modern = modern;
+            }
 
-            if (adminResults[session].modern !== "--" || adminResults[session].internet !== "--" || adminResults[session].tw !== "--") {
+            if (internet !== undefined && internet !== "") {
+                adminResults[session].internet = internet;
+            }
+
+            if (tw !== undefined && tw !== "") {
+                adminResults[session].tw = tw;
+            }
+
+            if (
+                adminResults[session].modern !== "--" ||
+                adminResults[session].internet !== "--" ||
+                adminResults[session].tw !== "--"
+            ) {
                 adminResults[session].isLocked = true;
             }
 
@@ -122,64 +157,94 @@ app.post('/api/admin/save', async (req, res) => {
             todayRecord.markModified('schedule');
             await todayRecord.save();
 
-            return res.json({ 
-                success: true, 
-                message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။`, 
-                adminResults 
+            return res.json({
+                success: true,
+                message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။`,
+                adminResults
             });
         }
 
-        res.status(400).json({ success: false, message: "မှားယွင်းနေသော Session ဖြစ်ပါသည်။" });
+        res.status(400).json({
+            success: false,
+            message: "မှားယွင်းနေသော Session ဖြစ်ပါသည်။"
+        });
+
     } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: "Server error occurred" });
+        res.status(500).json({
+            success: false,
+            message: "Server error occurred"
+        });
     }
 });
 
 app.get('/api/admin/data', async (req, res) => {
     try {
         const todayRecord = await getTodayAdminResults();
+
         res.json({
             success: true,
             adminResults: todayRecord.schedule
         });
+
     } catch (err) {
-        res.status(500).json({ success: false, message: "Server error" });
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
     }
 });
 
 app.get('/api/history', async (req, res) => {
     try {
-        const historyRecords = await DayData.find().sort({ _id: -1 }).limit(100);
+        const historyRecords = await DayData.find()
+            .sort({ _id: -1 })
+            .limit(100);
+
         res.json({
             success: true,
             history: historyRecords
         });
+
     } catch (err) {
-        res.status(500).json({ success: false, message: "Server error" });
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
     }
 });
 
-app.get('/api/live', async (req, res) => {
+async function fetchAndUpdateLiveCache() {
+    if (liveFetchRunning) return;
+
+    liveFetchRunning = true;
+
     let setIndex = '';
     let marketValue = '';
     let calculated2D = '--';
 
     try {
         const url = 'https://www.set.or.th/en/home';
+
         const { data } = await axios.get(url, {
             timeout: 8000,
-            headers: { 
+            headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept-Language': 'en-US,en;q=0.9'
             }
         });
-        
+
         const $ = cheerio.load(data);
 
         $('.mkt-info-value, .value, h3, span').each((i, el) => {
             const text = $(el).text().trim();
-            if (text.includes('.') && text.length >= 6 && text.length <= 10 && !setIndex) {
+
+            if (
+                text.includes('.') &&
+                text.length >= 6 &&
+                text.length <= 10 &&
+                !setIndex
+            ) {
                 if (!isNaN(text.replace(/,/g, ''))) {
                     setIndex = text;
                 }
@@ -188,22 +253,38 @@ app.get('/api/live', async (req, res) => {
 
         $('tr, div, li').each((i, el) => {
             const rowText = $(el).text().trim();
-            
-            if ((rowText.startsWith('SET') || rowText.includes('SET \n') || rowText.includes('SET\t')) && 
-                !rowText.includes('SET50') && 
-                !rowText.includes('SETTRI') && 
-                !rowText.includes('SETCLMV') && 
+
+            if (
+                (
+                    rowText.startsWith('SET') ||
+                    rowText.includes('SET \n') ||
+                    rowText.includes('SET\t')
+                ) &&
+                !rowText.includes('SET50') &&
+                !rowText.includes('SETTRI') &&
+                !rowText.includes('SETCLMV') &&
                 !rowText.includes('SETHD') &&
-                !rowText.includes('SETESG')) {
-                
+                !rowText.includes('SETESG')
+            ) {
                 const items = $(el).find('td, span, div');
+
                 items.each((j, subEl) => {
                     const t = $(subEl).text().trim();
-                    if (t.includes(',') && t.length >= 7 && t.length <= 12) {
+
+                    if (
+                        t.includes(',') &&
+                        t.length >= 7 &&
+                        t.length <= 12
+                    ) {
                         const clean = t.replace(/,/g, '');
                         const num = parseFloat(clean);
-                        
-                        if (!isNaN(num) && num >= 10000 && num < 200000 && !marketValue) {
+
+                        if (
+                            !isNaN(num) &&
+                            num >= 10000 &&
+                            num < 200000 &&
+                            !marketValue
+                        ) {
                             marketValue = t;
                         }
                     }
@@ -216,14 +297,13 @@ app.get('/api/live', async (req, res) => {
 
         if (setIndex.includes('.')) {
             const indexParts = setIndex.split('.');
-            const indexDecimal = indexParts[1]; 
-            digit1 = indexDecimal.slice(-1);    
+            digit1 = indexParts[1].slice(-1);
         }
 
         if (marketValue.includes('.')) {
             const valueParts = marketValue.split('.');
-            const valueInteger = valueParts[0].replace(/,/g, ''); 
-            digit2 = valueInteger.slice(-1); 
+            const valueInteger = valueParts[0].replace(/,/g, '');
+            digit2 = valueInteger.slice(-1);
         }
 
         if (digit1 !== "--" && digit2 !== "--") {
@@ -231,6 +311,7 @@ app.get('/api/live', async (req, res) => {
         }
 
         const myanmarTime = getMyanmarTime();
+
         const currentTime = myanmarTime.toLocaleTimeString('en-US', {
             hour12: true,
             hour: '2-digit',
@@ -240,28 +321,50 @@ app.get('/api/live', async (req, res) => {
 
         const currentHour = myanmarTime.getHours();
         const currentMinute = myanmarTime.getMinutes();
+
         const dateString = myanmarTime.toLocaleDateString('en-GB', {
             day: 'numeric',
             month: 'long',
             year: 'numeric'
         });
+
         const dayOfWeekIndex = myanmarTime.getDay();
-        const dayOfWeek = myanmarTime.toLocaleDateString('en-US', { weekday: 'long' });
-        
+
+        const dayOfWeek = myanmarTime.toLocaleDateString('en-US', {
+            weekday: 'long'
+        });
+
         const daysMap = {
-            "Sunday": "တနင်္ဂနွေ", "Monday": "တနင်္လာ", "Tuesday": "အင်္ဂါ",
-            "Wednesday": "ဗုဒ္ဓဟူး", "Thursday": "ကြာသပတေး", "Friday": "သောကြာ", "Saturday": "စနေ"
+            "Sunday": "တနင်္ဂနွေ",
+            "Monday": "တနင်္လာ",
+            "Tuesday": "အင်္ဂါ",
+            "Wednesday": "ဗုဒ္ဓဟူး",
+            "Thursday": "ကြာသပတေး",
+            "Friday": "သောကြာ",
+            "Saturday": "စနေ"
         };
+
         const myanmarDay = daysMap[dayOfWeek] || dayOfWeek;
-        const isWeekend = (dayOfWeekIndex === 0 || dayOfWeekIndex === 6);
+
+        const isWeekend =
+            dayOfWeekIndex === 0 ||
+            dayOfWeekIndex === 6;
 
         let todayRecord = await getTodayAdminResults();
         let adminResults = todayRecord.schedule;
 
-        // 12:01 PM အလိုအလျောက် ဇယားကွက်ထဲသို့ ဖြည့်သွင်းခြင်း (09:30 AM Admin ဂဏန်းများနှင့် 12:01 PM 2D ဂဏန်း ပေါင်းစပ်ခြင်း)
-        if ((currentHour === 12 && currentMinute >= 1) || currentHour > 12) {
+        // -------------------------------------------------------------
+        // 12:01 PM တွင် 09:30 AM (Admin) ဂဏန်းများနှင့် 12:01 PM (Live) ဂဏန်း ပေါင်းစပ်ခြင်း
+        // -------------------------------------------------------------
+        if (
+            (currentHour === 12 && currentMinute >= 1) ||
+            currentHour > 12
+        ) {
             if (!isWeekend && calculated2D !== "--") {
-                if (adminResults["12:01 PM"].modern === "--" && !adminResults["12:01 PM"].isLocked) {
+                if (
+                    adminResults["12:01 PM"].modern === "--" &&
+                    !adminResults["12:01 PM"].isLocked
+                ) {
                     adminResults["12:01 PM"].modern = calculated2D;
                     adminResults["12:01 PM"].internet = calculated2D;
                     adminResults["12:01 PM"].tw = calculated2D;
@@ -269,23 +372,42 @@ app.get('/api/live', async (req, res) => {
                 }
             }
 
-            if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
-                // 12:01 PM တွင် 09:30 AM Admin ဂဏန်းကိုပါ t1201 သို့မဟုတ် မှတ်တမ်းထဲသို့ ထည့်သွင်းပေးရန်အတွက် 
-                // Admin က 09:30 အကွက်မှာ ထည့်ထားတဲ့ Modern သို့မဟုတ် Internet တန်ဖိုးကို ယူမည်
-                const admin0930Val = adminResults["09:30 AM"].modern !== "--" ? adminResults["09:30 AM"].modern : (adminResults["09:30 AM"].internet !== "--" ? adminResults["09:30 AM"].internet : "--");
-                
-                // မှတ်တမ်းအတွက် 12:01 ကွက်တွင် 09:30 နဲ့ 12:01 ပေါင်းစပ်ပြသရန် (သို့မဟုတ် သင့် App Front-end ရဲ့ပြသပုံအရ သိမ်းဆည်းရန်)
-                todayRecord.t1201 = calculated2D; // လိုအပ်ပါက admin0930Val နှင့် calculated2D ကို တွဲ၍လည်း သိမ်းဆည်းနိုင်သည်
+            if (
+                !isWeekend &&
+                setIndex !== "--" &&
+                marketValue !== "--"
+            ) {
+                const admin0930 =
+                    adminResults["09:30 AM"].modern !== "--"
+                        ? adminResults["09:30 AM"].modern
+                        : (
+                            adminResults["09:30 AM"].internet !== "--"
+                                ? adminResults["09:30 AM"].internet
+                                : "--"
+                        );
+
+                todayRecord.t1201 =
+                    `${admin0930} / ${calculated2D}`;
+
                 todayRecord.setIndex1201 = setIndex;
                 todayRecord.value1201 = marketValue;
-                todayRecord.dateFormatted = `${myanmarDay}\n${dateString}`;
+                todayRecord.dateFormatted =
+                    `${myanmarDay}\n${dateString}`;
             }
         }
 
-        // 4:30 PM အလိုအလျောက် ဇယားကွက်ထဲသို့ ဖြည့်သွင်းခြင်း (02:00 PM Admin ဂဏန်းများနှင့် 04:30 PM 2D ဂဏန်း ပေါင်းစပ်ခြင်း)
-        if ((currentHour > 16 || (currentHour === 16 && currentMinute >= 30))) {
+        // -------------------------------------------------------------
+        // 4:30 PM တွင် 02:00 PM (Admin) ဂဏန်းများနှင့် 04:30 PM (Live) ဂဏန်း ပေါင်းစပ်ခြင်း
+        // -------------------------------------------------------------
+        if (
+            currentHour > 16 ||
+            (currentHour === 16 && currentMinute >= 30)
+        ) {
             if (!isWeekend && calculated2D !== "--") {
-                if (adminResults["04:30 PM"].modern === "--" && !adminResults["04:30 PM"].isLocked) {
+                if (
+                    adminResults["04:30 PM"].modern === "--" &&
+                    !adminResults["04:30 PM"].isLocked
+                ) {
                     adminResults["04:30 PM"].modern = calculated2D;
                     adminResults["04:30 PM"].internet = calculated2D;
                     adminResults["04:30 PM"].tw = calculated2D;
@@ -293,26 +415,40 @@ app.get('/api/live', async (req, res) => {
                 }
             }
 
-            if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
-                const admin0200Val = adminResults["02:00 PM"].modern !== "--" ? adminResults["02:00 PM"].modern : (adminResults["02:00 PM"].internet !== "--" ? adminResults["02:00 PM"].internet : "--");
-                
-                todayRecord.t430 = calculated2D;
+            if (
+                !isWeekend &&
+                setIndex !== "--" &&
+                marketValue !== "--"
+            ) {
+                const admin0200 =
+                    adminResults["02:00 PM"].modern !== "--"
+                        ? adminResults["02:00 PM"].modern
+                        : (
+                            adminResults["02:00 PM"].internet !== "--"
+                                ? adminResults["02:00 PM"].internet
+                                : "--"
+                        );
+
+                todayRecord.t430 =
+                    `${admin0200} / ${calculated2D}`;
+
                 todayRecord.setIndex430 = setIndex;
                 todayRecord.value430 = marketValue;
-                todayRecord.dateFormatted = `${myanmarDay}\n${dateString}`;
+                todayRecord.dateFormatted =
+                    `${myanmarDay}\n${dateString}`;
             }
         }
 
         todayRecord.schedule = adminResults;
         todayRecord.markModified('schedule');
+
         await todayRecord.save();
 
-        res.json({
-            success: true,
+        liveCache = {
             setIndex: setIndex || "--",
             value: marketValue || "--",
             live2D: calculated2D,
-            adminResults: adminResults,
+            adminResults,
             schedule: {
                 t0930: adminResults["09:30 AM"],
                 t1201: adminResults["12:01 PM"],
@@ -320,58 +456,183 @@ app.get('/api/live', async (req, res) => {
                 t1630: adminResults["04:30 PM"]
             },
             notice: "2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။",
-            time: currentTime
-        });
+            time: currentTime,
+            updatedAt: Date.now()
+        };
 
     } catch (error) {
-        const myanmarTime = getMyanmarTime();
-        const currentTime = myanmarTime.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        
-        let todayRecord = await getTodayAdminResults();
-        let adminResults = todayRecord.schedule;
+        console.error(
+            "Live data fetch error:",
+            error.message
+        );
 
-        let fallback2D = "--";
-        let fallbackSetIndex = "--";
-        let fallbackValue = "--";
+        // Keep the last successful live cache.
+        // Only use DB fallback if cache has never received a successful live result.
+        try {
+            const myanmarTime = getMyanmarTime();
 
-        const currentHour = myanmarTime.getHours();
-        const currentMinute = myanmarTime.getMinutes();
+            const currentTime =
+                myanmarTime.toLocaleTimeString('en-US', {
+                    hour12: true,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
 
-        // ဈေးကွက်ပိတ်ချိန် (သို့) API တောင်းလို့မရတဲ့အချိန်များ
-        if ((currentHour >= 12 && currentHour < 14) || (currentHour === 12 && currentMinute >= 1)) {
-            fallback2D = todayRecord.t1201 !== "--" ? todayRecord.t1201 : (adminResults["12:01 PM"].modern || "--");
-            fallbackSetIndex = todayRecord.setIndex1201 || "--";
-            fallbackValue = todayRecord.value1201 || "--";
-        } else if (currentHour >= 16 || currentHour < 9 || (currentHour === 9 && currentMinute < 30) || (currentHour >= 14 && currentHour < 16)) {
-            if (todayRecord.t430 && todayRecord.t430 !== "--") {
-                fallback2D = todayRecord.t430;
-                fallbackSetIndex = todayRecord.setIndex430 || "--";
-                fallbackValue = todayRecord.value430 || "--";
-            } else if (adminResults["04:30 PM"].modern && adminResults["04:30 PM"].modern !== "--") {
-                fallback2D = adminResults["04:30 PM"].modern;
-            } else if (todayRecord.t1201 && todayRecord.t1201 !== "--") {
-                fallback2D = todayRecord.t1201;
-                fallbackSetIndex = todayRecord.setIndex1201 || "--";
-                fallbackValue = todayRecord.value1201 || "--";
+            const todayRecord =
+                await getTodayAdminResults();
+
+            const adminResults =
+                todayRecord.schedule;
+
+            if (!liveCache.updatedAt) {
+                const currentHour =
+                    myanmarTime.getHours();
+
+                const currentMinute =
+                    myanmarTime.getMinutes();
+
+                let fallback2D = "--";
+                let fallbackSetIndex = "--";
+                let fallbackValue = "--";
+
+                if (
+                    currentHour >= 12 &&
+                    currentHour < 14
+                ) {
+                    fallback2D =
+                        todayRecord.t1201 !== "--"
+                            ? todayRecord.t1201
+                            : (
+                                adminResults["12:01 PM"].modern ||
+                                "--"
+                            );
+
+                    fallbackSetIndex =
+                        todayRecord.setIndex1201 ||
+                        "--";
+
+                    fallbackValue =
+                        todayRecord.value1201 ||
+                        "--";
+
+                } else if (
+                    currentHour >= 16 ||
+                    currentHour < 9 ||
+                    (
+                        currentHour === 9 &&
+                        currentMinute < 30
+                    ) ||
+                    (
+                        currentHour >= 14 &&
+                        currentHour < 16
+                    )
+                ) {
+                    if (
+                        todayRecord.t430 &&
+                        todayRecord.t430 !== "--"
+                    ) {
+                        fallback2D =
+                            todayRecord.t430;
+
+                        fallbackSetIndex =
+                            todayRecord.setIndex430 ||
+                            "--";
+
+                        fallbackValue =
+                            todayRecord.value430 ||
+                            "--";
+
+                    } else if (
+                        adminResults["04:30 PM"].modern &&
+                        adminResults["04:30 PM"].modern !== "--"
+                    ) {
+                        fallback2D =
+                            adminResults["04:30 PM"].modern;
+
+                    } else if (
+                        todayRecord.t1201 &&
+                        todayRecord.t1201 !== "--"
+                    ) {
+                        fallback2D =
+                            todayRecord.t1201;
+
+                        fallbackSetIndex =
+                            todayRecord.setIndex1201 ||
+                            "--";
+
+                        fallbackValue =
+                            todayRecord.value1201 ||
+                            "--";
+                    }
+                }
+
+                liveCache = {
+                    setIndex: fallbackSetIndex,
+                    value: fallbackValue,
+                    live2D: fallback2D,
+                    adminResults,
+                    schedule: {
+                        t0930: adminResults["09:30 AM"],
+                        t1201: adminResults["12:01 PM"],
+                        t1400: adminResults["02:00 PM"],
+                        t1630: adminResults["04:30 PM"]
+                    },
+                    notice:
+                        "2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။",
+                    time: currentTime,
+                    updatedAt: 0
+                };
+
+            } else {
+                liveCache.adminResults =
+                    adminResults;
+
+                liveCache.schedule = {
+                    t0930: adminResults["09:30 AM"],
+                    t1201: adminResults["12:01 PM"],
+                    t1400: adminResults["02:00 PM"],
+                    t1630: adminResults["04:30 PM"]
+                };
             }
+
+        } catch (fallbackError) {
+            console.error(
+                "Live fallback error:",
+                fallbackError.message
+            );
         }
 
-        res.json({
-            success: true,
-            setIndex: fallbackSetIndex,
-            value: fallbackValue,
-            live2D: fallback2D,
-            adminResults: adminResults,
-            schedule: {
-                t0930: adminResults["09:30 AM"],
-                t1201: adminResults["12:01 PM"],
-                t1400: adminResults["02:00 PM"],
-                t1630: adminResults["04:30 PM"]
-            },
-            notice: "ဈေးကွက်ပိတ်ချိန် (Market Closed)",
-            time: currentTime
-        });
+    } finally {
+        liveFetchRunning = false;
     }
+}
+
+// SET ကို server တစ်ခုတည်းကသာ 3 စက္ကန့်တစ်ကြိမ် fetch လုပ်မည်။
+// User များစွာ /api/live ခေါ်သော်လည်း SET website ကို ထပ်ခါထပ်ခါ မခေါ်တော့ပါ။
+setInterval(
+    fetchAndUpdateLiveCache,
+    LIVE_FETCH_INTERVAL_MS
+);
+
+// Server start ပြီးတာနဲ့ ပထမဆုံး data ကို ချက်ချင်းရယူပါ။
+fetchAndUpdateLiveCache();
+
+app.get('/api/live', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+
+    res.json({
+        success: true,
+        setIndex: liveCache.setIndex,
+        value: liveCache.value,
+        live2D: liveCache.live2D,
+        adminResults:
+            liveCache.adminResults || {},
+        schedule:
+            liveCache.schedule || {},
+        notice: liveCache.notice,
+        time: liveCache.time
+    });
 });
 
 app.get('/api/chat', (req, res) => {
@@ -383,15 +644,25 @@ app.get('/api/chat', (req, res) => {
 
 app.post('/api/chat', (req, res) => {
     const { user, text } = req.body;
+
     if (text) {
-        chatMessages.push({ user: user || "User", text: text });
+        chatMessages.push({
+            user: user || "User",
+            text: text
+        });
+
         if (chatMessages.length > 50) {
             chatMessages.shift();
         }
     }
-    res.json({ success: true });
+
+    res.json({
+        success: true
+    });
 });
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(
+        `Server is running on port ${PORT}`
+    );
 });

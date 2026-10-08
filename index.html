@@ -234,6 +234,65 @@
     let soundEnabled = true;
     let isLiveActive = false;
 
+    // Client-side waiting animation only.
+    // Temporary numbers are visual placeholders, NOT real 2D results.
+    let waitingAnimationTimer = null;
+    let waitingAnimationGeneration = 0;
+    let waitingAnimationVisible = true;
+
+    function stopWaitingAnimation(showRealResult = true) {
+      waitingAnimationGeneration++;
+
+      if (waitingAnimationTimer) {
+        clearInterval(waitingAnimationTimer);
+        waitingAnimationTimer = null;
+      }
+
+      const liveEl = document.getElementById('live2D');
+      if (!liveEl) return;
+
+      liveEl.style.visibility = 'visible';
+      liveEl.style.opacity = '1';
+
+      if (showRealResult) {
+        liveEl.innerText = current2D;
+      }
+    }
+
+    function startWaitingAnimation() {
+      if (!isLiveActive || current2D === "--" || current2D.length !== 2) {
+        stopWaitingAnimation(false);
+        return;
+      }
+
+      const liveEl = document.getElementById('live2D');
+      if (!liveEl) return;
+
+      stopWaitingAnimation(false);
+
+      const generation = waitingAnimationGeneration;
+      waitingAnimationVisible = true;
+
+      liveEl.innerText = current2D;
+      liveEl.style.visibility = 'visible';
+      liveEl.style.opacity = '1';
+
+      waitingAnimationTimer = setInterval(() => {
+        if (generation !== waitingAnimationGeneration || !isLiveActive) return;
+
+        if (waitingAnimationVisible) {
+          liveEl.innerText = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+          liveEl.style.visibility = 'visible';
+          liveEl.style.opacity = '1';
+        } else {
+          liveEl.style.visibility = 'hidden';
+          liveEl.style.opacity = '0';
+        }
+
+        waitingAnimationVisible = !waitingAnimationVisible;
+      }, 1000);
+    }
+
     function switchTab(pageId, btn) {
       document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -364,6 +423,7 @@
       
       if (day === 0 || day === 6) {
         isLiveActive = false;
+        stopWaitingAnimation(true);
         updateMarketUI('closed');
         document.getElementById('notice').innerText = "စနေ/တနင်္ဂနွေ ပိတ်ရက် ဖြစ်ပါသည်။";
         return;
@@ -409,7 +469,7 @@
           if (!announcedTimes['m1201']) {
             announcedTimes['m1201'] = true;
             startMoneyRain();
-            let currentVal = document.getElementById('live2D').innerText;
+            let currentVal = current2D;
             if (currentVal !== "--") {
               const t1201El = document.getElementById('t1201_modern');
               t1201El.innerText = currentVal;
@@ -431,7 +491,7 @@
           if (!announcedTimes['e1630']) {
             announcedTimes['e1630'] = true;
             startMoneyRain();
-            let currentVal = document.getElementById('live2D').innerText;
+            let currentVal = current2D;
             if (currentVal !== "--") {
               const t1630El = document.getElementById('t1630_modern');
               t1630El.innerText = currentVal;
@@ -441,6 +501,7 @@
 
       } else {
         isLiveActive = false;
+        stopWaitingAnimation(true);
         
         if ((hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
           const statusEl = document.getElementById('marketStatus');
@@ -546,14 +607,22 @@
             document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
             document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
             
-            document.getElementById('live2D').innerText = data.live2D;
+            const previous2D = current2D;
+            current2D = data.live2D;
+
+            // Every server refresh immediately restores the real result.
+            stopWaitingAnimation(true);
+
+            document.getElementById('live2D').innerText = current2D;
             document.getElementById('updateTime').innerText = "Last Update: " + data.time;
             document.getElementById('notice').innerText = data.notice;
 
-            if(current2D !== data.live2D) {
-              current2D = data.live2D;
+            if(previous2D !== current2D) {
               speak2D();
             }
+
+            // Animate locally while waiting for the next ~3-second refresh.
+            startWaitingAnimation();
           }
         }
       } catch(e) {}
