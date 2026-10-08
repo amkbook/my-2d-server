@@ -118,7 +118,6 @@ app.post('/api/admin/save', async (req, res) => {
                 adminResults[session].isLocked = true;
             }
 
-            // Admin မှ သိမ်းလိုက်သော အချက်အလက်များကို DayData ရဲ့ schedule ထဲသို့ တိုက်ရိုက် မှတ်တမ်းတင်မည်
             todayRecord.schedule = adminResults;
             todayRecord.markModified('schedule');
             await todayRecord.save();
@@ -329,14 +328,25 @@ app.get('/api/live', async (req, res) => {
         let fallbackValue = "--";
 
         const currentHour = myanmarTime.getHours();
+        const currentMinute = myanmarTime.getMinutes();
 
-        if (currentHour >= 12) {
-            if (todayRecord.t1201 && todayRecord.t1201 !== "--") {
+        // ဈေးကွက်ပိတ်ချိန် (သို့) API တောင်းလို့မရတဲ့အချိန်များ (12:01 မှ 2:00 ထိ နှင့် 4:30 မှ နောက်ရက် 9:30 ထိ) တွင် သိမ်းဆည်းထားပြီးသား တန်ဖိုးများကို ထည့်ပေးမည်
+        if ((currentHour >= 12 && currentHour < 14) || (currentHour === 12 && currentMinute >= 1)) {
+            fallback2D = todayRecord.t1201 !== "--" ? todayRecord.t1201 : (adminResults["12:01 PM"].modern || "--");
+            fallbackSetIndex = todayRecord.setIndex1201 || "--";
+            fallbackValue = todayRecord.value1201 || "--";
+        } else if (currentHour >= 16 || currentHour < 9 || (currentHour === 9 && currentMinute < 30) || (currentHour >= 14 && currentHour < 16)) {
+            // ညနေပိုင်း 4:30 ပိတ်ပြီးချိန် သို့မဟုတ် 2:00 နောက်ပိုင်း 
+            if (todayRecord.t430 && todayRecord.t430 !== "--") {
+                fallback2D = todayRecord.t430;
+                fallbackSetIndex = todayRecord.setIndex430 || "--";
+                fallbackValue = todayRecord.value430 || "--";
+            } else if (adminResults["04:30 PM"].modern && adminResults["04:30 PM"].modern !== "--") {
+                fallback2D = adminResults["04:30 PM"].modern;
+            } else if (todayRecord.t1201 && todayRecord.t1201 !== "--") {
                 fallback2D = todayRecord.t1201;
                 fallbackSetIndex = todayRecord.setIndex1201 || "--";
                 fallbackValue = todayRecord.value1201 || "--";
-            } else if (adminResults["12:01 PM"].modern && adminResults["12:01 PM"].modern !== "--") {
-                fallback2D = adminResults["12:01 PM"].modern;
             }
         }
 
@@ -352,7 +362,7 @@ app.get('/api/live', async (req, res) => {
                 t1400: adminResults["02:00 PM"],
                 t1630: adminResults["04:30 PM"]
             },
-            notice: "ဈေးကွက်ပိတ်ထားသည် (သို့) နေ့လည်ပိတ်ချိန် ရလဒ်...",
+            notice: "ဈေးကွက်ပိတ်ချိန် (Market Closed)",
             time: currentTime
         });
     }
