@@ -4,39 +4,176 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2D Live Market App - Full Version</title>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; padding-bottom: 90px; overflow-x: hidden; }
-    .container { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 15px; }
-    
-    .tab-content { display: none; }
-    .tab-content.active { display: flex; flex-direction: column; gap: 15px; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-    .card { background: #1e293b; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #334155; }
-    .notice { background: #0284c7; color: white; padding: 10px; border-radius: 8px; font-size: 14px; text-align: center; }
-    
-    .live-title-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px; }
-    .live-title { font-size: 16px; color: #94a3b8; }
-    
-    .status-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: bold; }
-    .status-live { color: #ef4444; display: inline-flex; align-items: center; gap: 4px; }
-    .status-paused { color: #f59e0b; display: inline-flex; align-items: center; gap: 4px; }
-    .spinner { width: 10px; height: 10px; border: 2px solid #ef4444; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
-    .status-closed { color: #10b981; display: inline-flex; align-items: center; gap: 4px; }
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+      padding-bottom: 90px;
+      overflow-x: hidden;
+    }
 
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .container {
+      width: 100%;
+      max-width: 450px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
 
-    .live-2d { font-size: 72px; font-weight: bold; color: #f59e0b; text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); margin: 10px 0; }
-    .time-badge { background: #334155; color: #38bdf8; padding: 4px 12px; border-radius: 20px; font-size: 12px; display: inline-block; }
-    
-    .set-info { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid #334155; }
-    .set-box { text-align: center; flex: 1; }
-    .set-label { font-size: 12px; color: #94a3b8; }
-    .set-value { font-size: 16px; font-weight: bold; color: #e2e8f0; margin-top: 2px; }
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      border: 1px solid #334155;
+    }
+
+    .notice {
+      background: #0284c7;
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .live-title-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+
+    .live-title {
+      font-size: 16px;
+      color: #94a3b8;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .status-live {
+      color: #ef4444;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-paused {
+      color: #f59e0b;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .spinner {
+      width: 10px;
+      height: 10px;
+      border: 2px solid #ef4444;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+
+    .status-closed {
+      color: #10b981;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .live-2d {
+      font-size: 72px;
+      font-weight: bold;
+      color: #f59e0b;
+      text-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+      margin: 10px 0;
+      min-height: 86px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .time-badge {
+      background: #334155;
+      color: #38bdf8;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      display: inline-block;
+    }
+
+    .set-info {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #334155;
+    }
+
+    .set-box {
+      text-align: center;
+      flex: 1;
+    }
+
+    .set-label {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .set-value {
+      font-size: 16px;
+      font-weight: bold;
+      color: #e2e8f0;
+      margin-top: 2px;
+    }
 
     .source-digit {
       color: #38bdf8 !important;
-      text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(56, 189, 248, 0.5);
+      text-shadow:
+        0 0 10px rgba(56, 189, 248, 0.8),
+        0 0 20px rgba(56, 189, 248, 0.5);
       font-weight: 900;
     }
 
@@ -45,47 +182,296 @@
       text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
     }
 
-    .audio-btn { background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 10px; cursor: pointer; }
-    
-    .schedule-table-container { background: #1e293b; border-radius: 12px; padding: 12px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-    .table-header-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 13px; font-weight: bold; color: #38bdf8; padding-bottom: 6px; border-bottom: 1px solid #334155; }
-    
-    .table-row-group { display: flex; flex-direction: column; gap: 8px; }
-    .market-row-item { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; background: #0f172a; border-radius: 8px; padding: 10px 8px; align-items: center; text-align: center; border: 1px solid #334155; }
-    .row-time-label { font-size: 13px; font-weight: bold; color: #facc15; text-align: left; padding-left: 6px; }
-    .row-val { font-size: 18px; font-weight: bold; color: #facc15; }
+    .audio-btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      width: 100%;
+      font-weight: bold;
+      margin-top: 10px;
+      cursor: pointer;
+    }
 
-    .chat-box { background: #1e293b; border-radius: 16px; padding: 15px; border: 1px solid #334155; display: flex; flex-direction: column; height: 260px; }
-    .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; padding-right: 5px; }
-    .msg { background: #334155; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
-    .msg-user { color: #38bdf8; font-weight: bold; margin-right: 5px; }
-    .chat-input-row { display: flex; gap: 8px; }
-    .chat-input-row input { flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; padding: 8px 12px; outline: none; }
-    .chat-input-row button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .schedule-table-container {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
 
-    .history-list-container { display: flex; flex-direction: column; gap: 20px; }
-    .history-card { background: #1e3a8a; border-radius: 14px; padding: 15px; border: 2px solid #3b82f6; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 12px; }
-    .history-date-badge { background: #000000; color: #f8fafc; text-align: center; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; border: 1px solid #334155; align-self: center; margin-bottom: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
-    
-    .history-top-results { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .history-res-box { background: #1e40af; border: 2px solid #60a5fa; border-radius: 10px; text-align: center; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
-    .history-res-title { font-size: 12px; color: #bfdbfe; font-weight: bold; }
-    .history-res-val { font-size: 32px; font-weight: bold; color: #ffffff; }
-    .history-res-sub { display: flex; justify-content: space-around; background: #1e3a8a; border-radius: 6px; padding: 4px; font-size: 11px; color: #e2e8f0; border-top: 1px solid #3b82f6; }
+    .table-header-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      text-align: center;
+      font-size: 13px;
+      font-weight: bold;
+      color: #38bdf8;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #334155;
+    }
 
-    .history-sub-table { background: #1e40af; border: 2px solid #60a5fa; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
-    .history-sub-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 12px; font-weight: bold; color: #bfdbfe; border-bottom: 1px solid #3b82f6; padding-bottom: 4px; }
-    .history-sub-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 14px; font-weight: bold; color: #ffffff; align-items: center; padding: 2px 0; }
-    .history-sub-label { text-align: left; padding-left: 6px; font-size: 12px; color: #facc15; }
+    .table-row-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-    .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
-    .gallery-item { background: #0f172a; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
-    .gallery-item img { width: 100%; height: 120px; object-fit: cover; }
+    .market-row-item {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 10px 8px;
+      align-items: center;
+      text-align: center;
+      border: 1px solid #334155;
+    }
 
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: space-around; padding: 10px 0; max-width: 450px; margin: 0 auto; z-index: 100; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; font-size: 11px; cursor: pointer; text-decoration: none; border: none; background: none; flex: 1; }
-    .nav-item.active { color: #38bdf8; font-weight: bold; }
-    .nav-icon { font-size: 18px; margin-bottom: 2px; }
+    .row-time-label {
+      font-size: 13px;
+      font-weight: bold;
+      color: #facc15;
+      text-align: left;
+      padding-left: 6px;
+    }
+
+    .row-val {
+      font-size: 18px;
+      font-weight: bold;
+      color: #facc15;
+    }
+
+    .chat-box {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 15px;
+      border: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      height: 260px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding-right: 5px;
+    }
+
+    .msg {
+      background: #334155;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .msg-user {
+      color: #38bdf8;
+      font-weight: bold;
+      margin-right: 5px;
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-input-row input {
+      flex: 1;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: white;
+      padding: 8px 12px;
+      outline: none;
+    }
+
+    .chat-input-row button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .history-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .history-card {
+      background: #1e3a8a;
+      border-radius: 14px;
+      padding: 15px;
+      border: 2px solid #3b82f6;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .history-date-badge {
+      background: #000000;
+      color: #f8fafc;
+      text-align: center;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      border: 1px solid #334155;
+      align-self: center;
+      margin-bottom: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    .history-top-results {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .history-res-box {
+      background: #1e40af;
+      border: 2px solid #60a5fa;
+      border-radius: 10px;
+      text-align: center;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .history-res-title {
+      font-size: 12px;
+      color: #bfdbfe;
+      font-weight: bold;
+    }
+
+    .history-res-val {
+      font-size: 32px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .history-res-sub {
+      display: flex;
+      justify-content: space-around;
+      background: #1e3a8a;
+      border-radius: 6px;
+      padding: 4px;
+      font-size: 11px;
+      color: #e2e8f0;
+      border-top: 1px solid #3b82f6;
+    }
+
+    .history-sub-table {
+      background: #1e40af;
+      border: 2px solid #60a5fa;
+      border-radius: 10px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .history-sub-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      text-align: center;
+      font-size: 12px;
+      font-weight: bold;
+      color: #bfdbfe;
+      border-bottom: 1px solid #3b82f6;
+      padding-bottom: 4px;
+    }
+
+    .history-sub-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: #ffffff;
+      align-items: center;
+      padding: 2px 0;
+    }
+
+    .history-sub-label {
+      text-align: left;
+      padding-left: 6px;
+      font-size: 12px;
+      color: #facc15;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .gallery-item {
+      background: #0f172a;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #334155;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1e293b;
+      border-top: 1px solid #334155;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      max-width: 450px;
+      margin: 0 auto;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #94a3b8;
+      font-size: 11px;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      background: none;
+      flex: 1;
+    }
+
+    .nav-item.active {
+      color: #38bdf8;
+      font-weight: bold;
+    }
+
+    .nav-icon {
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
 
     .falling-money {
       position: fixed;
@@ -96,590 +482,2429 @@
       pointer-events: none;
       animation: fallDown 4s linear infinite;
     }
+
     @keyframes fallDown {
-      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(105vh) rotate(360deg); opacity: 0.85; }
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(105vh) rotate(360deg);
+        opacity: 0.85;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <div class="container">
 
-    <!-- PAGE 1: Home (2D Live) -->
+    <!-- PAGE 1: HOME -->
     <div id="page-home" class="tab-content active">
-      <div id="notice" class="notice">2D Live မှ ကြိုဆိုပါသည်။</div>
 
-      <div class="card">
-        <div class="live-title-container">
-          <div class="live-title">LIVE 2D RESULT</div>
-          <div id="marketStatus" class="status-indicator status-closed">
-            <span>✔ စျေးကွက်ပိတ်ချိန်</span>
-          </div>
-        </div>
-
-        <div id="live2D" class="live-2d">--</div>
-        <div id="updateTime" class="time-badge">Market Closed</div>
-
-        <div class="set-info">
-          <div class="set-box">
-            <div class="set-label">SET Index</div>
-            <div id="setIndex" class="set-value">----.--</div>
-          </div>
-          <div class="set-box">
-            <div class="set-label">Value</div>
-            <div id="setValue" class="set-value">----.--</div>
-          </div>
-        </div>
-
-        <button id="audio-btn" class="audio-btn" onclick="toggleSound()">🔊 အသံဖွင့်ထားသည်</button>
+      <div id="notice" class="notice">
+        2D Live မှ ကြိုဆိုပါသည်။
       </div>
 
+      <div class="card">
+
+        <div class="live-title-container">
+
+          <div class="live-title">
+            LIVE 2D RESULT
+          </div>
+
+          <div id="marketStatus"
+               class="status-indicator status-closed">
+            <span>✔ စျေးကွက်ပိတ်ချိန်</span>
+          </div>
+
+        </div>
+
+        <div id="live2D" class="live-2d">
+          --
+        </div>
+
+        <div id="updateTime" class="time-badge">
+          Market Closed
+        </div>
+
+        <div class="set-info">
+
+          <div class="set-box">
+            <div class="set-label">
+              SET Index
+            </div>
+
+            <div id="setIndex" class="set-value">
+              ----.--
+            </div>
+          </div>
+
+          <div class="set-box">
+            <div class="set-label">
+              Value
+            </div>
+
+            <div id="setValue" class="set-value">
+              ----.--
+            </div>
+          </div>
+
+        </div>
+
+        <button id="audio-btn"
+                class="audio-btn"
+                onclick="toggleSound()">
+          🔊 အသံဖွင့်ထားသည်
+        </button>
+
+      </div>
+
+
+      <!-- SCHEDULE -->
+
       <div class="schedule-table-container">
+
         <div class="table-header-row">
           <div></div>
           <div>Modern</div>
           <div>Internet</div>
           <div>TW</div>
         </div>
-        
+
         <div class="table-row-group">
-          <div class="market-row-item">
-            <div class="row-time-label">09:30 AM</div>
-            <div id="t0930_modern" class="row-val">--</div>
-            <div id="t0930_internet" class="row-val">--</div>
-            <div id="t0930_tw" class="row-val">--</div>
-          </div>
-          
-          <div class="market-row-item">
-            <div class="row-time-label">12:01 PM</div>
-            <div id="t1201_modern" class="row-val green-val" style="grid-column: span 3;">--</div>
-          </div>
 
           <div class="market-row-item">
-            <div class="row-time-label">02:00 PM</div>
-            <div id="t1400_modern" class="row-val">--</div>
-            <div id="t1400_internet" class="row-val">--</div>
-            <div id="t1400_tw" class="row-val">--</div>
+
+            <div class="row-time-label">
+              09:30 AM
+            </div>
+
+            <div id="t0930_modern" class="row-val">
+              --
+            </div>
+
+            <div id="t0930_internet" class="row-val">
+              --
+            </div>
+
+            <div id="t0930_tw" class="row-val">
+              --
+            </div>
+
           </div>
 
+
           <div class="market-row-item">
-            <div class="row-time-label">04:30 PM</div>
-            <div id="t1630_modern" class="row-val green-val" style="grid-column: span 3;">--</div>
+
+            <div class="row-time-label">
+              12:01 PM
+            </div>
+
+            <div id="t1201_modern"
+                 class="row-val green-val"
+                 style="grid-column: span 3;">
+              --
+            </div>
+
           </div>
+
+
+          <div class="market-row-item">
+
+            <div class="row-time-label">
+              02:00 PM
+            </div>
+
+            <div id="t1400_modern" class="row-val">
+              --
+            </div>
+
+            <div id="t1400_internet" class="row-val">
+              --
+            </div>
+
+            <div id="t1400_tw" class="row-val">
+              --
+            </div>
+
+          </div>
+
+
+          <div class="market-row-item">
+
+            <div class="row-time-label">
+              04:30 PM
+            </div>
+
+            <div id="t1630_modern"
+                 class="row-val green-val"
+                 style="grid-column: span 3;">
+              --
+            </div>
+
+          </div>
+
         </div>
       </div>
+
+
+      <!-- CHAT -->
 
       <div class="chat-box">
-        <div class="live-title" style="margin-bottom: 5px;">Live Chatbox</div>
-        <div id="chatMessages" class="chat-messages"></div>
+
+        <div class="live-title"
+             style="margin-bottom: 5px;">
+          Live Chatbox
+        </div>
+
+        <div id="chatMessages"
+             class="chat-messages">
+        </div>
+
         <div class="chat-input-row">
-          <input type="text" id="chatInput" placeholder="စကားပြောရန် စာရိုက်ပါ..." onkeypress="handleKeyPress(event)">
-          <button onclick="sendMessage()">ပို့မည်</button>
+
+          <input
+            type="text"
+            id="chatInput"
+            placeholder="စကားပြောရန် စာရိုက်ပါ..."
+            onkeypress="handleKeyPress(event)"
+          >
+
+          <button onclick="sendMessage()">
+            ပို့မည်
+          </button>
+
         </div>
+
       </div>
+
     </div>
 
-    <!-- PAGE 2: Gold Price -->
+
+    <!-- PAGE 2: GOLD -->
+
     <div id="page-gold" class="tab-content">
+
       <div class="card">
-        <h2>🪙 ရွှေဈေးနှုန်းများ</h2>
-        <p style="color: #94a3b8; font-size: 14px; margin-top: 10px;">အခေါက်ရွှေနှင့် ၁၅ ပဲရည် ရွှေဈေးနှုန်း အချက်အလက်များ</p>
+
+        <h2>
+          🪙 ရွှေဈေးနှုန်းများ
+        </h2>
+
+        <p style="color: #94a3b8;
+                  font-size: 14px;
+                  margin-top: 10px;">
+          အခေါက်ရွှေနှင့် ၁၅ ပဲရည် ရွှေဈေးနှုန်း အချက်အလက်များ
+        </p>
+
       </div>
+
     </div>
 
-    <!-- PAGE 3: 2D History -->
-    <div id="page-2d-history" class="tab-content">
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;">
-        <span style="font-size: 20px; font-weight: bold; color: #ffffff; cursor: pointer;" onclick="switchTab('page-home', document.querySelector('.nav-item'))">←</span>
-        <div class="live-title" style="font-size: 18px; font-weight: bold; color: #ffffff;">2D Calendar</div>
-        <span style="font-size: 18px; color: #ffffff; cursor: pointer;">🔍</span>
-      </div>
-      
-      <div id="historyListContainer" class="history-list-container"></div>
-    </div>
 
-    <!-- PAGE 4: 3D History -->
-    <div id="page-3d-history" class="tab-content">
-      <div class="card">
-        <h2>🎯 3D နေ့စဉ်မှတ်တမ်း</h2>
-        <p style="color: #94a3b8; font-size: 14px; margin-top: 10px;">လစဉ် 3D ထွက်ဂဏန်း မှတ်တမ်းအဟောင်းများ</p>
-      </div>
-    </div>
+    <!-- PAGE 3: 2D HISTORY -->
 
-    <!-- PAGE 5: More & Photos -->
-    <div id="page-more" class="tab-content">
-      <div class="card">
-        <h2>⚙ More & နေ့စဉ်ဓာတ်ပုံများ</h2>
-        <div class="gallery-grid">
-          <div class="gallery-item"><div style="padding: 20px; color: #94a3b8;">ဓာတ်ပုံ ၁</div></div>
-          <div class="gallery-item"><div style="padding: 20px; color: #94a3b8;">ဓာတ်ပုံ ၂</div></div>
+    <div id="page-2d-history"
+         class="tab-content">
+
+      <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 10px;
+      ">
+
+        <span
+          style="
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffffff;
+            cursor: pointer;
+          "
+          onclick="
+            switchTab(
+              'page-home',
+              document.querySelector('.nav-item')
+            )
+          "
+        >
+          ←
+        </span>
+
+        <div
+          class="live-title"
+          style="
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+          "
+        >
+          2D Calendar
         </div>
+
+        <span
+          style="
+            font-size: 18px;
+            color: #ffffff;
+            cursor: pointer;
+          "
+        >
+          🔍
+        </span>
+
       </div>
+
+      <div
+        id="historyListContainer"
+        class="history-list-container">
+      </div>
+
+    </div>
+
+
+    <!-- PAGE 4: 3D HISTORY -->
+
+    <div id="page-3d-history"
+         class="tab-content">
+
+      <div class="card">
+
+        <h2>
+          🎯 3D နေ့စဉ်မှတ်တမ်း
+        </h2>
+
+        <p style="
+          color: #94a3b8;
+          font-size: 14px;
+          margin-top: 10px;
+        ">
+          လစဉ် 3D ထွက်ဂဏန်း မှတ်တမ်းအဟောင်းများ
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- PAGE 5: MORE -->
+
+    <div id="page-more"
+         class="tab-content">
+
+      <div class="card">
+
+        <h2>
+          ⚙ More & နေ့စဉ်ဓာတ်ပုံများ
+        </h2>
+
+        <div class="gallery-grid">
+
+          <div class="gallery-item">
+            <div style="
+              padding: 20px;
+              color: #94a3b8;
+            ">
+              ဓာတ်ပုံ ၁
+            </div>
+          </div>
+
+          <div class="gallery-item">
+            <div style="
+              padding: 20px;
+              color: #94a3b8;
+            ">
+              ဓာတ်ပုံ ၂
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
 
   </div>
+
+
+  <!-- BOTTOM NAV -->
 
   <div class="bottom-nav">
-    <button class="nav-item active" onclick="switchTab('page-home', this)"><span class="nav-icon">🏠</span><span>Home</span></button>
-    <button class="nav-item" onclick="switchTab('page-gold', this)"><span class="nav-icon">🪙</span><span>ရွှေဈေး</span></button>
-    <button class="nav-item" onclick="switchTab('page-2d-history', this)"><span class="nav-icon">📅</span><span>2D မှတ်တမ်း</span></button>
-    <button class="nav-item" onclick="switchTab('page-3d-history', this)"><span class="nav-icon">🎯</span><span>3D မှတ်တမ်း</span></button>
-    <button class="nav-item" onclick="switchTab('page-more', this)"><span class="nav-icon">⚙</span><span>More</span></button>
+
+    <button
+      class="nav-item active"
+      onclick="switchTab('page-home', this)"
+    >
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
+    </button>
+
+    <button
+      class="nav-item"
+      onclick="switchTab('page-gold', this)"
+    >
+      <span class="nav-icon">🪙</span>
+      <span>ရွှေဈေး</span>
+    </button>
+
+    <button
+      class="nav-item"
+      onclick="switchTab('page-2d-history', this)"
+    >
+      <span class="nav-icon">📅</span>
+      <span>2D မှတ်တမ်း</span>
+    </button>
+
+    <button
+      class="nav-item"
+      onclick="switchTab('page-3d-history', this)"
+    >
+      <span class="nav-icon">🎯</span>
+      <span>3D မှတ်တမ်း</span>
+    </button>
+
+    <button
+      class="nav-item"
+      onclick="switchTab('page-more', this)"
+    >
+      <span class="nav-icon">⚙</span>
+      <span>More</span>
+    </button>
+
   </div>
 
+
   <script>
+
     let current2D = "--";
+
     let announcedTimes = {};
+
     let soundEnabled = true;
+
     let isLiveActive = false;
 
-    // Client-side waiting animation only.
-    // Temporary numbers are visual placeholders, NOT real 2D results.
+
+    /*
+      Waiting animation control
+    */
+
     let waitingAnimationTimer = null;
+
     let waitingAnimationGeneration = 0;
+
     let waitingAnimationVisible = true;
 
-    function stopWaitingAnimation(showRealResult = true) {
-      waitingAnimationGeneration++;
 
-      if (waitingAnimationTimer) {
-        clearInterval(waitingAnimationTimer);
-        waitingAnimationTimer = null;
-      }
+    /*
+      Myanmar Time
+    */
 
-      const liveEl = document.getElementById('live2D');
-      if (!liveEl) return;
+    function getMyanmarTimeNow() {
 
-      liveEl.style.visibility = 'visible';
-      liveEl.style.opacity = '1';
+      const now = new Date();
 
-      if (showRealResult) {
-        liveEl.innerText = current2D;
-      }
+      const utc =
+        now.getTime() +
+        (now.getTimezoneOffset() * 60000);
+
+      return new Date(
+        utc + (3600000 * 6.5)
+      );
     }
 
-    function startWaitingAnimation() {
-      if (!isLiveActive || current2D === "--" || current2D.length !== 2) {
-        stopWaitingAnimation(false);
-        return;
+
+    function getMyanmarTimeText() {
+
+      return getMyanmarTimeNow().toLocaleTimeString(
+        'en-US',
+        {
+          hour12: true,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        }
+      );
+
+    }
+
+
+    /*
+      Market Session
+
+      Myanmar Time
+
+      09:30 - 12:01
+      14:00 - 16:30
+    */
+
+    function getMarketSession() {
+
+      const myanmarTime =
+        getMyanmarTimeNow();
+
+      const day =
+        myanmarTime.getDay();
+
+      const hours =
+        myanmarTime.getHours();
+
+      const minutes =
+        myanmarTime.getMinutes();
+
+      const seconds =
+        myanmarTime.getSeconds();
+
+      const totalSeconds =
+        hours * 3600 +
+        minutes * 60 +
+        seconds;
+
+
+      if (day === 0 || day === 6) {
+
+        return {
+          state: 'closed',
+          reason: 'weekend',
+          fixed: '04:30:00 PM'
+        };
+
       }
 
-      const liveEl = document.getElementById('live2D');
+
+      const morningStart =
+        9 * 3600 + 30 * 60;
+
+      const morningEnd =
+        12 * 3600 + 1 * 60;
+
+      const afternoonStart =
+        14 * 3600;
+
+      const afternoonEnd =
+        16 * 3600 + 30 * 60;
+
+
+      if (
+        totalSeconds >= morningStart &&
+        totalSeconds < morningEnd
+      ) {
+
+        return {
+          state: 'live',
+          session: 'morning',
+          time: getMyanmarTimeText()
+        };
+
+      }
+
+
+      if (
+        totalSeconds >= morningEnd &&
+        totalSeconds < afternoonStart
+      ) {
+
+        return {
+          state: 'closed',
+          reason: 'midday',
+          fixed: '12:01:00 PM'
+        };
+
+      }
+
+
+      if (
+        totalSeconds >= afternoonStart &&
+        totalSeconds < afternoonEnd
+      ) {
+
+        return {
+          state: 'live',
+          session: 'afternoon',
+          time: getMyanmarTimeText()
+        };
+
+      }
+
+
+      return {
+        state: 'closed',
+        reason: 'after-market',
+        fixed: '04:30:00 PM'
+      };
+
+    }
+
+
+    /*
+      Last Update
+
+      Market ပိတ်သွားရင် server က
+      live time ပြောင်းပေးသော်လည်း
+      ဒီ frontend က fixed time ကိုပဲ ပြမယ်။
+    */
+
+    function updateLastUpdateDisplay(session) {
+
+      const updateEl =
+        document.getElementById('updateTime');
+
+      if (!updateEl) return;
+
+
+      if (session.state === 'live') {
+
+        updateEl.innerText =
+          'Last Update: ' +
+          session.time;
+
+        return;
+
+      }
+
+
+      if (session.reason === 'midday') {
+
+        updateEl.innerText =
+          'Last Update: 12:01:00 PM';
+
+        return;
+
+      }
+
+
+      if (session.reason === 'weekend') {
+
+        updateEl.innerText =
+          'Last Update: 04:30:00 PM';
+
+        return;
+
+      }
+
+
+      updateEl.innerText =
+        'Last Update: 04:30:00 PM';
+
+    }
+
+
+    /*
+      Waiting animation stop
+    */
+
+    function stopWaitingAnimation(
+      showRealResult = true
+    ) {
+
+      waitingAnimationGeneration++;
+
+
+      if (waitingAnimationTimer) {
+
+        clearInterval(
+          waitingAnimationTimer
+        );
+
+        waitingAnimationTimer = null;
+
+      }
+
+
+      const liveEl =
+        document.getElementById('live2D');
+
       if (!liveEl) return;
+
+
+      liveEl.style.visibility =
+        'visible';
+
+      liveEl.style.opacity =
+        '1';
+
+
+      if (showRealResult) {
+
+        liveEl.innerText =
+          current2D;
+
+      }
+
+    }
+
+
+    /*
+      Waiting animation start
+
+      Market Live ဖြစ်နေချိန်မှာ
+      လက်ရှိ result ကို အကြားအကြား
+      random 2D နဲ့ animation ပြမယ်။
+
+      Market ပိတ်ရင် ချက်ချင်းရပ်မယ်။
+    */
+
+    function startWaitingAnimation() {
+
+      if (
+        !isLiveActive ||
+        current2D === "--" ||
+        current2D.length !== 2
+      ) {
+
+        stopWaitingAnimation(false);
+
+        return;
+
+      }
+
+
+      const liveEl =
+        document.getElementById('live2D');
+
+      if (!liveEl) return;
+
 
       stopWaitingAnimation(false);
 
-      const generation = waitingAnimationGeneration;
+
+      const generation =
+        waitingAnimationGeneration;
+
       waitingAnimationVisible = true;
 
-      liveEl.innerText = current2D;
-      liveEl.style.visibility = 'visible';
-      liveEl.style.opacity = '1';
 
-      waitingAnimationTimer = setInterval(() => {
-        if (generation !== waitingAnimationGeneration || !isLiveActive) return;
+      liveEl.innerText =
+        current2D;
 
-        if (waitingAnimationVisible) {
-          liveEl.innerText = String(Math.floor(Math.random() * 100)).padStart(2, '0');
-          liveEl.style.visibility = 'visible';
-          liveEl.style.opacity = '1';
-        } else {
-          liveEl.style.visibility = 'hidden';
-          liveEl.style.opacity = '0';
-        }
+      liveEl.style.visibility =
+        'visible';
 
-        waitingAnimationVisible = !waitingAnimationVisible;
-      }, 1000);
+      liveEl.style.opacity =
+        '1';
+
+
+      waitingAnimationTimer =
+        setInterval(() => {
+
+          if (
+            generation !==
+            waitingAnimationGeneration ||
+            !isLiveActive
+          ) {
+
+            return;
+
+          }
+
+
+          if (waitingAnimationVisible) {
+
+            liveEl.innerText =
+              String(
+                Math.floor(
+                  Math.random() * 100
+                )
+              ).padStart(2, '0');
+
+            liveEl.style.visibility =
+              'visible';
+
+            liveEl.style.opacity =
+              '1';
+
+          } else {
+
+            liveEl.style.visibility =
+              'hidden';
+
+            liveEl.style.opacity =
+              '0';
+
+          }
+
+
+          waitingAnimationVisible =
+            !waitingAnimationVisible;
+
+        }, 1000);
+
     }
+
+
+    /*
+      TAB
+    */
 
     function switchTab(pageId, btn) {
-      document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      document.getElementById(pageId).classList.add('active');
-      btn.classList.add('active');
 
-      if (pageId === 'page-2d-history') {
-        fetchHistoryList();
+      document
+        .querySelectorAll('.tab-content')
+        .forEach(p =>
+          p.classList.remove('active')
+        );
+
+
+      document
+        .querySelectorAll('.nav-item')
+        .forEach(b =>
+          b.classList.remove('active')
+        );
+
+
+      document
+        .getElementById(pageId)
+        .classList.add('active');
+
+
+      if (btn) {
+        btn.classList.add('active');
       }
+
+
+      if (
+        pageId ===
+        'page-2d-history'
+      ) {
+
+        fetchHistoryList();
+
+      }
+
     }
+
+
+    /*
+      HISTORY
+    */
 
     async function fetchHistoryList() {
+
       try {
-        const res = await fetch('/api/history');
-        const data = await res.json();
-        if (data.success && data.history) {
-          const container = document.getElementById('historyListContainer');
-          if (data.history.length === 0) {
-            container.innerHTML = `<div class="card" style="color: #94a3b8; padding: 30px;">ယခုထိ သိမ်းဆည်းထားသော မှတ်တမ်း မရှိသေးပါ။ နေ့လည် 12:01 နှင့် ညနေ 4:30 ချိန်များတွင် အလိုအလျောက် မှတ်တမ်းဝင်ပါမည်။</div>`;
+
+        const res =
+          await fetch('/api/history');
+
+        const data =
+          await res.json();
+
+
+        if (
+          data.success &&
+          data.history
+        ) {
+
+          const container =
+            document.getElementById(
+              'historyListContainer'
+            );
+
+
+          if (
+            data.history.length === 0
+          ) {
+
+            container.innerHTML = `
+              <div
+                class="card"
+                style="
+                  color: #94a3b8;
+                  padding: 30px;
+                "
+              >
+                ယခုထိ သိမ်းဆည်းထားသော
+                မှတ်တမ်း မရှိသေးပါ။
+                နေ့လည် 12:01 နှင့်
+                ညနေ 4:30 ချိန်များတွင်
+                အလိုအလျောက် မှတ်တမ်းဝင်ပါမည်။
+              </div>
+            `;
+
             return;
+
           }
 
-          container.innerHTML = data.history.map(item => `
-            <div class="history-card">
-              <div class="history-date-badge">${item.dateFormatted || 'နေ့စွဲ'}</div>
-              <div class="history-top-results">
-                <div class="history-res-box">
-                  <div class="history-res-title">12:01 PM</div>
-                  <div class="history-res-val green-val">${item.t1201 || '--'}</div>
-                  <div class="history-res-sub"><span>${item.setIndex1201 || item.setIndex || '--'}</span><span>${item.value1201 || item.value || '--'}</span></div>
+
+          container.innerHTML =
+            data.history.map(item => `
+
+              <div class="history-card">
+
+                <div class="history-date-badge">
+                  ${item.dateFormatted || 'နေ့စွဲ'}
                 </div>
-                <div class="history-res-box">
-                  <div class="history-res-title">4:30 PM</div>
-                  <div class="history-res-val green-val">${item.t430 || '--'}</div>
-                  <div class="history-res-sub"><span>${item.setIndex430 || item.setIndex || '--'}</span><span>${item.value430 || item.value || '--'}</span></div>
+
+
+                <div class="history-top-results">
+
+                  <div class="history-res-box">
+
+                    <div class="history-res-title">
+                      12:01 PM
+                    </div>
+
+                    <div class="history-res-val green-val">
+                      ${item.t1201 || '--'}
+                    </div>
+
+                    <div class="history-res-sub">
+
+                      <span>
+                        ${
+                          item.setIndex1201 ||
+                          item.setIndex ||
+                          '--'
+                        }
+                      </span>
+
+                      <span>
+                        ${
+                          item.value1201 ||
+                          item.value ||
+                          '--'
+                        }
+                      </span>
+
+                    </div>
+
+                  </div>
+
+
+                  <div class="history-res-box">
+
+                    <div class="history-res-title">
+                      4:30 PM
+                    </div>
+
+                    <div class="history-res-val green-val">
+                      ${item.t430 || '--'}
+                    </div>
+
+                    <div class="history-res-sub">
+
+                      <span>
+                        ${
+                          item.setIndex430 ||
+                          item.setIndex ||
+                          '--'
+                        }
+                      </span>
+
+                      <span>
+                        ${
+                          item.value430 ||
+                          item.value ||
+                          '--'
+                        }
+                      </span>
+
+                    </div>
+
+                  </div>
+
                 </div>
+
+
+                <div class="history-sub-table">
+
+                  <div class="history-sub-header">
+                    <div></div>
+                    <div>Modern</div>
+                    <div>Internet</div>
+                    <div>TW</div>
+                  </div>
+
+
+                  <!-- 09:30 AM -->
+
+                  <div class="history-sub-row">
+
+                    <div class="history-sub-label">
+                      09:30 AM
+                    </div>
+
+                    <div>
+                      ${
+                        item.schedule?.["09:30 AM"]?.modern ||
+                        '--'
+                      }
+                    </div>
+
+                    <div>
+                      ${
+                        item.schedule?.["09:30 AM"]?.internet ||
+                        '--'
+                      }
+                    </div>
+
+                    <div>
+                      ${
+                        item.schedule?.["09:30 AM"]?.tw ||
+                        '--'
+                      }
+                    </div>
+
+                  </div>
+
+
+                  <!-- 02:00 PM -->
+
+                  <div class="history-sub-row">
+
+                    <div class="history-sub-label">
+                      02:00 PM
+                    </div>
+
+                    <div>
+                      ${
+                        item.schedule?.["02:00 PM"]?.modern ||
+                        '--'
+                      }
+                    </div>
+
+                    <div>
+                      ${
+                        item.schedule?.["02:00 PM"]?.internet ||
+                        '--'
+                      }
+                    </div>
+
+                    <div>
+                      ${
+                        item.schedule?.["02:00 PM"]?.tw ||
+                        '--'
+                      }
+                    </div>
+
+                  </div>
+
+                </div>
+
               </div>
-              <div class="history-sub-table">
-                <div class="history-sub-header">
-                  <div></div><div>Modern</div><div>Internet</div><div>TW</div>
-                </div>
-                <div class="history-sub-row">
-                  <div class="history-sub-label">09:30 AM</div>
-                  <div>${item.schedule?.t0930?.modern || '--'}</div>
-                  <div>${item.schedule?.t0930?.internet || '--'}</div>
-                  <div>${item.schedule?.t0930?.tw || '--'}</div>
-                </div>
-                <div class="history-sub-row">
-                  <div class="history-sub-label">02:00 PM</div>
-                  <div>${item.schedule?.t1400?.modern || '--'}</div>
-                  <div>${item.schedule?.t1400?.internet || '--'}</div>
-                  <div>${item.schedule?.t1400?.tw || '--'}</div>
-                </div>
-              </div>
-            </div>
-          `).join('');
+
+            `).join('');
+
         }
-      } catch (e) {}
+
+      } catch (e) {
+
+        console.error(
+          'History fetch error:',
+          e
+        );
+
+      }
+
     }
+
+
+    /*
+      SOUND
+    */
 
     function speak2D() {
-      if (current2D !== "--" && current2D.length === 2) {
+
+      if (
+        current2D !== "--" &&
+        current2D.length === 2
+      ) {
+
         if (!soundEnabled) return;
-        let d1 = current2D[0];
-        let d2 = current2D[1];
 
-        let audio1 = new Audio(`./sounds/${d1}.mp3`);
-        let audio2 = new Audio(`./sounds/${d2}.mp3`);
 
-        audio1.play().catch(e => console.log(e));
-        audio1.onended = function() {
-          audio2.play().catch(e => console.log(e));
-        };
+        const d1 =
+          current2D[0];
+
+        const d2 =
+          current2D[1];
+
+
+        const audio1 =
+          new Audio(
+            `./sounds/${d1}.mp3`
+          );
+
+        const audio2 =
+          new Audio(
+            `./sounds/${d2}.mp3`
+          );
+
+
+        audio1
+          .play()
+          .catch(e =>
+            console.log(e)
+          );
+
+
+        audio1.onended =
+          function() {
+
+            audio2
+              .play()
+              .catch(e =>
+                console.log(e)
+              );
+
+          };
+
       }
+
     }
 
-    function playAnnouncement(filename) {
+
+    function playAnnouncement(
+      filename
+    ) {
+
       if (!soundEnabled) return;
-      let audio = new Audio(`./sounds/${filename}.mp3`);
-      audio.play().catch(e => console.log(e));
+
+
+      const audio =
+        new Audio(
+          `./sounds/${filename}.mp3`
+        );
+
+
+      audio
+        .play()
+        .catch(e =>
+          console.log(e)
+        );
+
     }
+
+
+    /*
+      MONEY RAIN
+    */
 
     const moneyImages = [
+
       './images/Myanmar-5-26-sm-removebg-preview.png',
+
       './images/myanmar-money-10000-kyats-high-260nw-2445695....png'
+
     ];
 
+
     function startMoneyRain() {
-      if (window.isMoneyRainActive) return;
-      window.isMoneyRainActive = true;
 
-      const rainInterval = setInterval(() => {
-        const img = document.createElement('img');
-        const randomImg = moneyImages[Math.floor(Math.random() * moneyImages.length)];
-        img.src = randomImg;
-        img.classList.add('falling-money');
-        img.style.left = Math.random() * window.innerWidth + 'px';
-        document.body.appendChild(img);
+      if (window.isMoneyRainActive)
+        return;
 
-        setTimeout(() => {
-          img.remove();
-        }, 4000);
-      }, 250);
+
+      window.isMoneyRainActive =
+        true;
+
+
+      const rainInterval =
+        setInterval(() => {
+
+          const img =
+            document.createElement('img');
+
+
+          const randomImg =
+            moneyImages[
+              Math.floor(
+                Math.random() *
+                moneyImages.length
+              )
+            ];
+
+
+          img.src =
+            randomImg;
+
+
+          img.classList.add(
+            'falling-money'
+          );
+
+
+          img.style.left =
+            Math.random() *
+            window.innerWidth +
+            'px';
+
+
+          document.body.appendChild(
+            img
+          );
+
+
+          setTimeout(() => {
+
+            img.remove();
+
+          }, 4000);
+
+
+        }, 250);
+
 
       setTimeout(() => {
-        clearInterval(rainInterval);
-        window.isMoneyRainActive = false;
+
+        clearInterval(
+          rainInterval
+        );
+
+        window.isMoneyRainActive =
+          false;
+
       }, 15000);
+
     }
 
-    function updateMarketUI(status) {
-      const statusEl = document.getElementById('marketStatus');
+
+    /*
+      MARKET UI
+    */
+
+    function updateMarketUI(
+      status
+    ) {
+
+      const statusEl =
+        document.getElementById(
+          'marketStatus'
+        );
+
+
+      if (!statusEl) return;
+
+
       if (status === 'live') {
-        statusEl.className = 'status-indicator status-live';
-        statusEl.innerHTML = '<span class="spinner"></span> <span>Live</span>';
-      } else if (status === 'paused') {
-        statusEl.className = 'status-indicator status-paused';
-        statusEl.innerHTML = '<span>⏸ Live Paused</span>';
-      } else {
-        statusEl.className = 'status-indicator status-closed';
-        statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
+
+        statusEl.className =
+          'status-indicator status-live';
+
+        statusEl.innerHTML =
+          '<span class="spinner"></span> <span>Live</span>';
+
       }
+
+      else if (
+        status === 'paused'
+      ) {
+
+        statusEl.className =
+          'status-indicator status-paused';
+
+        statusEl.innerHTML =
+          '<span>⏸ Live Paused</span>';
+
+      }
+
+      else {
+
+        statusEl.className =
+          'status-indicator status-closed';
+
+        statusEl.innerHTML =
+          '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
+
+      }
+
     }
+
+
+    /*
+      MARKET SCHEDULE
+    */
 
     function checkMarketSchedule() {
-      const now = new Date();
-      const day = now.getDay();
-      
-      if (day === 0 || day === 6) {
-        isLiveActive = false;
-        stopWaitingAnimation(true);
-        updateMarketUI('closed');
-        document.getElementById('notice').innerText = "စနေ/တနင်္ဂနွေ ပိတ်ရက် ဖြစ်ပါသည်။";
+
+      const session =
+        getMarketSession();
+
+
+      const myanmarTime =
+        getMyanmarTimeNow();
+
+
+      const hours =
+        myanmarTime.getHours();
+
+      const minutes =
+        myanmarTime.getMinutes();
+
+      const seconds =
+        myanmarTime.getSeconds();
+
+
+      /*
+        Weekend
+      */
+
+      if (
+        session.reason ===
+        'weekend'
+      ) {
+
+        isLiveActive =
+          false;
+
+
+        stopWaitingAnimation(
+          true
+        );
+
+
+        updateMarketUI(
+          'closed'
+        );
+
+
+        document
+          .getElementById('notice')
+          .innerText =
+          'စနေ/တနင်္ဂနွေ ပိတ်ရက် ဖြစ်ပါသည်။';
+
+
+        updateLastUpdateDisplay(
+          session
+        );
+
+
         return;
+
       }
 
-      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-      const myanmarTime = new Date(utc + (3600000 * 6.5));
-      
-      const hours = myanmarTime.getHours();
-      const minutes = myanmarTime.getMinutes();
-      const seconds = myanmarTime.getSeconds();
-      const totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
-      const morningStart = 9 * 3600 + 30 * 60;
-      const morningEnd = 12 * 3600 + 1 * 60;
-      const afternoonStart = 14 * 3600;
-      const afternoonEnd = 16 * 3600 + 30 * 60;
+      /*
+        LIVE
+      */
 
-      let inMorningLive = (totalSeconds >= morningStart && totalSeconds <= morningEnd);
-      let inAfternoonLive = (totalSeconds >= afternoonStart && totalSeconds <= afternoonEnd);
+      if (
+        session.state ===
+        'live'
+      ) {
 
-      if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
-        updateMarketUI('paused');
-      } else if (totalSeconds > afternoonEnd || totalSeconds < morningStart) {
-        updateMarketUI('closed');
+        isLiveActive =
+          true;
+
+
+        updateMarketUI(
+          'live'
+        );
+
+
+        /*
+          Morning announcements
+        */
+
+        if (
+          hours === 11 &&
+          minutes === 45 &&
+          !announcedTimes['m1145']
+        ) {
+
+          announcedTimes['m1145'] =
+            true;
+
+          playAnnouncement(
+            'min15'
+          );
+
+        }
+
+
+        if (
+          hours === 11 &&
+          minutes === 58 &&
+          !announcedTimes['m1158']
+        ) {
+
+          announcedTimes['m1158'] =
+            true;
+
+          playAnnouncement(
+            'min3'
+          );
+
+        }
+
+
+        /*
+          12:01 boundary
+
+          Frontend မှာလည်း
+          money rain / visual update
+          ဖြစ်စေမယ်။
+
+          Server ကတော့ result ကို
+          actual 12:01 boundary မှာ
+          lock လုပ်ပေးမယ်။
+        */
+
+        if (
+          hours === 12 &&
+          minutes === 1 &&
+          !announcedTimes['m1201']
+        ) {
+
+          announcedTimes['m1201'] =
+            true;
+
+          startMoneyRain();
+
+        }
+
+
+        /*
+          Afternoon announcements
+        */
+
+        if (
+          hours === 15 &&
+          minutes === 15 &&
+          !announcedTimes['e1515']
+        ) {
+
+          announcedTimes['e1515'] =
+            true;
+
+          playAnnouncement(
+            'min15'
+          );
+
+        }
+
+
+        if (
+          hours === 15 &&
+          minutes === 27 &&
+          !announcedTimes['e1527']
+        ) {
+
+          announcedTimes['e1527'] =
+            true;
+
+          playAnnouncement(
+            'min3'
+          );
+
+        }
+
+
+        /*
+          04:30 boundary
+        */
+
+        if (
+          hours === 16 &&
+          minutes === 30 &&
+          !announcedTimes['e1630']
+        ) {
+
+          announcedTimes['e1630'] =
+            true;
+
+          startMoneyRain();
+
+        }
+
+
+        updateLastUpdateDisplay(
+          session
+        );
+
+
+        return;
+
       }
 
-      if (inMorningLive || inAfternoonLive) {
-        isLiveActive = true;
-        updateMarketUI('live');
 
-        if (hours === 11 && minutes === 45 && seconds === 0 && !announcedTimes['m1145']) {
-          announcedTimes['m1145'] = true;
-          playAnnouncement('min15');
-        }
-        if (hours === 11 && minutes === 58 && seconds === 0 && !announcedTimes['m1158']) {
-          announcedTimes['m1158'] = true;
-          playAnnouncement('min3');
-        }
+      /*
+        MARKET CLOSED / PAUSED
+      */
 
-        // 12:01 PM အတိတွင် ချက်ချင်း 12:01 အကွက်ထဲသို့ ထည့်သွင်းရန်
-        if (hours === 12 && minutes === 1 && seconds === 0) {
-          if (!announcedTimes['m1201']) {
-            announcedTimes['m1201'] = true;
-            startMoneyRain();
-            let currentVal = current2D;
-            if (currentVal !== "--") {
-              const t1201El = document.getElementById('t1201_modern');
-              t1201El.innerText = currentVal;
-            }
-          }
-        }
+      isLiveActive =
+        false;
 
-        if (hours === 15 && minutes === 15 && seconds === 0 && !announcedTimes['e1515']) {
-          announcedTimes['e1515'] = true;
-          playAnnouncement('min15');
-        }
-        if (hours === 15 && minutes === 27 && seconds === 0 && !announcedTimes['e1527']) {
-          announcedTimes['e1527'] = true;
-          playAnnouncement('min3');
-        }
 
-        // 4:30 PM အတိတွင် ချက်ချင်း 4:30 အကွက်ထဲသို့ ထည့်သွင်းရန်
-        if (hours === 16 && minutes === 30 && seconds === 0) {
-          if (!announcedTimes['e1630']) {
-            announcedTimes['e1630'] = true;
-            startMoneyRain();
-            let currentVal = current2D;
-            if (currentVal !== "--") {
-              const t1630El = document.getElementById('t1630_modern');
-              t1630El.innerText = currentVal;
-            }
-          }
-        }
+      stopWaitingAnimation(
+        true
+      );
 
-      } else {
-        isLiveActive = false;
-        stopWaitingAnimation(true);
-        
-        if ((hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
-          const statusEl = document.getElementById('marketStatus');
-          statusEl.className = 'status-indicator status-closed';
-          statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
-          document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
-        }
-        else if ((hours === 16 && minutes >= 30) || hours > 16) {
-          const statusEl = document.getElementById('marketStatus');
-          statusEl.className = 'status-indicator status-closed';
-          statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
-          document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
-        } else {
-          if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
-            updateMarketUI('paused');
-          } else {
-            updateMarketUI('closed');
-          }
-        }
+
+      /*
+        Midday
+        12:01 PM - 02:00 PM
+      */
+
+      if (
+        session.reason ===
+        'midday'
+      ) {
+
+        updateMarketUI(
+          'paused'
+        );
+
+
+        document
+          .getElementById('notice')
+          .innerText =
+          'နေ့လည်ပိုင်း စျေးကွက် ခေတ္တပိတ်ထားပါသည်။';
+
+
+        updateLastUpdateDisplay(
+          session
+        );
+
+
+        return;
+
       }
 
-      if (hours === 9 && minutes === 0 && seconds === 0 && !announcedTimes['reset_0900']) {
-        announcedTimes = { 'reset_0900': true };
-        document.getElementById('t0930_modern').innerText = "--";
-        document.getElementById('t0930_internet').innerText = "--";
-        document.getElementById('t0930_tw').innerText = "--";
-        document.getElementById('t1201_modern').innerText = "--";
-        document.getElementById('t1400_modern').innerText = "--";
-        document.getElementById('t1400_internet').innerText = "--";
-        document.getElementById('t1400_tw').innerText = "--";
-        document.getElementById('t1630_modern').innerText = "--";
-      } else if (hours !== 9) {
-        announcedTimes['reset_0900'] = false;
-      }
+
+      /*
+        After market
+      */
+
+      updateMarketUI(
+        'closed'
+      );
+
+
+      document
+        .getElementById('notice')
+        .innerText =
+        'ယနေ့ စျေးကွက်ပိတ်ပြီးပါပြီ။';
+
+
+      updateLastUpdateDisplay(
+        session
+      );
+
     }
 
-    function formatSourceHighlight(rawText, type) {
-      if (!rawText) return rawText;
-      let textStr = String(rawText).trim();
-      let cleanText = textStr.replace(/,/g, '');
-      if (!cleanText.includes('.')) return textStr;
 
-      let parts = cleanText.split('.');
-      let intPart = parts[0];
-      let decPart = parts[1];
+    /*
+      RESET DAILY VISUAL TABLE
+
+      09:00 AM ကျော်သွားပြီး
+      တစ်ကြိမ်သာ reset လုပ်မယ်။
+
+      Server database ကို မဖျက်ပါ။
+      UI ပေါ်က display ကိုသာ reset လုပ်မယ်။
+    */
+
+    function resetDailyVisualTable() {
+
+      const myanmarTime =
+        getMyanmarTimeNow();
+
+
+      const hours =
+        myanmarTime.getHours();
+
+      const minutes =
+        myanmarTime.getMinutes();
+
+
+      if (
+        hours === 9 &&
+        minutes === 0 &&
+        !announcedTimes['reset_0900']
+      ) {
+
+        announcedTimes = {
+          reset_0900: true
+        };
+
+
+        const ids = [
+
+          't0930_modern',
+          't0930_internet',
+          't0930_tw',
+
+          't1201_modern',
+
+          't1400_modern',
+          't1400_internet',
+          't1400_tw',
+
+          't1630_modern'
+
+        ];
+
+
+        ids.forEach(id => {
+
+          const el =
+            document.getElementById(id);
+
+          if (el) {
+            el.innerText =
+              '--';
+          }
+
+        });
+
+      }
+
+
+      if (hours !== 9) {
+
+        announcedTimes[
+          'reset_0900'
+        ] = false;
+
+      }
+
+    }
+
+
+    /*
+      SOURCE HIGHLIGHT
+    */
+
+    function formatSourceHighlight(
+      rawText,
+      type
+    ) {
+
+      if (!rawText)
+        return rawText;
+
+
+      const textStr =
+        String(rawText).trim();
+
+
+      const cleanText =
+        textStr.replace(/,/g, '');
+
+
+      if (
+        !cleanText.includes('.')
+      ) {
+
+        return textStr;
+
+      }
+
+
+      const parts =
+        cleanText.split('.');
+
+
+      const intPart =
+        parts[0];
+
+
+      const decPart =
+        parts[1];
+
 
       if (type === 'index') {
-        if (decPart && decPart.length > 0) {
-          let lastDigit = decPart.slice(-1);
-          let restDec = decPart.slice(0, -1);
+
+        if (
+          decPart &&
+          decPart.length > 0
+        ) {
+
+          const lastDigit =
+            decPart.slice(-1);
+
+          const restDec =
+            decPart.slice(0, -1);
+
+
           return `${intPart}.${restDec}<span class="source-digit">${lastDigit}</span>`;
+
         }
-      } else if (type === 'value') {
-        if (intPart && intPart.length > 0) {
-          let lastIntDigit = intPart.slice(-1);
-          let restInt = intPart.slice(0, -1);
-          return `${restInt}<span class="source-digit">${lastIntDigit}</span>.${decPart}`;
-        }
+
       }
+
+
+      else if (
+        type === 'value'
+      ) {
+
+        if (
+          intPart &&
+          intPart.length > 0
+        ) {
+
+          const lastIntDigit =
+            intPart.slice(-1);
+
+          const restInt =
+            intPart.slice(0, -1);
+
+
+          return `${restInt}<span class="source-digit">${lastIntDigit}</span>.${decPart}`;
+
+        }
+
+      }
+
+
       return textStr;
+
     }
+
+
+    /*
+      ADMIN SCHEDULE DATA
+    */
 
     async function fetchScheduleData() {
+
       try {
-        const res = await fetch('/api/admin/data');
-        const data = await res.json();
-        if (data.success && data.adminResults) {
-          const s0930 = data.adminResults["09:30 AM"];
+
+        const res =
+          await fetch(
+            '/api/admin/data'
+          );
+
+
+        const data =
+          await res.json();
+
+
+        if (
+          data.success &&
+          data.adminResults
+        ) {
+
+          /*
+            09:30 AM
+          */
+
+          const s0930 =
+            data.adminResults[
+              '09:30 AM'
+            ];
+
+
           if (s0930) {
-            document.getElementById('t0930_modern').innerText = s0930.modern !== "--" ? s0930.modern : "--";
-            document.getElementById('t0930_internet').innerText = s0930.internet !== "--" ? s0930.internet : "--";
-            document.getElementById('t0930_tw').innerText = s0930.tw !== "--" ? s0930.tw : "--";
+
+            document
+              .getElementById(
+                't0930_modern'
+              )
+              .innerText =
+              s0930.modern !== '--'
+                ? s0930.modern
+                : '--';
+
+
+            document
+              .getElementById(
+                't0930_internet'
+              )
+              .innerText =
+              s0930.internet !== '--'
+                ? s0930.internet
+                : '--';
+
+
+            document
+              .getElementById(
+                't0930_tw'
+              )
+              .innerText =
+              s0930.tw !== '--'
+                ? s0930.tw
+                : '--';
+
           }
-          const s1201 = data.adminResults["12:01 PM"];
-          if (s1201 && s1201.modern !== "--") {
-            document.getElementById('t1201_modern').innerText = s1201.modern;
+
+
+          /*
+            12:01 PM
+          */
+
+          const s1201 =
+            data.adminResults[
+              '12:01 PM'
+            ];
+
+
+          if (s1201) {
+
+            document
+              .getElementById(
+                't1201_modern'
+              )
+              .innerText =
+              s1201.modern !== '--'
+                ? s1201.modern
+                : '--';
+
           }
-          const s1400 = data.adminResults["02:00 PM"];
+
+
+          /*
+            02:00 PM
+          */
+
+          const s1400 =
+            data.adminResults[
+              '02:00 PM'
+            ];
+
+
           if (s1400) {
-            document.getElementById('t1400_modern').innerText = s1400.modern !== "--" ? s1400.modern : "--";
-            document.getElementById('t1400_internet').innerText = s1400.internet !== "--" ? s1400.internet : "--";
-            document.getElementById('t1400_tw').innerText = s1400.tw !== "--" ? s1400.tw : "--";
+
+            document
+              .getElementById(
+                't1400_modern'
+              )
+              .innerText =
+              s1400.modern !== '--'
+                ? s1400.modern
+                : '--';
+
+
+            document
+              .getElementById(
+                't1400_internet'
+              )
+              .innerText =
+              s1400.internet !== '--'
+                ? s1400.internet
+                : '--';
+
+
+            document
+              .getElementById(
+                't1400_tw'
+              )
+              .innerText =
+              s1400.tw !== '--'
+                ? s1400.tw
+                : '--';
+
           }
-          const s1630 = data.adminResults["04:30 PM"];
-          if (s1630 && s1630.modern !== "--") {
-            document.getElementById('t1630_modern').innerText = s1630.modern;
+
+
+          /*
+            04:30 PM
+          */
+
+          const s1630 =
+            data.adminResults[
+              '04:30 PM'
+            ];
+
+
+          if (s1630) {
+
+            document
+              .getElementById(
+                't1630_modern'
+              )
+              .innerText =
+              s1630.modern !== '--'
+                ? s1630.modern
+                : '--';
+
           }
+
         }
+
       } catch (e) {
-        console.error("Schedule fetch error:", e);
+
+        console.error(
+          'Schedule fetch error:',
+          e
+        );
+
       }
+
     }
+
+
+    /*
+      LIVE DATA
+
+      အရေးကြီးဆုံး ပြင်ဆင်ထားတဲ့ function
+
+      Market Live
+      → data.live2D
+
+      Midday
+      → 12:01 PM locked result
+
+      After Market
+      → 04:30 PM locked result
+
+      Server က current live2D ပြောင်းပေးနေရင်တောင်
+      Market ပိတ်ပြီးနောက် Home result
+      မပြောင်းတော့ပါ။
+    */
 
     async function fetchLiveData() {
+
+      /*
+        Schedule data ကိုလည်း update လုပ်မယ်
+      */
+
       fetchScheduleData();
 
+
       try {
-        const res = await fetch('/api/live');
-        const data = await res.json();
-        
-        if(data.success) {
-          if (data.live2D && data.live2D !== "--") {
-            document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
-            document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
-            
-            const previous2D = current2D;
-            current2D = data.live2D;
 
-            // Every server refresh immediately restores the real result.
-            stopWaitingAnimation(true);
+        const res =
+          await fetch(
+            '/api/live'
+          );
 
-            document.getElementById('live2D').innerText = current2D;
-            document.getElementById('updateTime').innerText = "Last Update: " + data.time;
-            document.getElementById('notice').innerText = data.notice;
 
-            if(previous2D !== current2D) {
-              speak2D();
+        const data =
+          await res.json();
+
+
+        if (!data.success)
+          return;
+
+
+        const session =
+          getMarketSession();
+
+
+        const previous2D =
+          current2D;
+
+
+        let display2D =
+          '--';
+
+
+        /*
+          MARKET LIVE
+        */
+
+        if (
+          session.state ===
+          'live'
+        ) {
+
+          if (
+            data.live2D &&
+            data.live2D !== '--'
+          ) {
+
+            display2D =
+              data.live2D;
+
+          }
+
+        }
+
+
+        /*
+          MARKET CLOSED
+        */
+
+        else {
+
+          /*
+            12:01 PM result
+          */
+
+          if (
+            session.reason ===
+            'midday'
+          ) {
+
+            const locked1201 =
+              data
+                .adminResults
+                ?.['12:01 PM']
+                ?.modern;
+
+
+            if (
+              locked1201 &&
+              locked1201 !== '--'
+            ) {
+
+              display2D =
+                locked1201;
+
             }
 
-            // Animate locally while waiting for the next ~3-second refresh.
-            startWaitingAnimation();
           }
+
+
+          /*
+            04:30 PM result
+          */
+
+          else {
+
+            const locked430 =
+              data
+                .adminResults
+                ?.['04:30 PM']
+                ?.modern;
+
+
+            if (
+              locked430 &&
+              locked430 !== '--'
+            ) {
+
+              display2D =
+                locked430;
+
+            }
+
+          }
+
         }
-      } catch(e) {}
+
+
+        /*
+          SET INDEX
+
+          Live result ရှိတဲ့အချိန်မှာ
+          SET data ပြမယ်။
+
+          Closed ဖြစ်ရင် server က
+          locked snapshot ပြန်ပေးရင်လည်း
+          ပြမယ်။
+        */
+
+        if (
+          data.setIndex &&
+          data.setIndex !== '--'
+        ) {
+
+          const setIndexEl =
+            document.getElementById(
+              'setIndex'
+            );
+
+
+          if (setIndexEl) {
+
+            setIndexEl.innerHTML =
+              formatSourceHighlight(
+                data.setIndex,
+                'index'
+              );
+
+          }
+
+        }
+
+
+        /*
+          SET VALUE
+        */
+
+        if (
+          data.value &&
+          data.value !== '--'
+        ) {
+
+          const setValueEl =
+            document.getElementById(
+              'setValue'
+            );
+
+
+          if (setValueEl) {
+
+            setValueEl.innerHTML =
+              formatSourceHighlight(
+                data.value,
+                'value'
+              );
+
+          }
+
+        }
+
+
+        /*
+          2D RESULT
+        */
+
+        if (
+          display2D !== '--' &&
+          display2D.length === 2
+        ) {
+
+          current2D =
+            display2D;
+
+
+          const liveEl =
+            document.getElementById(
+              'live2D'
+            );
+
+
+          if (liveEl) {
+
+            liveEl.innerText =
+              current2D;
+
+          }
+
+
+          /*
+            Result ပြောင်းမှ အသံထွက်
+          */
+
+          if (
+            previous2D !==
+            current2D
+          ) {
+
+            speak2D();
+
+          }
+
+
+          /*
+            Live ဖြစ်ရင် animation
+          */
+
+          if (
+            session.state ===
+            'live'
+          ) {
+
+            startWaitingAnimation();
+
+          }
+
+
+          /*
+            Closed ဖြစ်ရင်
+            animation လုံးဝရပ်
+          */
+
+          else {
+
+            stopWaitingAnimation(
+              true
+            );
+
+          }
+
+        }
+
+        else {
+
+          if (
+            session.state !==
+            'live'
+          ) {
+
+            stopWaitingAnimation(
+              false
+            );
+
+          }
+
+        }
+
+
+        /*
+          Last Update
+
+          data.time ကို မသုံးပါ။
+
+          Myanmar session time ကိုပဲ
+          သုံးပြီး closed time ကို freeze လုပ်မယ်။
+        */
+
+        updateLastUpdateDisplay(
+          session
+        );
+
+
+        /*
+          NOTICE
+        */
+
+        const noticeEl =
+          document.getElementById(
+            'notice'
+          );
+
+
+        if (noticeEl) {
+
+          if (
+            data.notice
+          ) {
+
+            noticeEl.innerText =
+              data.notice;
+
+          }
+
+        }
+
+      } catch (e) {
+
+        console.error(
+          'Live data fetch error:',
+          e
+        );
+
+      }
+
     }
+
+
+    /*
+      CHAT
+    */
 
     async function fetchChat() {
+
       try {
-        const res = await fetch('/api/chat');
-        const data = await res.json();
-        if(data.success) {
-          const chatDiv = document.getElementById('chatMessages');
-          chatDiv.innerHTML = data.messages.map(m => 
-            `<div class="msg"><span class="msg-user">${m.user}:</span> ${m.text}</div>`
-          ).join('');
-          chatDiv.scrollTop = chatDiv.scrollHeight;
+
+        const res =
+          await fetch(
+            '/api/chat'
+          );
+
+
+        const data =
+          await res.json();
+
+
+        if (
+          data.success
+        ) {
+
+          const chatDiv =
+            document.getElementById(
+              'chatMessages'
+            );
+
+
+          chatDiv.innerHTML =
+            data.messages
+              .map(m =>
+
+                `<div class="msg">
+                  <span class="msg-user">
+                    ${m.user}:
+                  </span>
+                  ${m.text}
+                </div>`
+
+              )
+              .join('');
+
+
+          chatDiv.scrollTop =
+            chatDiv.scrollHeight;
+
         }
-      } catch(e) {}
+
+      } catch (e) {
+
+        console.error(
+          'Chat fetch error:',
+          e
+        );
+
+      }
+
     }
+
+
+    /*
+      SEND CHAT
+    */
 
     async function sendMessage() {
-      const int = document.getElementById('chatInput');
-      const text = int.value.trim();
-      if(!text) return;
 
-      await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user: "User", text: text })
-      });
+      const input =
+        document.getElementById(
+          'chatInput'
+        );
 
-      int.value = "";
-      fetchChat();
+
+      const text =
+        input.value.trim();
+
+
+      if (!text)
+        return;
+
+
+      try {
+
+        await fetch(
+          '/api/chat',
+          {
+            method: 'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json'
+            },
+
+            body: JSON.stringify({
+              user: 'User',
+              text: text
+            })
+          }
+        );
+
+
+        input.value =
+          '';
+
+
+        fetchChat();
+
+      } catch (e) {
+
+        console.error(
+          'Chat send error:',
+          e
+        );
+
+      }
+
     }
 
-    function handleKeyPress(e) { if(e.key === 'Enter') sendMessage(); }
 
-    checkMarketSchedule();
-    fetchScheduleData();
-    fetchLiveData();
-    fetchChat();
+    function handleKeyPress(e) {
 
-    setInterval(checkMarketSchedule, 1000);
-    setInterval(fetchLiveData, 3000);
-    setInterval(fetchChat, 2000);
-    setInterval(fetchScheduleData, 5000);
+      if (
+        e.key ===
+        'Enter'
+      ) {
+
+        sendMessage();
+
+      }
+
+    }
+
+
+    /*
+      SOUND BUTTON
+    */
 
     function toggleSound() {
-      soundEnabled = !soundEnabled;
-      const btn = document.getElementById('audio-btn'); 
-      if (btn) {
-        if (soundEnabled) {
-            btn.innerHTML = "🔊 အသံဖွင့်ထားသည်";
-        } else {
-            btn.innerHTML = "🔇 အသံပိတ်ထားသည်";
-        }
+
+      soundEnabled =
+        !soundEnabled;
+
+
+      const btn =
+        document.getElementById(
+          'audio-btn'
+        );
+
+
+      if (!btn)
+        return;
+
+
+      if (
+        soundEnabled
+      ) {
+
+        btn.innerHTML =
+          '🔊 အသံဖွင့်ထားသည်';
+
       }
+
+      else {
+
+        btn.innerHTML =
+          '🔇 အသံပိတ်ထားသည်';
+
+      }
+
     }
+
+
+    /*
+      INITIAL LOAD
+    */
+
+    checkMarketSchedule();
+
+    resetDailyVisualTable();
+
+    fetchScheduleData();
+
+    fetchLiveData();
+
+    fetchChat();
+
+
+    /*
+      LIVE CLOCK / UI
+
+      1 second
+    */
+
+    setInterval(
+      () => {
+
+        checkMarketSchedule();
+
+        resetDailyVisualTable();
+
+      },
+      1000
+    );
+
+
+    /*
+      LIVE DATA
+
+      3 seconds
+    */
+
+    setInterval(
+      fetchLiveData,
+      3000
+    );
+
+
+    /*
+      CHAT
+
+      2 seconds
+    */
+
+    setInterval(
+      fetchChat,
+      2000
+    );
+
+
+    /*
+      ADMIN SCHEDULE
+
+      5 seconds
+    */
+
+    setInterval(
+      fetchScheduleData,
+      5000
+    );
+
   </script>
+
 </body>
 </html>
