@@ -40,7 +40,6 @@
       font-weight: 900;
     }
 
-    /* Auto ဝင်လာသော 12:01 နှင့် 04:30 အတွက် အစိမ်းရောင် စတိုင် */
     .green-val {
       color: #10b981 !important;
       text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
@@ -64,7 +63,6 @@
     .chat-input-row input { flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; padding: 8px 12px; outline: none; }
     .chat-input-row button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-    /* History List Styles */
     .history-list-container { display: flex; flex-direction: column; gap: 20px; }
     .history-card { background: #1e3a8a; border-radius: 14px; padding: 15px; border: 2px solid #3b82f6; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 12px; }
     .history-date-badge { background: #000000; color: #f8fafc; text-align: center; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; border: 1px solid #334155; align-self: center; margin-bottom: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
@@ -80,7 +78,6 @@
     .history-sub-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 14px; font-weight: bold; color: #ffffff; align-items: center; padding: 2px 0; }
     .history-sub-label { text-align: left; padding-left: 6px; font-size: 12px; color: #facc15; }
 
-    /* Additional Full Page Styles (Gold, 3D, More & Galleries) */
     .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
     .gallery-item { background: #0f172a; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
     .gallery-item img { width: 100%; height: 120px; object-fit: cover; }
@@ -385,12 +382,12 @@
       const afternoonStart = 14 * 3600;
       const afternoonEnd = 16 * 3600 + 30 * 60;
 
-      let inMorningLive = (totalSeconds >= morningStart && totalSeconds < morningEnd);
-      let inAfternoonLive = (totalSeconds >= afternoonStart && totalSeconds < afternoonEnd);
+      let inMorningLive = (totalSeconds >= morningStart && totalSeconds <= morningEnd);
+      let inAfternoonLive = (totalSeconds >= afternoonStart && totalSeconds <= afternoonEnd);
 
-      if (totalSeconds >= morningEnd && totalSeconds < afternoonStart) {
+      if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
         updateMarketUI('paused');
-      } else if (totalSeconds >= afternoonEnd || totalSeconds < morningStart) {
+      } else if (totalSeconds > afternoonEnd || totalSeconds < morningStart) {
         updateMarketUI('closed');
       }
 
@@ -407,6 +404,7 @@
           playAnnouncement('min3');
         }
 
+        // 12:01 PM အတိတွင် ချက်ချင်း 12:01 အကွက်ထဲသို့ ထည့်သွင်းရန်
         if (hours === 12 && minutes === 1 && seconds === 0) {
           if (!announcedTimes['m1201']) {
             announcedTimes['m1201'] = true;
@@ -428,6 +426,7 @@
           playAnnouncement('min3');
         }
 
+        // 4:30 PM အတိတွင် ချက်ချင်း 4:30 အကွက်ထဲသို့ ထည့်သွင်းရန်
         if (hours === 16 && minutes === 30 && seconds === 0) {
           if (!announcedTimes['e1630']) {
             announcedTimes['e1630'] = true;
@@ -443,19 +442,19 @@
       } else {
         isLiveActive = false;
         
-        if ((hours === 12 && minutes === 1 && seconds === 0) || (hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
+        if ((hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
           const statusEl = document.getElementById('marketStatus');
           statusEl.className = 'status-indicator status-closed';
           statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
           document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
         }
-        else if ((hours === 16 && minutes === 30 && seconds === 0) || (hours === 16 && minutes >= 30) || hours > 16) {
+        else if ((hours === 16 && minutes >= 30) || hours > 16) {
           const statusEl = document.getElementById('marketStatus');
           statusEl.className = 'status-indicator status-closed';
           statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
           document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
         } else {
-          if (totalSeconds >= morningEnd && totalSeconds < afternoonStart) {
+          if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
             updateMarketUI('paused');
           } else {
             updateMarketUI('closed');
@@ -516,8 +515,8 @@
             document.getElementById('t0930_tw').innerText = s0930.tw !== "--" ? s0930.tw : "--";
           }
           const s1201 = data.adminResults["12:01 PM"];
-          if (s1201) {
-            document.getElementById('t1201_modern').innerText = s1201.modern !== "--" ? s1201.modern : "--";
+          if (s1201 && s1201.modern !== "--") {
+            document.getElementById('t1201_modern').innerText = s1201.modern;
           }
           const s1400 = data.adminResults["02:00 PM"];
           if (s1400) {
@@ -526,8 +525,8 @@
             document.getElementById('t1400_tw').innerText = s1400.tw !== "--" ? s1400.tw : "--";
           }
           const s1630 = data.adminResults["04:30 PM"];
-          if (s1630) {
-            document.getElementById('t1630_modern').innerText = s1630.modern !== "--" ? s1630.modern : "--";
+          if (s1630 && s1630.modern !== "--") {
+            document.getElementById('t1630_modern').innerText = s1630.modern;
           }
         }
       } catch (e) {
@@ -536,11 +535,6 @@
     }
 
     async function fetchLiveData() {
-      if (!isLiveActive) {
-        fetchScheduleData();
-        return;
-      }
-
       fetchScheduleData();
 
       try {
