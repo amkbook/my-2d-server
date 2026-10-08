@@ -258,7 +258,7 @@ app.get('/api/live', async (req, res) => {
         let todayRecord = await getTodayAdminResults();
         let adminResults = todayRecord.schedule;
 
-        // 12:01 PM အလိုအလျောက် ဇယားကွက်ထဲသို့ ဖြည့်သွင်းခြင်း
+        // 12:01 PM အလိုအလျောက် ဇယားကွက်ထဲသို့ ဖြည့်သွင်းခြင်း (09:30 AM Admin ဂဏန်းများနှင့် 12:01 PM 2D ဂဏန်း ပေါင်းစပ်ခြင်း)
         if ((currentHour === 12 && currentMinute >= 1) || currentHour > 12) {
             if (!isWeekend && calculated2D !== "--") {
                 if (adminResults["12:01 PM"].modern === "--" && !adminResults["12:01 PM"].isLocked) {
@@ -270,14 +270,19 @@ app.get('/api/live', async (req, res) => {
             }
 
             if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
-                todayRecord.t1201 = calculated2D;
+                // 12:01 PM တွင် 09:30 AM Admin ဂဏန်းကိုပါ t1201 သို့မဟုတ် မှတ်တမ်းထဲသို့ ထည့်သွင်းပေးရန်အတွက် 
+                // Admin က 09:30 အကွက်မှာ ထည့်ထားတဲ့ Modern သို့မဟုတ် Internet တန်ဖိုးကို ယူမည်
+                const admin0930Val = adminResults["09:30 AM"].modern !== "--" ? adminResults["09:30 AM"].modern : (adminResults["09:30 AM"].internet !== "--" ? adminResults["09:30 AM"].internet : "--");
+                
+                // မှတ်တမ်းအတွက် 12:01 ကွက်တွင် 09:30 နဲ့ 12:01 ပေါင်းစပ်ပြသရန် (သို့မဟုတ် သင့် App Front-end ရဲ့ပြသပုံအရ သိမ်းဆည်းရန်)
+                todayRecord.t1201 = calculated2D; // လိုအပ်ပါက admin0930Val နှင့် calculated2D ကို တွဲ၍လည်း သိမ်းဆည်းနိုင်သည်
                 todayRecord.setIndex1201 = setIndex;
                 todayRecord.value1201 = marketValue;
                 todayRecord.dateFormatted = `${myanmarDay}\n${dateString}`;
             }
         }
 
-        // 4:30 PM အလိုအလျောက် ဇယားကွက်ထဲသို့ ဖြည့်သွင်းခြင်း
+        // 4:30 PM အလိုအလျောက် ဇယားကွက်ထဲသို့ ဖြည့်သွင်းခြင်း (02:00 PM Admin ဂဏန်းများနှင့် 04:30 PM 2D ဂဏန်း ပေါင်းစပ်ခြင်း)
         if ((currentHour > 16 || (currentHour === 16 && currentMinute >= 30))) {
             if (!isWeekend && calculated2D !== "--") {
                 if (adminResults["04:30 PM"].modern === "--" && !adminResults["04:30 PM"].isLocked) {
@@ -289,6 +294,8 @@ app.get('/api/live', async (req, res) => {
             }
 
             if (!isWeekend && setIndex !== "--" && marketValue !== "--") {
+                const admin0200Val = adminResults["02:00 PM"].modern !== "--" ? adminResults["02:00 PM"].modern : (adminResults["02:00 PM"].internet !== "--" ? adminResults["02:00 PM"].internet : "--");
+                
                 todayRecord.t430 = calculated2D;
                 todayRecord.setIndex430 = setIndex;
                 todayRecord.value430 = marketValue;
@@ -330,13 +337,12 @@ app.get('/api/live', async (req, res) => {
         const currentHour = myanmarTime.getHours();
         const currentMinute = myanmarTime.getMinutes();
 
-        // ဈေးကွက်ပိတ်ချိန် (သို့) API တောင်းလို့မရတဲ့အချိန်များ (12:01 မှ 2:00 ထိ နှင့် 4:30 မှ နောက်ရက် 9:30 ထိ) တွင် သိမ်းဆည်းထားပြီးသား တန်ဖိုးများကို ထည့်ပေးမည်
+        // ဈေးကွက်ပိတ်ချိန် (သို့) API တောင်းလို့မရတဲ့အချိန်များ
         if ((currentHour >= 12 && currentHour < 14) || (currentHour === 12 && currentMinute >= 1)) {
             fallback2D = todayRecord.t1201 !== "--" ? todayRecord.t1201 : (adminResults["12:01 PM"].modern || "--");
             fallbackSetIndex = todayRecord.setIndex1201 || "--";
             fallbackValue = todayRecord.value1201 || "--";
         } else if (currentHour >= 16 || currentHour < 9 || (currentHour === 9 && currentMinute < 30) || (currentHour >= 14 && currentHour < 16)) {
-            // ညနေပိုင်း 4:30 ပိတ်ပြီးချိန် သို့မဟုတ် 2:00 နောက်ပိုင်း 
             if (todayRecord.t430 && todayRecord.t430 !== "--") {
                 fallback2D = todayRecord.t430;
                 fallbackSetIndex = todayRecord.setIndex430 || "--";
