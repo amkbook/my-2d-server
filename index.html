@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2D Live Market App - Full Version</title>
-  <style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2D Live Market App - Full Version</title>
+<style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; padding-bottom: 90px; overflow-x: hidden; }
     .container { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 15px; }
@@ -236,6 +236,65 @@
     let soundEnabled = true;
     let isLiveActive = false;
 
+    // Client-side waiting animation only.
+    // Temporary numbers are visual placeholders, NOT real 2D results.
+    let waitingAnimationTimer = null;
+    let waitingAnimationGeneration = 0;
+    let waitingAnimationVisible = true;
+
+    function stopWaitingAnimation(showRealResult = true) {
+      waitingAnimationGeneration++;
+
+      if (waitingAnimationTimer) {
+        clearInterval(waitingAnimationTimer);
+        waitingAnimationTimer = null;
+      }
+
+      const liveEl = document.getElementById('live2D');
+      if (!liveEl) return;
+
+      liveEl.style.visibility = 'visible';
+      liveEl.style.opacity = '1';
+
+      if (showRealResult) {
+        liveEl.innerText = current2D;
+      }
+    }
+
+    function startWaitingAnimation() {
+      if (!isLiveActive || current2D === "--" || current2D.length !== 2) {
+        stopWaitingAnimation(false);
+        return;
+      }
+
+      const liveEl = document.getElementById('live2D');
+      if (!liveEl) return;
+
+      stopWaitingAnimation(false);
+
+      const generation = waitingAnimationGeneration;
+      waitingAnimationVisible = true;
+
+      liveEl.innerText = current2D;
+      liveEl.style.visibility = 'visible';
+      liveEl.style.opacity = '1';
+
+      waitingAnimationTimer = setInterval(() => {
+        if (generation !== waitingAnimationGeneration || !isLiveActive) return;
+
+        if (waitingAnimationVisible) {
+          liveEl.innerText = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+          liveEl.style.visibility = 'visible';
+          liveEl.style.opacity = '1';
+        } else {
+          liveEl.style.visibility = 'hidden';
+          liveEl.style.opacity = '0';
+        }
+
+        waitingAnimationVisible = !waitingAnimationVisible;
+      }, 1000);
+    }
+
     function switchTab(pageId, btn) {
       document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -245,6 +304,20 @@
       if (pageId === 'page-2d-history') {
         fetchHistoryList();
       }
+    }
+
+    // History compatibility helper:
+    // Older database records used "09:30 / 12:01" and "02:00 / 04:30".
+    // New records contain only the exact endpoint result.
+    // This keeps old data untouched while displaying the correct endpoint result.
+    function getExactEndpointResult(value) {
+      if (!value || value === '--') return '--';
+      const text = String(value);
+      if (text.includes('/')) {
+        const parts = text.split('/');
+        return parts[parts.length - 1].trim() || '--';
+      }
+      return text.trim() || '--';
     }
 
     async function fetchHistoryList() {
@@ -264,12 +337,12 @@
               <div class="history-top-results">
                 <div class="history-res-box">
                   <div class="history-res-title">12:01 PM</div>
-                  <div class="history-res-val green-val">${item.t1201 || '--'}</div>
+                  <div class="history-res-val green-val">${getExactEndpointResult(item.t1201)}</div>
                   <div class="history-res-sub"><span>${item.setIndex1201 || item.setIndex || '--'}</span><span>${item.value1201 || item.value || '--'}</span></div>
                 </div>
                 <div class="history-res-box">
                   <div class="history-res-title">4:30 PM</div>
-                  <div class="history-res-val green-val">${item.t430 || '--'}</div>
+                  <div class="history-res-val green-val">${getExactEndpointResult(item.t430)}</div>
                   <div class="history-res-sub"><span>${item.setIndex430 || item.setIndex || '--'}</span><span>${item.value430 || item.value || '--'}</span></div>
                 </div>
               </div>
@@ -279,15 +352,15 @@
                 </div>
                 <div class="history-sub-row">
                   <div class="history-sub-label">09:30 AM</div>
-                  <div>${item.schedule?.t0930?.modern || '--'}</div>
-                  <div>${item.schedule?.t0930?.internet || '--'}</div>
-                  <div>${item.schedule?.t0930?.tw || '--'}</div>
+                  <div>${item.schedule?.["09:30 AM"]?.modern || '--'}</div>
+                  <div>${item.schedule?.["09:30 AM"]?.internet || '--'}</div>
+                  <div>${item.schedule?.["09:30 AM"]?.tw || '--'}</div>
                 </div>
                 <div class="history-sub-row">
                   <div class="history-sub-label">02:00 PM</div>
-                  <div>${item.schedule?.t1400?.modern || '--'}</div>
-                  <div>${item.schedule?.t1400?.internet || '--'}</div>
-                  <div>${item.schedule?.t1400?.tw || '--'}</div>
+                  <div>${item.schedule?.["02:00 PM"]?.modern || '--'}</div>
+                  <div>${item.schedule?.["02:00 PM"]?.internet || '--'}</div>
+                  <div>${item.schedule?.["02:00 PM"]?.tw || '--'}</div>
                 </div>
               </div>
             </div>
@@ -360,42 +433,75 @@
       }
     }
 
-    function checkMarketSchedule() {
+    function getMyanmarTimeNow() {
       const now = new Date();
-      const day = now.getDay();
-      
-      if (day === 0 || day === 6) {
-        isLiveActive = false;
-        updateMarketUI('closed');
-        document.getElementById('notice').innerText = "စနေ/တနင်္ဂနွေ ပိတ်ရက် ဖြစ်ပါသည်။";
-        return;
-      }
-
       const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-      const myanmarTime = new Date(utc + (3600000 * 6.5));
-      
+      return new Date(utc + (3600000 * 6.5));
+    }
+
+    function getMyanmarTimeText() {
+      return getMyanmarTimeNow().toLocaleTimeString('en-US', {
+        hour12: true,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+
+    function getMarketSession() {
+      const myanmarTime = getMyanmarTimeNow();
+      const day = myanmarTime.getDay();
       const hours = myanmarTime.getHours();
       const minutes = myanmarTime.getMinutes();
       const seconds = myanmarTime.getSeconds();
       const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+
+      if (day === 0 || day === 6) {
+        return { state: 'closed', reason: 'weekend', fixed: '04:30:00 PM' };
+      }
 
       const morningStart = 9 * 3600 + 30 * 60;
       const morningEnd = 12 * 3600 + 1 * 60;
       const afternoonStart = 14 * 3600;
       const afternoonEnd = 16 * 3600 + 30 * 60;
 
-      let inMorningLive = (totalSeconds >= morningStart && totalSeconds <= morningEnd);
-      let inAfternoonLive = (totalSeconds >= afternoonStart && totalSeconds <= afternoonEnd);
-
-      if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
-        updateMarketUI('paused');
-      } else if (totalSeconds > afternoonEnd || totalSeconds < morningStart) {
-        updateMarketUI('closed');
+      if (totalSeconds >= morningStart && totalSeconds < morningEnd) {
+        return { state: 'live', session: 'morning', time: getMyanmarTimeText() };
       }
 
-      if (inMorningLive || inAfternoonLive) {
+      if (totalSeconds >= morningEnd && totalSeconds < afternoonStart) {
+        return { state: 'closed', reason: 'midday', fixed: '12:01:00 PM' };
+      }
+
+      if (totalSeconds >= afternoonStart && totalSeconds < afternoonEnd) {
+        return { state: 'live', session: 'afternoon', time: getMyanmarTimeText() };
+      }
+
+      return { state: 'closed', reason: 'after-market', fixed: '04:30:00 PM' };
+    }
+
+    function updateLastUpdateDisplay(session) {
+      const updateEl = document.getElementById('updateTime');
+      if (!updateEl) return;
+
+      if (session.state === 'live') {
+        updateEl.innerText = 'Last Update: ' + session.time;
+      } else {
+        updateEl.innerText = 'Last Update: ' + session.fixed;
+      }
+    }
+
+    function checkMarketSchedule() {
+      const myanmarTime = getMyanmarTimeNow();
+      const hours = myanmarTime.getHours();
+      const minutes = myanmarTime.getMinutes();
+      const seconds = myanmarTime.getSeconds();
+      const session = getMarketSession();
+
+      if (session.state === 'live') {
         isLiveActive = true;
         updateMarketUI('live');
+        document.getElementById('notice').innerText = '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။';
 
         if (hours === 11 && minutes === 45 && seconds === 0 && !announcedTimes['m1145']) {
           announcedTimes['m1145'] = true;
@@ -405,75 +511,48 @@
           announcedTimes['m1158'] = true;
           playAnnouncement('min3');
         }
-
-        // 12:01 PM အတိတွင် ချက်ချင်း 12:01 အကွက်ထဲသို့ ထည့်သွင်းရန်
-        if (hours === 12 && minutes === 1 && seconds === 0) {
-          if (!announcedTimes['m1201']) {
-            announcedTimes['m1201'] = true;
-            startMoneyRain();
-            let currentVal = document.getElementById('live2D').innerText;
-            if (currentVal !== "--") {
-              const t1201El = document.getElementById('t1201_modern');
-              t1201El.innerText = currentVal;
-            }
-          }
-        }
-
-        if (hours === 15 && minutes === 15 && seconds === 0 && !announcedTimes['e1515']) {
-          announcedTimes['e1515'] = true;
+        // ညနေပိုင်း ၄:၃၀ ပိတ်ချိန်အတွက် ၁၅ မိနစ်ကြို (16:15) နှင့် ၃ မိနစ်ကြို (16:27) သို့ အတိအကျ ပြင်ဆင်ထားခြင်း
+        if (hours === 16 && minutes === 15 && seconds === 0 && !announcedTimes['e1615']) {
+          announcedTimes['e1615'] = true;
           playAnnouncement('min15');
         }
-        if (hours === 15 && minutes === 27 && seconds === 0 && !announcedTimes['e1527']) {
-          announcedTimes['e1527'] = true;
+        if (hours === 16 && minutes === 27 && seconds === 0 && !announcedTimes['e1627']) {
+          announcedTimes['e1627'] = true;
           playAnnouncement('min3');
         }
-
-        // 4:30 PM အတိတွင် ချက်ချင်း 4:30 အကွက်ထဲသို့ ထည့်သွင်းရန်
-        if (hours === 16 && minutes === 30 && seconds === 0) {
-          if (!announcedTimes['e1630']) {
-            announcedTimes['e1630'] = true;
-            startMoneyRain();
-            let currentVal = document.getElementById('live2D').innerText;
-            if (currentVal !== "--") {
-              const t1630El = document.getElementById('t1630_modern');
-              t1630El.innerText = currentVal;
-            }
-          }
-        }
-
       } else {
         isLiveActive = false;
-        
-        if ((hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
-          const statusEl = document.getElementById('marketStatus');
-          statusEl.className = 'status-indicator status-closed';
-          statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
-          document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
-        }
-        else if ((hours === 16 && minutes >= 30) || hours > 16) {
-          const statusEl = document.getElementById('marketStatus');
-          statusEl.className = 'status-indicator status-closed';
-          statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
-          document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
+        stopWaitingAnimation(true);
+        updateMarketUI(session.reason === 'midday' ? 'paused' : 'closed');
+
+        if (session.reason === 'weekend') {
+          document.getElementById('notice').innerText = 'စနေ/တနင်္ဂနွေ ပိတ်ရက် ဖြစ်ပါသည်။';
         } else {
-          if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
-            updateMarketUI('paused');
-          } else {
-            updateMarketUI('closed');
-          }
+          document.getElementById('notice').innerText = '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။';
+        }
+
+        if (hours === 12 && minutes === 1 && !announcedTimes['m1201']) {
+          announcedTimes['m1201'] = true;
+          startMoneyRain();
+        }
+        if (hours === 16 && minutes === 30 && !announcedTimes['e1630']) {
+          announcedTimes['e1630'] = true;
+          startMoneyRain();
         }
       }
 
+      updateLastUpdateDisplay(session);
+
       if (hours === 9 && minutes === 0 && seconds === 0 && !announcedTimes['reset_0900']) {
         announcedTimes = { 'reset_0900': true };
-        document.getElementById('t0930_modern').innerText = "--";
-        document.getElementById('t0930_internet').innerText = "--";
-        document.getElementById('t0930_tw').innerText = "--";
-        document.getElementById('t1201_modern').innerText = "--";
-        document.getElementById('t1400_modern').innerText = "--";
-        document.getElementById('t1400_internet').innerText = "--";
-        document.getElementById('t1400_tw').innerText = "--";
-        document.getElementById('t1630_modern').innerText = "--";
+        document.getElementById('t0930_modern').innerText = '--';
+        document.getElementById('t0930_internet').innerText = '--';
+        document.getElementById('t0930_tw').innerText = '--';
+        document.getElementById('t1201_modern').innerText = '--';
+        document.getElementById('t1400_modern').innerText = '--';
+        document.getElementById('t1400_internet').innerText = '--';
+        document.getElementById('t1400_tw').innerText = '--';
+        document.getElementById('t1630_modern').innerText = '--';
       } else if (hours !== 9) {
         announcedTimes['reset_0900'] = false;
       }
@@ -537,34 +616,66 @@
     }
 
     async function fetchLiveData() {
+      fetchScheduleData();
+
       try {
         const res = await fetch('/api/live');
         const data = await res.json();
-        
-        if(data.success) {
-          if (data.live2D && data.live2D !== "--") {
-            document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
-            document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
-            
-            document.getElementById('live2D').innerText = data.live2D;
-            document.getElementById('updateTime').innerText = "Last Update: " + data.time;
-            document.getElementById('notice').innerText = data.notice;
 
-            if(current2D !== data.live2D) {
-              current2D = data.live2D;
-              speak2D();
+        if (data.success) {
+          const session = getMarketSession();
+          const previous2D = current2D;
+          let display2D = data.live2D && data.live2D !== '--' ? data.live2D : '--';
+
+          if (session.state === 'closed') {
+            if (session.reason === 'midday') {
+              const locked = data.adminResults?.['12:01 PM']?.modern;
+              if (locked && locked !== '--') display2D = locked;
+            } else {
+              const locked = data.adminResults?.['04:30 PM']?.modern;
+              if (locked && locked !== '--') display2D = locked;
             }
           }
+
+          if (data.setIndex && data.setIndex !== '--') {
+            document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
+          }
+          if (data.value && data.value !== '--') {
+            document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
+          }
+
+          if (display2D !== '--') {
+            current2D = display2D;
+            stopWaitingAnimation(true);
+            document.getElementById('live2D').innerText = current2D;
+
+            if (previous2D !== current2D) {
+              speak2D();
+            }
+
+            if (session.state === 'live') {
+              startWaitingAnimation();
+            }
+          }
+
+          document.getElementById('notice').innerText = data.notice || '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။';
+          updateLastUpdateDisplay(session);
         }
-      } catch(e) {}
+      } catch (e) {}
     }
 
-    // Stable guest identity for this browser; no account is required.
     function getChatGuestId() {
-      let id = localStorage.getItem('2dChatGuestId');
-      if (!id || !/^[a-zA-Z0-9_-]{12,80}$/.test(id)) {
-        id = 'g_' + (window.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : (Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)));
-        localStorage.setItem('2dChatGuestId', id);
+      const key = '2dLiveMarketChatGuestId';
+      let id = '';
+      try { id = localStorage.getItem(key) || ''; } catch (e) {}
+
+      if (!/^[A-Za-z0-9_-]{12,80}$/.test(id)) {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+          id = 'g_' + window.crypto.randomUUID().replace(/-/g, '');
+        } else {
+          id = 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 18);
+        }
+        try { localStorage.setItem(key, id); } catch (e) {}
       }
       return id;
     }
@@ -573,6 +684,7 @@
       const status = document.getElementById('chatStatus');
       const input = document.getElementById('chatInput');
       const button = document.getElementById('chatSendButton');
+
       if (status) {
         status.textContent = message || (isOpen ? 'Chat ဖွင့်ထားသည်' : 'Chat ပိတ်ထားသည်');
         status.style.color = isOpen ? '#34d399' : '#fbbf24';
@@ -583,23 +695,43 @@
 
     async function fetchChat() {
       try {
-        const res = await fetch('/api/chat');
+        const res = await fetch('/api/chat', { cache: 'no-store' });
         const data = await res.json();
-        if (!data.success) return;
-        setChatAvailability(!!data.open, data.open ? 'Chat ဖွင့်ထားသည် — မြန်မာစံတော်ချိန်' : (data.message || 'Chat ပိတ်ထားသည်'));
+        if (!data.success) {
+          setChatAvailability(false, data.message || 'Chat ကို ယခုအသုံးပြု၍မရပါ။');
+          return;
+        }
+
+        setChatAvailability(
+          !!data.open,
+          data.open ? 'Chat ဖွင့်ထားသည် — မြန်မာစံတော်ချိန်' : (data.message || 'Live Chatbox ပိတ်ထားပါသည်။')
+        );
+
         const chatDiv = document.getElementById('chatMessages');
         chatDiv.replaceChildren();
-        (data.messages || []).forEach(m => {
-          const row = document.createElement('div');
-          row.className = 'msg';
-          const name = document.createElement('span');
-          name.className = 'msg-user';
-          name.textContent = String(m.user || 'Guest') + ':';
-          const body = document.createElement('span');
-          body.textContent = ' ' + String(m.text || '');
-          row.append(name, body);
-          chatDiv.appendChild(row);
-        });
+
+        if (!data.open) {
+          const notice = document.createElement('div');
+          notice.className = 'msg';
+          notice.textContent = data.message || 'Live Chatbox ပိတ်ထားပါသည်။';
+          chatDiv.appendChild(notice);
+        } else {
+          (data.messages || []).forEach(m => {
+            const row = document.createElement('div');
+            row.className = 'msg';
+
+            const name = document.createElement('span');
+            name.className = 'msg-user';
+            name.textContent = String(m.user || 'Guest') + ':';
+
+            const body = document.createElement('span');
+            body.textContent = ' ' + String(m.text || '');
+
+            row.append(name, body);
+            chatDiv.appendChild(row);
+          });
+        }
+
         chatDiv.scrollTop = chatDiv.scrollHeight;
       } catch (e) {
         setChatAvailability(false, 'Chat server နှင့် ချိတ်ဆက်မရပါ။');
@@ -608,32 +740,41 @@
 
     async function sendMessage() {
       const input = document.getElementById('chatInput');
+      const button = document.getElementById('chatSendButton');
       const text = input.value.trim();
       if (!text) return;
+
       if (text.length > 500) {
         setChatAvailability(true, 'စာလုံး ၅၀၀ ထက် မကျော်ရပါ။');
         return;
       }
-      const username = document.getElementById('chatUsername').value.trim().slice(0, 30);
-      const button = document.getElementById('chatSendButton');
+
+      const usernameInput = document.getElementById('chatUsername');
+      const username = usernameInput ? usernameInput.value.trim().slice(0, 30) : '';
       button.disabled = true;
+
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ guestId: getChatGuestId(), user: username, text })
+          body: JSON.stringify({
+            guestId: getChatGuestId(),
+            user: username || 'Guest',
+            text
+          })
         });
+
         const data = await res.json();
         if (!res.ok || !data.success) {
           setChatAvailability(data.open !== false, data.message || 'စာပို့၍မရပါ။');
           return;
         }
+
         input.value = '';
         await fetchChat();
       } catch (e) {
         setChatAvailability(false, 'စာပို့မရပါ။ Connection ကို စစ်ဆေးပါ။');
       } finally {
-        button.disabled = false;
         await fetchChat();
       }
     }
@@ -648,7 +789,7 @@
     setInterval(checkMarketSchedule, 1000);
     setInterval(fetchLiveData, 3000);
     setInterval(fetchChat, 2000);
-    setInterval(fetchScheduleData, 15000);
+    setInterval(fetchScheduleData, 5000);
 
     function toggleSound() {
       soundEnabled = !soundEnabled;
