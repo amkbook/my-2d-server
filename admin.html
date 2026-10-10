@@ -81,8 +81,9 @@
         let cachedAdminData = null;
 
         async function adminLogin() {
-            const pwd = document.getElementById('passwordInput').value;
+            const pwd = document.getElementById('passwordInput').value.trim();
             const errorText = document.getElementById('loginError');
+            errorText.classList.add('hidden');
 
             try {
                 const response = await fetch('/api/admin/login', {
@@ -92,16 +93,17 @@
                 });
                 const data = await response.json();
 
-                if (data.success) {
+                if (response.ok && data.success) {
                     currentPassword = pwd;
                     document.getElementById('loginSection').classList.add('hidden');
                     document.getElementById('controlSection').classList.remove('hidden');
-                    loadAdminData(); // ဝင်လိုက်တာနဲ့ လက်ရှိဒေတာတွေကို ဆွဲထုတ်မည်
+                    loadAdminData();
                 } else {
                     errorText.classList.remove('hidden');
                 }
             } catch (err) {
-                alert('ချိတ်ဆက်မှု အမှားအယွင်း ရှိနေပါသည်။');
+                errorText.innerText = "ဆာဗာသို့ ချိတ်ဆက်၍ မရပါ။";
+                errorText.classList.remove('hidden');
             }
         }
 
@@ -151,7 +153,6 @@
         }
 
         async function onSessionChange() {
-            // Session ပြောင်းတဲ့အခါ Server ဆီက ဒေတာအသစ်ကိုပါ တစ်ခါတည်း ထပ်မံဆွဲထုတ်မည်
             await loadAdminData();
         }
 
