@@ -1,4 +1,3 @@
-
 const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
@@ -8,52 +7,28 @@ const mongoose = require('mongoose');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '16kb' }));
-app.use(express.static(__dirname));
+app.use(express.json({ limit: '20kb' }));
 
 const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-// SET Live data ကို server တစ်ခုတည်းက 3 စက္ကန့်တစ်ကြိမ် fetch လုပ်မည်။
-const LIVE_FETCH_INTERVAL_MS = 3000;
+if (!MONGO_URI) console.error('ERROR: MONGO_URI environment variable is missing.');
+if (!ADMIN_PASSWORD) console.error('ERROR: ADMIN_PASSWORD environment variable is missing.');
 
-// Myanmar Time boundary များ — 12:01:00 PM နှင့် 04:30:00 PM အတိ။
-const MORNING_BOUNDARY = { hour: 12, minute: 1, second: 0, key: '1201' };
-const AFTERNOON_BOUNDARY = { hour: 16, minute: 30, second: 0, key: '1630' };
-
-let liveCache = {
-    setIndex: '--',
-    value: '--',
-    live2D: '--',
-    adminResults: null,
-    schedule: null,
-    notice: '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။',
-    time: '--',
-    updatedAt: 0
-};
-
-let liveFetchRunning = false;
-let boundaryCaptureRunning = false;
-
-// MongoDB သို့ ချိတ်ဆက်ခြင်း
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://clean2duser:cleanpass123@cluster0.aqs0zyr.mongodb.net/my2dapp?retryWrites=true&w=majority&appName=Cluster0';
-
-mongoose.connect(MONGO_URI)
+mongoose.connect(MONGO_URI || '')
     .then(() => console.log('MongoDB successfully connected!'))
-    .catch(err => console.error('MongoDB connection error:', err));
+    .catch(err => console.error('MongoDB connection error:', err.message));
 
 const dataSchema = new mongoose.Schema({
     dateStr: { type: String, required: true, unique: true },
     dateFormatted: String,
-
-    // History big result boxes — 12:01 / 04:30 အတိရလဒ် 2D တစ်ခုတည်းသာ သိမ်းမည်။
     t1201: { type: String, default: '--' },
     t430: { type: String, default: '--' },
-
     setIndex1201: { type: String, default: '--' },
     value1201: { type: String, default: '--' },
     setIndex430: { type: String, default: '--' },
     value430: { type: String, default: '--' },
-
     schedule: {
         type: Object,
         default: {
@@ -67,6 +42,109 @@ const dataSchema = new mongoose.Schema({
 
 const DayData = mongoose.model('DayData', dataSchema);
 
+const chatSchema = new mongoose.Schema({
+    guestId: { type: String, required: true, index: true },
+    user: { type: String, required: true, maxlength: 30 },
+    text: { type: String, required: true, maxlength: 500 },
+    createdAt: { type: Date, default: Date.now, index: true }
+}, { versionKey: false });
+
+chatSchema.index({ createdAt: -1 });
+const ChatMessage = mongoose.model('ChatMessage', chatSchema);
+
+const CHAT_MAX_MESSAGES = 1000;
+const CHAT_MIN_INTERVAL_MS = 2000;
+const CHAT_MAX_PER_MINUTE = 15;
+const chatRateLimits = new Map();
+const processedChatClosures = new Set();
+const BURMESE_TIME_ZONE = 'Asia/Yangon';
+
+function getMyanmarParts(date = new Date()) {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: BURMESE_TIME_ZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hourCycle: 'h23',
+        weekday: 'short'
+    }).formatToParts(date);
+
+    return Object.fromEntries(
+        parts
+            .filter(p => p.type !== 'literal')
+            .map(p => [p.type, p.value])
+    );
+}
+
+function getChatScheduleState(date = new Date()) {
+    const p = getMyanmarParts(date);
+    const day = new Date(
+        `${p.year}-${p.month}-${p.day}T00:00:00Z`
+    ).getUTCDay();
+
+    const weekday = day >= 1 && day <= 5;
+    const minutes = Number(p.hour) * 60 + Number(p.minute);
+
+    const open = weekday && (
+        (minutes >= 660 && minutes < 730) ||
+        (minutes >= 930 && minutes < 1000)
+    );
+
+    const dateKey = `${p.year}-${p.month}-${p.day}`;
+
+    const closeKey =
+        weekday && minutes >= 730 && minutes < 930
+            ? `${dateKey}-1210`
+            : weekday && minutes >= 1000
+                ? `${dateKey}-1640`
+                : null;
+
+    return {
+        open,
+        weekday,
+        minutes,
+        dateKey,
+        closeKey,
+        time: `${p.hour}:${p.minute}:${p.second}`
+    };
+}
+
+async function enforceChatClosure() {
+    const state = getChatScheduleState();
+
+    if (state.closeKey && !processedChatClosures.has(state.closeKey)) {
+        await ChatMessage.deleteMany({});
+        processedChatClosures.add(state.closeKey);
+    }
+
+    if (processedChatClosures.size > 20) {
+        processedChatClosures.clear();
+    }
+
+    return state;
+}
+
+async function trimChatMessages() {
+    const count = await ChatMessage.countDocuments();
+
+    if (count > CHAT_MAX_MESSAGES) {
+        const oldest = await ChatMessage.find()
+            .sort({ createdAt: 1, _id: 1 })
+            .limit(count - CHAT_MAX_MESSAGES)
+            .select('_id')
+            .lean();
+
+        if (oldest.length) {
+            await ChatMessage.deleteMany({
+                _id: { $in: oldest.map(m => m._id) }
+            });
+        }
+    }
+}
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -75,32 +153,22 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-let chatMessages = [
-    { user: 'System', text: '2D Live Market App သို့ ကြိုဆိုပါသည်။' }
-];
-
 function getMyanmarTime() {
-    const now = new Date();
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    return new Date(utc + (3600000 * 6.5));
-}
+    const p = getMyanmarParts();
 
-function getMyanmarDateKey(date = getMyanmarTime()) {
-    return date.toLocaleDateString('en-GB');
-}
-
-function getScheduleObject(schedule) {
-    return {
-        t0930: schedule['09:30 AM'],
-        t1201: schedule['12:01 PM'],
-        t1400: schedule['02:00 PM'],
-        t1630: schedule['04:30 PM']
-    };
+    return new Date(Date.UTC(
+        Number(p.year),
+        Number(p.month) - 1,
+        Number(p.day),
+        Number(p.hour),
+        Number(p.minute),
+        Number(p.second)
+    ));
 }
 
 async function getTodayAdminResults() {
     const myanmarTime = getMyanmarTime();
-    const todayDateStr = getMyanmarDateKey(myanmarTime);
+    const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
 
     let record = await DayData.findOne({ dateStr: todayDateStr });
 
@@ -119,34 +187,13 @@ async function getTodayAdminResults() {
         await record.save();
     }
 
-    // Old records may not have the newer schedule keys.
-    if (!record.schedule) record.schedule = {};
-
-    const defaults = {
-        '09:30 AM': { modern: '--', internet: '--', tw: '--', isLocked: false },
-        '12:01 PM': { modern: '--', internet: '--', tw: '--', isLocked: false, isAuto: true },
-        '02:00 PM': { modern: '--', internet: '--', tw: '--', isLocked: false },
-        '04:30 PM': { modern: '--', internet: '--', tw: '--', isLocked: false, isAuto: true }
-    };
-
-    for (const key of Object.keys(defaults)) {
-        if (!record.schedule[key]) {
-            record.schedule[key] = { ...defaults[key] };
-        } else {
-            record.schedule[key].modern ??= '--';
-            record.schedule[key].internet ??= '--';
-            record.schedule[key].tw ??= '--';
-            record.schedule[key].isLocked ??= false;
-        }
-    }
-
     return record;
 }
 
 app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
 
-    if (password === '2dpro153791') {
+    if (ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
         res.json({ success: true, message: 'Login successful' });
     } else {
         res.status(401).json({
@@ -160,7 +207,7 @@ app.post('/api/admin/save', async (req, res) => {
     try {
         const { password, session, modern, internet, tw } = req.body;
 
-        if (password !== '2dpro153791') {
+        if (!ADMIN_PASSWORD || password !== ADMIN_PASSWORD) {
             return res.status(401).json({
                 success: false,
                 message: 'ခွင့်ပြုချက်မရှိပါ (Unauthorized)'
@@ -174,16 +221,18 @@ app.post('/api/admin/save', async (req, res) => {
             if (adminResults[session].isLocked) {
                 return res.status(400).json({
                     success: false,
-                    message: `${session} အတွက် ဂဏန်းများကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)`
+                    message: `${session} အတွက် ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ပြင်ဆင်ခွင့်မရှိပါ။`
                 });
             }
 
             if (modern !== undefined && modern !== '') {
                 adminResults[session].modern = modern;
             }
+
             if (internet !== undefined && internet !== '') {
                 adminResults[session].internet = internet;
             }
+
             if (tw !== undefined && tw !== '') {
                 adminResults[session].tw = tw;
             }
@@ -202,7 +251,7 @@ app.post('/api/admin/save', async (req, res) => {
 
             return res.json({
                 success: true,
-                message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။`,
+                message: `${session} အချက်အလက်များ သိမ်းဆည်းပြီးပါပြီ။`,
                 adminResults
             });
         }
@@ -212,7 +261,7 @@ app.post('/api/admin/save', async (req, res) => {
             message: 'မှားယွင်းနေသော Session ဖြစ်ပါသည်။'
         });
     } catch (err) {
-        console.error(err);
+        console.error('Admin save error:', err.message);
         res.status(500).json({
             success: false,
             message: 'Server error occurred'
@@ -240,23 +289,11 @@ app.get('/api/history', async (req, res) => {
     try {
         const historyRecords = await DayData.find()
             .sort({ _id: -1 })
-            .limit(100)
-            .lean();
-
-        // Front-end history table expects t0930/t1400 inside schedule.
-        const history = historyRecords.map(item => ({
-            ...item,
-            schedule: {
-                t0930: item.schedule?.['09:30 AM'] || { modern: '--', internet: '--', tw: '--' },
-                t1201: item.schedule?.['12:01 PM'] || { modern: '--', internet: '--', tw: '--' },
-                t1400: item.schedule?.['02:00 PM'] || { modern: '--', internet: '--', tw: '--' },
-                t1630: item.schedule?.['04:30 PM'] || { modern: '--', internet: '--', tw: '--' }
-            }
-        }));
+            .limit(100);
 
         res.json({
             success: true,
-            history
+            history: historyRecords
         });
     } catch (err) {
         res.status(500).json({
@@ -266,184 +303,102 @@ app.get('/api/history', async (req, res) => {
     }
 });
 
-// -------------------------------------------------------------
-// SET website မှ လက်ရှိ SET Index / Value ကို fetch ပြီး 2D တွက်ရန်
-// Value အတွက် မူလအတိုင်း 10,000 နှင့်အထက်ကိုသာ လက်ခံမည်။
-// -------------------------------------------------------------
-async function fetchCurrentSET() {
+app.get('/api/live', async (req, res) => {
     let setIndex = '';
     let marketValue = '';
     let calculated2D = '--';
 
-    const url = 'https://www.set.or.th/en/home';
-
-    const { data } = await axios.get(url, {
-        timeout: 8000,
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9'
-        }
-    });
-
-    const $ = cheerio.load(data);
-
-    // SET Index ကို ရှာခြင်း
-    $('.mkt-info-value, .value, h3, span').each((i, el) => {
-        const text = $(el).text().trim();
-
-        if (
-            text.includes('.') &&
-            text.length >= 6 &&
-            text.length <= 10 &&
-            !setIndex
-        ) {
-            if (!isNaN(text.replace(/,/g, ''))) {
-                setIndex = text;
-            }
-        }
-    });
-
-    // SET Value ကို ရှာခြင်း
-    // မူလစည်းမျဉ်းအတိုင်း 10,000 အောက်ကို လက်မခံပါ။
-    $('tr, div, li').each((i, el) => {
-        const rowText = $(el).text().trim();
-
-        if (
-            (
-                rowText.startsWith('SET') ||
-                rowText.includes('SET \n') ||
-                rowText.includes('SET\t')
-            ) &&
-            !rowText.includes('SET50') &&
-            !rowText.includes('SETTRI') &&
-            !rowText.includes('SETCLMV') &&
-            !rowText.includes('SETHD') &&
-            !rowText.includes('SETESG')
-        ) {
-            const items = $(el).find('td, span, div');
-
-            items.each((j, subEl) => {
-                const t = $(subEl).text().trim();
-
-                if (t.includes(',') && t.length >= 7 && t.length <= 12) {
-                    const clean = t.replace(/,/g, '');
-                    const num = parseFloat(clean);
-
-                    if (
-                        !isNaN(num) &&
-                        num >= 10000 &&
-                        num < 200000 &&
-                        !marketValue
-                    ) {
-                        marketValue = t;
-                    }
-                }
-            });
-        }
-    });
-
-    let digit1 = '--';
-    let digit2 = '--';
-
-    // 2D digit 1 = SET Index ဒဿမပိုင်း၏ နောက်ဆုံးဂဏန်း
-    if (setIndex.includes('.')) {
-        const indexParts = setIndex.split('.');
-        digit1 = indexParts[1].slice(-1);
-    }
-
-    // 2D digit 2 = Value ကိန်းပြည့်ပိုင်း၏ နောက်ဆုံးဂဏန်း
-    if (marketValue.includes('.')) {
-        const valueParts = marketValue.split('.');
-        const valueInteger = valueParts[0].replace(/,/g, '');
-        digit2 = valueInteger.slice(-1);
-    }
-
-    if (digit1 !== '--' && digit2 !== '--') {
-        calculated2D = digit1 + digit2;
-    }
-
-    return {
-        setIndex: setIndex || '--',
-        marketValue: marketValue || '--',
-        calculated2D
-    };
-}
-
-function isWeekendMyanmar(date = getMyanmarTime()) {
-    const day = date.getDay();
-    return day === 0 || day === 6;
-}
-
-function formatCurrentTime(date = getMyanmarTime()) {
-    return date.toLocaleTimeString('en-US', {
-        hour12: true,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-}
-
-// -------------------------------------------------------------
-// 12:01 PM big box = 12:01 PM အတိတွင်ရသော 2D တစ်ခုတည်း
-// 04:30 PM big box = 04:30 PM အတိတွင်ရသော 2D တစ်ခုတည်း
-// 09:30 / 02:00 Admin ဂဏန်းများကို big box ထဲ မပေါင်းပါ။
-// -------------------------------------------------------------
-async function captureBoundaryResult(session) {
-    if (boundaryCaptureRunning) return false;
-    if (session !== '12:01 PM' && session !== '04:30 PM') return false;
-    if (isWeekendMyanmar()) return false;
-
-    boundaryCaptureRunning = true;
-
     try {
+        const url = 'https://www.set.or.th/en/home';
+
+        const { data } = await axios.get(url, {
+            timeout: 8000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+                'Accept-Language': 'en-US,en;q=0.9'
+            }
+        });
+
+        const $ = cheerio.load(data);
+
+        $('.mkt-info-value, .value, h3, span').each((i, el) => {
+            const text = $(el).text().trim();
+
+            if (text.includes('.') && text.length >= 6 && text.length <= 10 && !setIndex) {
+                if (!isNaN(text.replace(/,/g, ''))) {
+                    setIndex = text;
+                }
+            }
+        });
+
+        $('tr, div, li').each((i, el) => {
+            const rowText = $(el).text().trim();
+
+            if (
+                (rowText.startsWith('SET') ||
+                 rowText.includes('SET \n') ||
+                 rowText.includes('SET\t')) &&
+                !rowText.includes('SET50') &&
+                !rowText.includes('SETTRI') &&
+                !rowText.includes('SETCLMV') &&
+                !rowText.includes('SETHD') &&
+                !rowText.includes('SETESG')
+            ) {
+                $(el).find('td, span, div').each((j, subEl) => {
+                    const t = $(subEl).text().trim();
+
+                    if (t.includes(',') && t.length >= 7 && t.length <= 12) {
+                        const clean = t.replace(/,/g, '');
+                        const num = parseFloat(clean);
+
+                        if (!isNaN(num) && num >= 10000 && num < 200000 && !marketValue) {
+                            marketValue = t;
+                        }
+                    }
+                });
+            }
+        });
+
+        let digit1 = '--';
+        let digit2 = '--';
+
+        if (setIndex.includes('.')) {
+            const indexParts = setIndex.split('.');
+            digit1 = indexParts[1].slice(-1);
+        }
+
+        if (marketValue.includes('.')) {
+            const valueParts = marketValue.split('.');
+            const valueInteger = valueParts[0].replace(/,/g, '');
+            digit2 = valueInteger.slice(-1);
+        }
+
+        if (digit1 !== '--' && digit2 !== '--') {
+            calculated2D = digit1 + digit2;
+        }
+
         const myanmarTime = getMyanmarTime();
-        const todayRecord = await getTodayAdminResults();
+        const currentTime = myanmarTime.toLocaleTimeString('en-US', {
+            hour12: true,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
 
-        // တစ်ရက်တစ်ကြိမ်သာ lock လုပ်ရန်။
-        if (session === '12:01 PM' && todayRecord.t1201 && todayRecord.t1201 !== '--') {
-            return true;
-        }
-        if (session === '04:30 PM' && todayRecord.t430 && todayRecord.t430 !== '--') {
-            return true;
-        }
+        const currentHour = myanmarTime.getHours();
+        const currentMinute = myanmarTime.getMinutes();
 
-        // Boundary အချိန်ရောက်မှ SET ကို fetch လုပ်ပြီး အဲဒီ fetch မှရသော 2D ကိုသာ သိမ်းမည်။
-        const result = await fetchCurrentSET();
+        const dateString = myanmarTime.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
 
-        if (
-            result.calculated2D === '--' ||
-            result.setIndex === '--' ||
-            result.marketValue === '--'
-        ) {
-            console.error(`${session} boundary capture: SET data incomplete.`);
-            return false;
-        }
+        const dayOfWeekIndex = myanmarTime.getDay();
+        const dayOfWeek = myanmarTime.toLocaleDateString('en-US', {
+            weekday: 'long'
+        });
 
-        if (session === '12:01 PM') {
-            todayRecord.t1201 = result.calculated2D;
-            todayRecord.setIndex1201 = result.setIndex;
-            todayRecord.value1201 = result.marketValue;
-
-            todayRecord.schedule['12:01 PM'].modern = result.calculated2D;
-            todayRecord.schedule['12:01 PM'].internet = result.calculated2D;
-            todayRecord.schedule['12:01 PM'].tw = result.calculated2D;
-            todayRecord.schedule['12:01 PM'].isLocked = true;
-            todayRecord.schedule['12:01 PM'].isAuto = true;
-        }
-
-        if (session === '04:30 PM') {
-            todayRecord.t430 = result.calculated2D;
-            todayRecord.setIndex430 = result.setIndex;
-            todayRecord.value430 = result.marketValue;
-
-            todayRecord.schedule['04:30 PM'].modern = result.calculated2D;
-            todayRecord.schedule['04:30 PM'].internet = result.calculated2D;
-            todayRecord.schedule['04:30 PM'].tw = result.calculated2D;
-            todayRecord.schedule['04:30 PM'].isLocked = true;
-            todayRecord.schedule['04:30 PM'].isAuto = true;
-        }
-
-        const dayOfWeek = myanmarTime.toLocaleDateString('en-US', { weekday: 'long' });
         const daysMap = {
             Sunday: 'တနင်္ဂနွေ',
             Monday: 'တနင်္လာ',
@@ -455,214 +410,278 @@ async function captureBoundaryResult(session) {
         };
 
         const myanmarDay = daysMap[dayOfWeek] || dayOfWeek;
-        const dateString = myanmarTime.toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        });
+        const isWeekend = dayOfWeekIndex === 0 || dayOfWeekIndex === 6;
 
-        todayRecord.dateFormatted = `${myanmarDay}\n${dateString}`;
+        const todayRecord = await getTodayAdminResults();
+        const adminResults = todayRecord.schedule;
+
+        if ((currentHour === 12 && currentMinute >= 1) || currentHour > 12) {
+            if (!isWeekend && calculated2D !== '--') {
+                if (
+                    adminResults['12:01 PM'].modern === '--' &&
+                    !adminResults['12:01 PM'].isLocked
+                ) {
+                    adminResults['12:01 PM'].modern = calculated2D;
+                    adminResults['12:01 PM'].internet = calculated2D;
+                    adminResults['12:01 PM'].tw = calculated2D;
+                    adminResults['12:01 PM'].isLocked = true;
+                }
+            }
+
+            if (!isWeekend && setIndex !== '--' && marketValue !== '--') {
+                if (todayRecord.t1201 === '--') {
+                    todayRecord.t1201 = calculated2D;
+                    todayRecord.setIndex1201 = setIndex;
+                    todayRecord.value1201 = marketValue;
+                    todayRecord.dateFormatted = `${myanmarDay}\n${dateString}`;
+                }
+            }
+        }
+
+        if (currentHour > 16 || (currentHour === 16 && currentMinute >= 30)) {
+            if (!isWeekend && calculated2D !== '--') {
+                if (
+                    adminResults['04:30 PM'].modern === '--' &&
+                    !adminResults['04:30 PM'].isLocked
+                ) {
+                    adminResults['04:30 PM'].modern = calculated2D;
+                    adminResults['04:30 PM'].internet = calculated2D;
+                    adminResults['04:30 PM'].tw = calculated2D;
+                    adminResults['04:30 PM'].isLocked = true;
+                }
+            }
+
+            if (!isWeekend && setIndex !== '--' && marketValue !== '--') {
+                if (todayRecord.t430 === '--') {
+                    todayRecord.t430 = calculated2D;
+                    todayRecord.setIndex430 = setIndex;
+                    todayRecord.value430 = marketValue;
+                    todayRecord.dateFormatted = `${myanmarDay}\n${dateString}`;
+                }
+            }
+        }
+
+        todayRecord.schedule = adminResults;
         todayRecord.markModified('schedule');
         await todayRecord.save();
 
-        console.log(
-            `BOUNDARY CAPTURED | Myanmar ${session} | 2D=${result.calculated2D} | SET=${result.setIndex} | VALUE=${result.marketValue}`
-        );
-
-        liveCache.setIndex = result.setIndex;
-        liveCache.value = result.marketValue;
-        liveCache.live2D = result.calculated2D;
-        liveCache.adminResults = todayRecord.schedule;
-        liveCache.schedule = getScheduleObject(todayRecord.schedule);
-        liveCache.time = formatCurrentTime(myanmarTime);
-        liveCache.updatedAt = Date.now();
-
-        return true;
-    } catch (error) {
-        console.error(`${session} boundary capture error:`, error.message);
-        return false;
-    } finally {
-        boundaryCaptureRunning = false;
-    }
-}
-
-// Myanmar time ကို အခြေခံပြီး နောက် boundary အချိန်ကို setTimeout လုပ်သည်။
-function scheduleNextBoundaryCapture() {
-    const now = getMyanmarTime();
-
-    const targets = [
-        { hour: 12, minute: 1, second: 0, session: '12:01 PM' },
-        { hour: 16, minute: 30, second: 0, session: '04:30 PM' }
-    ];
-
-    let target = null;
-
-    for (const t of targets) {
-        const candidate = new Date(now);
-        candidate.setHours(t.hour, t.minute, t.second, 0);
-
-        if (candidate.getTime() > now.getTime()) {
-            target = { ...t, date: candidate };
-            break;
-        }
-    }
-
-    if (!target) {
-        const candidate = new Date(now);
-        candidate.setDate(candidate.getDate() + 1);
-        candidate.setHours(12, 1, 0, 0);
-        target = { ...targets[0], date: candidate };
-    }
-
-    const delay = Math.max(0, target.date.getTime() - now.getTime());
-
-    console.log(
-        `Next Myanmar boundary: ${target.session} | in ${Math.round(delay / 1000)} seconds`
-    );
-
-    setTimeout(async () => {
-        if (!isWeekendMyanmar()) {
-            await captureBoundaryResult(target.session);
-        } else {
-            console.log(`Boundary skipped: ${target.session} (Myanmar weekend)`);
-        }
-
-        scheduleNextBoundaryCapture();
-    }, delay);
-}
-
-// -------------------------------------------------------------
-// Live cache updater — SET website ကို server တစ်ခုတည်းကသာ
-// 3 seconds တစ်ကြိမ် fetch လုပ်မည်။
-// -------------------------------------------------------------
-async function fetchAndUpdateLiveCache() {
-    if (liveFetchRunning) return;
-
-    liveFetchRunning = true;
-
-    try {
-        const result = await fetchCurrentSET();
-        const myanmarTime = getMyanmarTime();
-        const todayRecord = await getTodayAdminResults();
-
-        liveCache = {
-            setIndex: result.setIndex,
-            value: result.marketValue,
-            live2D: result.calculated2D,
-            adminResults: todayRecord.schedule,
-            schedule: getScheduleObject(todayRecord.schedule),
+        res.json({
+            success: true,
+            setIndex: setIndex || '--',
+            value: marketValue || '--',
+            live2D: calculated2D,
+            adminResults,
+            schedule: {
+                t0930: adminResults['09:30 AM'],
+                t1201: adminResults['12:01 PM'],
+                t1400: adminResults['02:00 PM'],
+                t1630: adminResults['04:30 PM']
+            },
             notice: '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။',
-            time: formatCurrentTime(myanmarTime),
-            updatedAt: Date.now()
-        };
+            time: currentTime
+        });
     } catch (error) {
-        console.error('Live data fetch error:', error.message);
+        console.error('Live fetch error:', error.message);
 
-        try {
-            const myanmarTime = getMyanmarTime();
-            const todayRecord = await getTodayAdminResults();
-            const adminResults = todayRecord.schedule;
-
-            // Cache မရှိသေးလျှင် သိမ်းပြီးသား boundary result ကို fallback အဖြစ် ပြမည်။
-            if (!liveCache.updatedAt) {
-                let fallback2D = '--';
-                let fallbackSetIndex = '--';
-                let fallbackValue = '--';
-
-                const currentHour = myanmarTime.getHours();
-                const currentMinute = myanmarTime.getMinutes();
-
-                if (currentHour >= 12 && currentHour < 14) {
-                    fallback2D = todayRecord.t1201 !== '--'
-                        ? todayRecord.t1201
-                        : '--';
-                    fallbackSetIndex = todayRecord.setIndex1201 || '--';
-                    fallbackValue = todayRecord.value1201 || '--';
-                } else if (
-                    currentHour >= 16 ||
-                    currentHour < 9 ||
-                    (currentHour === 9 && currentMinute < 30) ||
-                    (currentHour >= 14 && currentHour < 16)
-                ) {
-                    if (todayRecord.t430 && todayRecord.t430 !== '--') {
-                        fallback2D = todayRecord.t430;
-                        fallbackSetIndex = todayRecord.setIndex430 || '--';
-                        fallbackValue = todayRecord.value430 || '--';
-                    } else if (todayRecord.t1201 && todayRecord.t1201 !== '--') {
-                        fallback2D = todayRecord.t1201;
-                        fallbackSetIndex = todayRecord.setIndex1201 || '--';
-                        fallbackValue = todayRecord.value1201 || '--';
-                    }
-                }
-
-                liveCache = {
-                    setIndex: fallbackSetIndex,
-                    value: fallbackValue,
-                    live2D: fallback2D,
-                    adminResults,
-                    schedule: getScheduleObject(adminResults),
-                    notice: '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။',
-                    time: formatCurrentTime(myanmarTime),
-                    updatedAt: 0
-                };
-            } else {
-                liveCache.adminResults = adminResults;
-                liveCache.schedule = getScheduleObject(adminResults);
-            }
-        } catch (fallbackError) {
-            console.error('Live fallback error:', fallbackError.message);
-        }
-    } finally {
-        liveFetchRunning = false;
-    }
-}
-
-setInterval(fetchAndUpdateLiveCache, LIVE_FETCH_INTERVAL_MS);
-fetchAndUpdateLiveCache();
-scheduleNextBoundaryCapture();
-
-app.get('/api/live', (req, res) => {
-    res.set('Cache-Control', 'no-store');
-
-    res.json({
-        success: true,
-        setIndex: liveCache.setIndex,
-        value: liveCache.value,
-        live2D: liveCache.live2D,
-        adminResults: liveCache.adminResults || {},
-        schedule: liveCache.schedule || {},
-        notice: liveCache.notice,
-        time: liveCache.time
-    });
-});
-
-app.get('/api/chat', (req, res) => {
-    res.json({
-        success: true,
-        messages: chatMessages
-    });
-});
-
-app.post('/api/chat', (req, res) => {
-    const { user, text } = req.body;
-
-    if (text) {
-        chatMessages.push({
-            user: user || 'User',
-            text
+        const myanmarTime = getMyanmarTime();
+        const currentTime = myanmarTime.toLocaleTimeString('en-US', {
+            hour12: true,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
         });
 
-        if (chatMessages.length > 50) {
-            chatMessages.shift();
-        }
-    }
+        const todayRecord = await getTodayAdminResults();
+        const adminResults = todayRecord.schedule;
 
-    res.json({ success: true });
+        let fallback2D = '--';
+        let fallbackSetIndex = '--';
+        let fallbackValue = '--';
+
+        const currentHour = myanmarTime.getHours();
+        const currentMinute = myanmarTime.getMinutes();
+
+        if ((currentHour >= 12 && currentHour < 14) ||
+            (currentHour === 12 && currentMinute >= 1)) {
+            fallback2D = todayRecord.t1201 !== '--'
+                ? todayRecord.t1201
+                : (adminResults['12:01 PM'].modern || '--');
+
+            fallbackSetIndex = todayRecord.setIndex1201 || '--';
+            fallbackValue = todayRecord.value1201 || '--';
+        } else if (
+            currentHour >= 16 ||
+            currentHour < 9 ||
+            (currentHour === 9 && currentMinute < 30) ||
+            (currentHour >= 14 && currentHour < 16)
+        ) {
+            if (todayRecord.t430 && todayRecord.t430 !== '--') {
+                fallback2D = todayRecord.t430;
+                fallbackSetIndex = todayRecord.setIndex430 || '--';
+                fallbackValue = todayRecord.value430 || '--';
+            } else if (
+                adminResults['04:30 PM'].modern &&
+                adminResults['04:30 PM'].modern !== '--'
+            ) {
+                fallback2D = adminResults['04:30 PM'].modern;
+            } else if (todayRecord.t1201 && todayRecord.t1201 !== '--') {
+                fallback2D = todayRecord.t1201;
+                fallbackSetIndex = todayRecord.setIndex1201 || '--';
+                fallbackValue = todayRecord.value1201 || '--';
+            }
+        }
+
+        res.json({
+            success: true,
+            setIndex: fallbackSetIndex,
+            value: fallbackValue,
+            live2D: fallback2D,
+            adminResults,
+            schedule: {
+                t0930: adminResults['09:30 AM'],
+                t1201: adminResults['12:01 PM'],
+                t1400: adminResults['02:00 PM'],
+                t1630: adminResults['04:30 PM']
+            },
+            notice: '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။',
+            time: currentTime
+        });
+    }
 });
+
+app.get('/api/chat', async (req, res) => {
+    try {
+        const state = await enforceChatClosure();
+
+        if (!state.open) {
+            return res.json({
+                success: true,
+                open: false,
+                messages: [],
+                message: 'Chatbox ပိတ်ထားပါသည်။'
+            });
+        }
+
+        const messages = await ChatMessage.find()
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(CHAT_MAX_MESSAGES)
+            .lean();
+
+        messages.reverse();
+
+        res.json({ success: true, open: true, messages });
+    } catch (err) {
+        console.error('Chat fetch error:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Chat ကို ရယူ၍မရပါ။'
+        });
+    }
+});
+
+app.post('/api/chat', async (req, res) => {
+    try {
+        const state = await enforceChatClosure();
+
+        if (!state.open) {
+            return res.status(403).json({
+                success: false,
+                open: false,
+                message: 'Chatbox ဖွင့်ချိန် မဟုတ်သေးပါ။'
+            });
+        }
+
+        const guestId = String(req.body.guestId || '').trim();
+        const text = String(req.body.text || '').trim();
+        const requestedName = String(req.body.user || '').trim();
+
+        if (!/^[a-zA-Z0-9_-]{12,80}$/.test(guestId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Guest ID မမှန်ပါ။ စာမျက်နှာကို refresh လုပ်ပါ။'
+            });
+        }
+
+        if (!text) {
+            return res.status(400).json({
+                success: false,
+                message: 'စာသားထည့်ပါ။'
+            });
+        }
+
+        if (text.length > 500) {
+            return res.status(400).json({
+                success: false,
+                message: 'စာလုံး ၅၀၀ ထက် မကျော်ရပါ။'
+            });
+        }
+
+        const now = Date.now();
+        const previous = chatRateLimits.get(guestId) || {
+            lastAt: 0,
+            timestamps: []
+        };
+
+        const recent = previous.timestamps.filter(t => now - t < 60000);
+
+        if (now - previous.lastAt < CHAT_MIN_INTERVAL_MS) {
+            return res.status(429).json({
+                success: false,
+                message: 'စာတစ်စောင်နှင့်တစ်စောင် အနည်းဆုံး ၂ စက္ကန့်ခြားပါ။'
+            });
+        }
+
+        if (recent.length >= CHAT_MAX_PER_MINUTE) {
+            return res.status(429).json({
+                success: false,
+                message: 'တစ်မိနစ်အတွင်း စာပို့နှုန်း ကန့်သတ်ချက် ပြည့်နေပါသည်။'
+            });
+        }
+
+        const user = requestedName
+            ? requestedName.slice(0, 30)
+            : `Guest-${guestId.slice(-4)}`;
+
+        await ChatMessage.create({
+            guestId,
+            user,
+            text,
+            createdAt: new Date(now)
+        });
+
+        chatRateLimits.set(guestId, {
+            lastAt: now,
+            timestamps: [...recent, now]
+        });
+
+        await trimChatMessages();
+
+        if (chatRateLimits.size > 20000) {
+            for (const [id, info] of chatRateLimits) {
+                if (now - info.lastAt > 10 * 60 * 1000) {
+                    chatRateLimits.delete(id);
+                }
+
+                if (chatRateLimits.size <= 15000) break;
+            }
+        }
+
+        res.json({ success: true, message: 'စာပို့ပြီးပါပြီ။' });
+    } catch (err) {
+        console.error('Chat send error:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'စာပို့၍မရပါ။'
+        });
+    }
+});
+
+setInterval(() => {
+    enforceChatClosure().catch(err =>
+        console.error('Chat closure error:', err.message)
+    );
+}, 15000);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-    console.log('Myanmar Timezone: Asia/Yangon');
-    console.log('Morning boundary: 12:01:00 PM Myanmar Time');
-    console.log('Afternoon boundary: 04:30:00 PM Myanmar Time');
 });

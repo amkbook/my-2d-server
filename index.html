@@ -172,10 +172,12 @@
 
       <div class="chat-box">
         <div class="live-title" style="margin-bottom: 5px;">Live Chatbox</div>
-        <div id="chatMessages" class="chat-messages"></div>
+        <div id="chatStatus" style="font-size:12px;color:#fbbf24;margin-bottom:6px;">Chat ဖွင့်ချိန်ကို စစ်ဆေးနေသည်...</div>
+        <input type="text" id="chatUsername" maxlength="30" placeholder="အမည် (မထည့်လည်းရသည်)" aria-label="Chat အမည်" style="background:#0f172a;border:1px solid #334155;border-radius:8px;color:white;padding:8px 12px;margin-bottom:8px;">
+        <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
         <div class="chat-input-row">
-          <input type="text" id="chatInput" placeholder="စကားပြောရန် စာရိုက်ပါ..." onkeypress="handleKeyPress(event)">
-          <button onclick="sendMessage()">ပို့မည်</button>
+          <input type="text" id="chatInput" maxlength="500" placeholder="စကားပြောရန် စာရိုက်ပါ..." onkeypress="handleKeyPress(event)">
+          <button id="chatSendButton" onclick="sendMessage()">ပို့မည်</button>
         </div>
       </div>
     </div>
@@ -245,18 +247,6 @@
       }
     }
 
-    function extractBoundary2D(value) {
-      if (value === undefined || value === null) return '--';
-      const text = String(value).trim();
-      if (!text || text === '--') return '--';
-      // Backward compatibility: old records like "85 / 14" are displayed as the actual 12:01/4:30 result: "14".
-      if (text.includes('/')) {
-        const parts = text.split('/').map(v => v.trim()).filter(Boolean);
-        return parts.length ? parts[parts.length - 1] : '--';
-      }
-      return text;
-    }
-
     async function fetchHistoryList() {
       try {
         const res = await fetch('/api/history');
@@ -274,12 +264,12 @@
               <div class="history-top-results">
                 <div class="history-res-box">
                   <div class="history-res-title">12:01 PM</div>
-                  <div class="history-res-val green-val">${extractBoundary2D(item.t1201) || '--'}</div>
+                  <div class="history-res-val green-val">${item.t1201 || '--'}</div>
                   <div class="history-res-sub"><span>${item.setIndex1201 || item.setIndex || '--'}</span><span>${item.value1201 || item.value || '--'}</span></div>
                 </div>
                 <div class="history-res-box">
                   <div class="history-res-title">4:30 PM</div>
-                  <div class="history-res-val green-val">${extractBoundary2D(item.t430) || '--'}</div>
+                  <div class="history-res-val green-val">${item.t430 || '--'}</div>
                   <div class="history-res-sub"><span>${item.setIndex430 || item.setIndex || '--'}</span><span>${item.value430 || item.value || '--'}</span></div>
                 </div>
               </div>
@@ -372,9 +362,7 @@
 
     function checkMarketSchedule() {
       const now = new Date();
-      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-      const myanmarTime = new Date(utc + (3600000 * 6.5));
-      const day = myanmarTime.getDay();
+      const day = now.getDay();
       
       if (day === 0 || day === 6) {
         isLiveActive = false;
@@ -383,6 +371,9 @@
         return;
       }
 
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const myanmarTime = new Date(utc + (3600000 * 6.5));
+      
       const hours = myanmarTime.getHours();
       const minutes = myanmarTime.getMinutes();
       const seconds = myanmarTime.getSeconds();
@@ -415,11 +406,17 @@
           playAnnouncement('min3');
         }
 
-        // 12:01 PM result ကို server.js က Myanmar Time 12:01:00 AM/PM boundary မှာ capture/lock လုပ်သည်။
-        // Front-end က live value ကို ခန့်မှန်းပြီး history result အဖြစ် မသိမ်းပါ။
-        if (hours === 12 && minutes === 1 && seconds === 0 && !announcedTimes['m1201']) {
-          announcedTimes['m1201'] = true;
-          startMoneyRain();
+        // 12:01 PM အတိတွင် ချက်ချင်း 12:01 အကွက်ထဲသို့ ထည့်သွင်းရန်
+        if (hours === 12 && minutes === 1 && seconds === 0) {
+          if (!announcedTimes['m1201']) {
+            announcedTimes['m1201'] = true;
+            startMoneyRain();
+            let currentVal = document.getElementById('live2D').innerText;
+            if (currentVal !== "--") {
+              const t1201El = document.getElementById('t1201_modern');
+              t1201El.innerText = currentVal;
+            }
+          }
         }
 
         if (hours === 15 && minutes === 15 && seconds === 0 && !announcedTimes['e1515']) {
@@ -431,11 +428,17 @@
           playAnnouncement('min3');
         }
 
-        // 4:30 PM result ကို server.js က Myanmar Time 16:30:00 boundary မှာ capture/lock လုပ်သည်။
-        // Front-end က live value ကို ခန့်မှန်းပြီး history result အဖြစ် မသိမ်းပါ။
-        if (hours === 16 && minutes === 30 && seconds === 0 && !announcedTimes['e1630']) {
-          announcedTimes['e1630'] = true;
-          startMoneyRain();
+        // 4:30 PM အတိတွင် ချက်ချင်း 4:30 အကွက်ထဲသို့ ထည့်သွင်းရန်
+        if (hours === 16 && minutes === 30 && seconds === 0) {
+          if (!announcedTimes['e1630']) {
+            announcedTimes['e1630'] = true;
+            startMoneyRain();
+            let currentVal = document.getElementById('live2D').innerText;
+            if (currentVal !== "--") {
+              const t1630El = document.getElementById('t1630_modern');
+              t1630El.innerText = currentVal;
+            }
+          }
         }
 
       } else {
@@ -534,8 +537,6 @@
     }
 
     async function fetchLiveData() {
-      fetchScheduleData();
-
       try {
         const res = await fetch('/api/live');
         const data = await res.json();
@@ -558,33 +559,83 @@
       } catch(e) {}
     }
 
+    // Stable guest identity for this browser; no account is required.
+    function getChatGuestId() {
+      let id = localStorage.getItem('2dChatGuestId');
+      if (!id || !/^[a-zA-Z0-9_-]{12,80}$/.test(id)) {
+        id = 'g_' + (window.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : (Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)));
+        localStorage.setItem('2dChatGuestId', id);
+      }
+      return id;
+    }
+
+    function setChatAvailability(isOpen, message) {
+      const status = document.getElementById('chatStatus');
+      const input = document.getElementById('chatInput');
+      const button = document.getElementById('chatSendButton');
+      if (status) {
+        status.textContent = message || (isOpen ? 'Chat ဖွင့်ထားသည်' : 'Chat ပိတ်ထားသည်');
+        status.style.color = isOpen ? '#34d399' : '#fbbf24';
+      }
+      if (input) input.disabled = !isOpen;
+      if (button) button.disabled = !isOpen;
+    }
+
     async function fetchChat() {
       try {
         const res = await fetch('/api/chat');
         const data = await res.json();
-        if(data.success) {
-          const chatDiv = document.getElementById('chatMessages');
-          chatDiv.innerHTML = data.messages.map(m => 
-            `<div class="msg"><span class="msg-user">${m.user}:</span> ${m.text}</div>`
-          ).join('');
-          chatDiv.scrollTop = chatDiv.scrollHeight;
-        }
-      } catch(e) {}
+        if (!data.success) return;
+        setChatAvailability(!!data.open, data.open ? 'Chat ဖွင့်ထားသည် — မြန်မာစံတော်ချိန်' : (data.message || 'Chat ပိတ်ထားသည်'));
+        const chatDiv = document.getElementById('chatMessages');
+        chatDiv.replaceChildren();
+        (data.messages || []).forEach(m => {
+          const row = document.createElement('div');
+          row.className = 'msg';
+          const name = document.createElement('span');
+          name.className = 'msg-user';
+          name.textContent = String(m.user || 'Guest') + ':';
+          const body = document.createElement('span');
+          body.textContent = ' ' + String(m.text || '');
+          row.append(name, body);
+          chatDiv.appendChild(row);
+        });
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+      } catch (e) {
+        setChatAvailability(false, 'Chat server နှင့် ချိတ်ဆက်မရပါ။');
+      }
     }
 
     async function sendMessage() {
-      const int = document.getElementById('chatInput');
-      const text = int.value.trim();
-      if(!text) return;
-
-      await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user: "User", text: text })
-      });
-
-      int.value = "";
-      fetchChat();
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+      if (text.length > 500) {
+        setChatAvailability(true, 'စာလုံး ၅၀၀ ထက် မကျော်ရပါ။');
+        return;
+      }
+      const username = document.getElementById('chatUsername').value.trim().slice(0, 30);
+      const button = document.getElementById('chatSendButton');
+      button.disabled = true;
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ guestId: getChatGuestId(), user: username, text })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          setChatAvailability(data.open !== false, data.message || 'စာပို့၍မရပါ။');
+          return;
+        }
+        input.value = '';
+        await fetchChat();
+      } catch (e) {
+        setChatAvailability(false, 'စာပို့မရပါ။ Connection ကို စစ်ဆေးပါ။');
+      } finally {
+        button.disabled = false;
+        await fetchChat();
+      }
     }
 
     function handleKeyPress(e) { if(e.key === 'Enter') sendMessage(); }
@@ -597,7 +648,7 @@
     setInterval(checkMarketSchedule, 1000);
     setInterval(fetchLiveData, 3000);
     setInterval(fetchChat, 2000);
-    setInterval(fetchScheduleData, 5000);
+    setInterval(fetchScheduleData, 15000);
 
     function toggleSound() {
       soundEnabled = !soundEnabled;
