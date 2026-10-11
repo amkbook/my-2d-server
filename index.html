@@ -78,6 +78,14 @@
     .history-sub-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 14px; font-weight: bold; color: #ffffff; align-items: center; padding: 2px 0; }
     .history-sub-label { text-align: left; padding-left: 6px; font-size: 12px; color: #facc15; }
 
+    /* ရွှေစျေးစာမျက်နှာအတွက် Styling များနှင့် တာဝန်ခံဒီဇိုင်း */
+    .gold-card { background: #1e293b; border-radius: 16px; padding: 15px; border: 1px solid #334155; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .gold-global-box { background: #0f172a; border: 1px solid #eab308; border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 15px; }
+    .gold-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .gold-item-box { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px; text-align: center; display: flex; flex-direction: column; gap: 4px; }
+    .gold-main-price { font-size: 20px; font-weight: bold; color: #facc15; }
+    .gold-sub-change { font-size: 12px; color: #f8fafc; font-weight: normal; }
+
     .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
     .gallery-item { background: #0f172a; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
     .gallery-item img { width: 100%; height: 120px; object-fit: cover; }
@@ -182,11 +190,21 @@
       </div>
     </div>
 
-    <!-- PAGE 2: Gold Price -->
+    <!-- PAGE 2: Gold Price (ရွှေစျေး Tab အသစ်) -->
     <div id="page-gold" class="tab-content">
-      <div class="card">
-        <h2>🪙 ရွှေဈေးနှုန်းများ</h2>
-        <p style="color: #94a3b8; font-size: 14px; margin-top: 10px;">အခေါက်ရွှေနှင့် ၁၅ ပဲရည် ရွှေဈေးနှုန်း အချက်အလက်များ</p>
+      <div class="gold-card">
+        <h2 class="text-xl font-bold text-center text-yellow-400 mb-4">🪙 ရွှေဈေးနှုန်းများ</h2>
+        
+        <!-- ကမ္ဘာ့ရွှေစျေး အပေါ်ထိပ်ဆုံးနေရာ -->
+        <div class="gold-global-box">
+          <div class="text-xs text-slate-400">🌍 ကမ္ဘာ့ရွှေစျေး (Global Gold)</div>
+          <div id="globalGoldVal" class="text-2xl font-bold text-yellow-400 mt-1">--</div>
+        </div>
+
+        <!-- တစ်ရက်လျှင် ၃ ကြိမ် (09:00 AM, 12:00 PM, 04:00 PM) ဖြင့် စုစုပေါင်း အကွက် ၆ ကွက် -->
+        <div id="goldSessionsContainer" class="flex flex-col gap-4">
+          <!-- Dynamically populated via JS -->
+        </div>
       </div>
     </div>
 
@@ -236,8 +254,6 @@
     let soundEnabled = true;
     let isLiveActive = false;
 
-    // Client-side waiting animation only.
-    // Temporary numbers are visual placeholders, NOT real 2D results.
     let waitingAnimationTimer = null;
     let waitingAnimationGeneration = 0;
     let waitingAnimationVisible = true;
@@ -303,13 +319,11 @@
 
       if (pageId === 'page-2d-history') {
         fetchHistoryList();
+      } else if (pageId === 'page-gold') {
+        fetchGoldData();
       }
     }
 
-    // History compatibility helper:
-    // Older database records used "09:30 / 12:01" and "02:00 / 04:30".
-    // New records contain only the exact endpoint result.
-    // This keeps old data untouched while displaying the correct endpoint result.
     function getExactEndpointResult(value) {
       if (!value || value === '--') return '--';
       const text = String(value);
@@ -367,6 +381,46 @@
           `).join('');
         }
       } catch (e) {}
+    }
+
+    // ==========================================
+    // GOLD PRICE FRONTEND FETCH & UI RENDER
+    // ==========================================
+    async function fetchGoldData() {
+      try {
+        const res = await fetch('/api/admin/gold');
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('globalGoldVal').innerText = data.globalGold !== "--" ? data.globalGold : "--";
+          
+          const container = document.getElementById('goldSessionsContainer');
+          const sessions = data.sessions || {};
+          const sessionKeys = ["09:00 AM", "12:00 PM", "04:00 PM"];
+
+          container.innerHTML = sessionKeys.map(timeKey => {
+            const sData = sessions[timeKey] || { p15: { price: "--", change: "--" }, akhot: { price: "--", change: "--" } };
+            return `
+              <div class="bg-slate-900 border border-slate-700 rounded-xl p-3">
+                <div class="text-xs font-bold text-yellow-400 mb-2 border-b border-slate-800 pb-1">${timeKey} ရွှေစျေးနှုန်းများ</div>
+                <div class="gold-grid">
+                  <div class="gold-item-box">
+                    <span class="text-xs text-slate-400">၁၅ ပဲရည်</span>
+                    <span class="gold-main-price">${sData.p15.price}</span>
+                    <span class="gold-sub-change">${sData.p15.change}</span>
+                  </div>
+                  <div class="gold-item-box">
+                    <span class="text-xs text-slate-400">အခေါက်ရွှေ</span>
+                    <span class="gold-main-price">${sData.akhot.price}</span>
+                    <span class="gold-sub-change">${sData.akhot.change}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        console.error("Gold fetch error:", err);
+      }
     }
 
     function speak2D() {
@@ -511,7 +565,6 @@
           announcedTimes['m1158'] = true;
           playAnnouncement('min3');
         }
-        // ညနေပိုင်း ၄:၃၀ ပိတ်ချိန်အတွက် ၁၅ မိနစ်ကြို (16:15) နှင့် ၃ မိနစ်ကြို (16:27) သို့ အတိအကျ ပြင်ဆင်ထားခြင်း
         if (hours === 16 && minutes === 15 && seconds === 0 && !announcedTimes['e1615']) {
           announcedTimes['e1615'] = true;
           playAnnouncement('min15');
@@ -775,6 +828,7 @@
       } catch (e) {
         setChatAvailability(false, 'စာပို့မရပါ။ Connection ကို စစ်ဆေးပါ။');
       } finally {
+        button.disabled = false;
         await fetchChat();
       }
     }
@@ -785,6 +839,7 @@
     fetchScheduleData();
     fetchLiveData();
     fetchChat();
+    fetchGoldData();
 
     setInterval(checkMarketSchedule, 1000);
     setInterval(fetchLiveData, 3000);
@@ -793,7 +848,7 @@
 
     function toggleSound() {
       soundEnabled = !soundEnabled;
-      const btn = document.getElementById('audio-btn'); 
+      const btn = document.getElementById('audio-btn');
       if (btn) {
         if (soundEnabled) {
             btn.innerHTML = "🔊 အသံဖွင့်ထားသည်";

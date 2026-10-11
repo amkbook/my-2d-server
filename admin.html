@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D Admin Control Panel</title>
+    <title>2D & Gold Admin Control Panel</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
 
     <div class="w-full max-w-md bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-700">
-        <h1 class="text-2xl font-bold text-center mb-6 text-yellow-400">2D Admin Control Panel</h1>
+        <h1 class="text-2xl font-bold text-center mb-6 text-yellow-400">Admin Control Panel</h1>
 
         <!-- Login Section -->
         <div id="loginSection" class="space-y-4">
@@ -28,10 +28,11 @@
 
         <!-- Control Panel Form (Login ပြီးမှ ပေါ်မည်) -->
         <div id="controlSection" class="hidden space-y-6">
+            
+            <!-- 2D Control Section -->
             <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
-                <h2 class="text-lg font-semibold text-yellow-400 mb-3">ဇယားကွက် ဂဏန်းများ ထိန်းချုပ်ရန်</h2>
+                <h2 class="text-lg font-semibold text-yellow-400 mb-3">2D ဇယားကွက် ဂဏန်းများ ထိန်းချုပ်ရန်</h2>
                 
-                <!-- Session Selection -->
                 <div class="mb-4">
                     <label class="block text-sm text-slate-300 mb-1">အချိန်အကွက် (Session)</label>
                     <select id="sessionSelect" onchange="onSessionChange()" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
@@ -40,21 +41,18 @@
                     </select>
                 </div>
 
-                <!-- Modern Input -->
                 <div class="mb-3">
                     <label class="block text-sm text-slate-300 mb-1">Modern ဂဏန်း</label>
                     <input type="text" id="modernInput" placeholder="ဥပမာ - 45" 
                         class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
                 </div>
 
-                <!-- Internet Input -->
                 <div class="mb-3">
                     <label class="block text-sm text-slate-300 mb-1">Internet ဂဏန်း</label>
                     <input type="text" id="internetInput" placeholder="ဥပမာ - 78" 
                         class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
                 </div>
 
-                <!-- TW Input -->
                 <div class="mb-4">
                     <label class="block text-sm text-slate-300 mb-1">TW ဂဏန်း</label>
                     <input type="text" id="twInput" placeholder="ဥပမာ - 12" 
@@ -63,9 +61,62 @@
 
                 <button id="saveBtn" onclick="saveData()" 
                     class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2 rounded-lg transition">
-                    အချက်အလက် သိမ်းဆည်းမည် (Save)
+                    2D အချက်အလက် သိမ်းဆည်းမည်
                 </button>
-                <p id="lockNotice" class="text-orange-400 text-xs text-center mt-2 hidden">⚠️ ဤအချိန်အကွက်အတွက် ဂဏန်းများကို သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်၍မရပါ (Locked)။</p>
+                <p id="lockNotice" class="text-orange-400 text-xs text-center mt-2 hidden">⚠️ ဤ 2D အချိန်အကွက်အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
+            </div>
+
+            <!-- GOLD PRICE CONTROL SECTION (ရွှေစျေး ထိန်းချုပ်ရန် သီးသန့်) -->
+            <div class="bg-slate-900 p-4 rounded-xl border border-yellow-600/50">
+                <h2 class="text-lg font-semibold text-yellow-400 mb-3">🪙 ရွှေစျေးနှုန်းများ ထိန်းချုပ်ရန်</h2>
+                
+                <!-- ကမ္ဘာ့ရွှေစျေး -->
+                <div class="mb-4 pb-3 border-b border-slate-800">
+                    <label class="block text-sm text-yellow-300 mb-1">ကမ္ဘာ့ရွှေစျေး (Global Gold Price)</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="globalGoldInput" placeholder="ဥပမာ - $2,350.5" 
+                            class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
+                        <button onclick="saveGlobalGold()" class="bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-bold px-4 py-2 rounded-lg transition text-sm">သိမ်းမည်</button>
+                    </div>
+                </div>
+
+                <!-- ရွှေစျေး အချိန်အကွက် (09:00 AM, 12:00 PM, 04:00 PM) -->
+                <div class="mb-3">
+                    <label class="block text-sm text-slate-300 mb-1">ရွှေစျေး အချိန်အကွက် (Session)</label>
+                    <select id="goldSessionSelect" onchange="onGoldSessionChange()" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
+                        <option value="09:00 AM">မနက် 09:00 AM</option>
+                        <option value="12:00 PM">နေ့လယ် 12:00 PM</option>
+                        <option value="04:00 PM">ညနေ 04:00 PM</option>
+                    </select>
+                </div>
+
+                <!-- ၁၅ ပဲရည် ရွှေစျေး -->
+                <div class="mb-3 bg-slate-800/60 p-3 rounded-lg border border-slate-700">
+                    <span class="text-xs text-yellow-400 font-bold block mb-2">၁၅ ပဲရည် ရွှေစျေး</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="p15PriceInput" placeholder="စျေးနှုန်း (ဥပမာ - 3,500,000)" 
+                            class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-400">
+                        <input type="text" id="p15ChangeInput" placeholder="အတတ်/အကျ (ဥပမာ - ⏫ 50,000)" 
+                            class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-400">
+                    </div>
+                </div>
+
+                <!-- အခေါက်ရွှေ စျေး -->
+                <div class="mb-4 bg-slate-800/60 p-3 rounded-lg border border-slate-700">
+                    <span class="text-xs text-yellow-400 font-bold block mb-2">အခေါက်ရွှေ စျေး</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="akhotPriceInput" placeholder="စျေးနှုန်း (ဥပမာ - 4,200,000)" 
+                            class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-400">
+                        <input type="text" id="akhotChangeInput" placeholder="အတတ်/အကျ (ဥပမာ - ⏬ 20,000)" 
+                            class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-400">
+                    </div>
+                </div>
+
+                <button id="saveGoldBtn" onclick="saveGoldData()" 
+                    class="w-full bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-bold py-2 rounded-lg transition">
+                    ရွှေစျေး အချက်အလက် သိမ်းဆည်းမည်
+                </button>
+                <p id="goldLockNotice" class="text-orange-400 text-xs text-center mt-2 hidden">⚠️ ဤရွှေစျေးအချိန်အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
             </div>
 
             <p id="saveStatus" class="text-green-400 text-sm text-center hidden"></p>
@@ -79,6 +130,7 @@
     <script>
         let currentPassword = "";
         let cachedAdminData = null;
+        let cachedGoldData = null;
 
         async function adminLogin() {
             const pwd = document.getElementById('passwordInput').value.trim();
@@ -98,6 +150,7 @@
                     document.getElementById('loginSection').classList.add('hidden');
                     document.getElementById('controlSection').classList.remove('hidden');
                     loadAdminData();
+                    loadAdminGoldData();
                 } else {
                     errorText.classList.remove('hidden');
                 }
@@ -188,6 +241,133 @@
                 }
             } catch (err) {
                 alert('သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိသွားပါသည်။');
+            }
+        }
+
+        // ==========================================
+        // GOLD ADMIN FUNCTIONS
+        // ==========================================
+        async function loadAdminGoldData() {
+            try {
+                const response = await fetch('/api/admin/gold');
+                const data = await response.json();
+                if (data.success) {
+                    cachedGoldData = data;
+                    document.getElementById('globalGoldInput').value = data.globalGold !== "--" ? data.globalGold : "";
+                    updateGoldFormFields();
+                }
+            } catch (err) {
+                console.error("Gold data load error:", err);
+            }
+        }
+
+        function updateGoldFormFields() {
+            if (!cachedGoldData || !cachedGoldData.sessions) return;
+            const session = document.getElementById('goldSessionSelect').value;
+            const sessionData = cachedGoldData.sessions[session] || { 
+                p15: { price: "--", change: "--" }, 
+                akhot: { price: "--", change: "--" }, 
+                isLocked: false 
+            };
+
+            const p15PriceInput = document.getElementById('p15PriceInput');
+            const p15ChangeInput = document.getElementById('p15ChangeInput');
+            const akhotPriceInput = document.getElementById('akhotPriceInput');
+            const akhotChangeInput = document.getElementById('akhotChangeInput');
+            const saveGoldBtn = document.getElementById('saveGoldBtn');
+            const goldLockNotice = document.getElementById('goldLockNotice');
+
+            p15PriceInput.value = sessionData.p15.price !== "--" ? sessionData.p15.price : "";
+            p15ChangeInput.value = sessionData.p15.change !== "--" ? sessionData.p15.change : "";
+            akhotPriceInput.value = sessionData.akhot.price !== "--" ? sessionData.akhot.price : "";
+            akhotChangeInput.value = sessionData.akhot.change !== "--" ? sessionData.akhot.change : "";
+
+            if (sessionData.isLocked) {
+                p15PriceInput.disabled = true;
+                p15ChangeInput.disabled = true;
+                akhotPriceInput.disabled = true;
+                akhotChangeInput.disabled = true;
+                saveGoldBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                saveGoldBtn.disabled = true;
+                goldLockNotice.classList.remove('hidden');
+            } else {
+                p15PriceInput.disabled = false;
+                p15ChangeInput.disabled = false;
+                akhotPriceInput.disabled = false;
+                akhotChangeInput.disabled = false;
+                saveGoldBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                saveGoldBtn.disabled = false;
+                goldLockNotice.classList.add('hidden');
+            }
+        }
+
+        async function onGoldSessionChange() {
+            updateGoldFormFields();
+        }
+
+        async function saveGlobalGold() {
+            const globalGoldPrice = document.getElementById('globalGoldInput').value.trim();
+            const statusText = document.getElementById('saveStatus');
+
+            try {
+                const response = await fetch('/api/admin/gold/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        password: currentPassword,
+                        type: 'global',
+                        globalGoldPrice: globalGoldPrice || "--"
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    cachedGoldData.globalGold = data.globalGold;
+                    statusText.innerText = "ကမ္ဘာ့ရွှေစျေး အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။";
+                    statusText.classList.remove('hidden');
+                    setTimeout(() => statusText.classList.add('hidden'), 4000);
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('ကမ္ဘာ့ရွှေစျေး သိမ်းဆည်းရာတွင် အမှားအယွင်းရှိပါသည်။');
+            }
+        }
+
+        async function saveGoldData() {
+            const session = document.getElementById('goldSessionSelect').value;
+            const p15Price = document.getElementById('p15PriceInput').value.trim();
+            const p15Change = document.getElementById('p15ChangeInput').value.trim();
+            const akhotPrice = document.getElementById('akhotPriceInput').value.trim();
+            const akhotChange = document.getElementById('akhotChangeInput').value.trim();
+            const statusText = document.getElementById('saveStatus');
+
+            try {
+                const response = await fetch('/api/admin/gold/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        password: currentPassword,
+                        type: 'session',
+                        session: session,
+                        p15Price: p15Price || "--",
+                        p15Change: p15Change || "--",
+                        akhotPrice: akhotPrice || "--",
+                        akhotChange: akhotChange || "--"
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    cachedGoldData.sessions = data.sessions;
+                    updateGoldFormFields();
+                    statusText.innerText = data.message;
+                    statusText.classList.remove('hidden');
+                    setTimeout(() => statusText.classList.add('hidden'), 4000);
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('ရွှေစျေး သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိသွားပါသည်။');
             }
         }
     </script>
