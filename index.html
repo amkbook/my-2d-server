@@ -295,12 +295,11 @@
       liveEl.style.visibility = 'visible';
       liveEl.style.opacity = '1';
 
-      // ကျပမ်းဂဏန်းများမပြဘဲ တကယ့်အဖြေမှန် (current2D) ကိုသာ တစ်စက္ကန့်တစ်ခါ အသက်ဝင်ပြသမည်
       waitingAnimationTimer = setInterval(() => {
         if (generation !== waitingAnimationGeneration || !isLiveActive) return;
 
         if (waitingAnimationVisible) {
-          liveEl.innerText = current2D;
+          liveEl.innerText = String(Math.floor(Math.random() * 100)).padStart(2, '0');
           liveEl.style.visibility = 'visible';
           liveEl.style.opacity = '1';
         } else {
@@ -384,6 +383,9 @@
       } catch (e) {}
     }
 
+    // ==========================================
+    // GOLD PRICE FRONTEND FETCH & UI RENDER
+    // ==========================================
     async function fetchGoldData() {
       try {
         const res = await fetch('/api/admin/gold');
