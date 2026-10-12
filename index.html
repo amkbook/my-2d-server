@@ -660,6 +660,47 @@
     async function fetchLiveData() {
       fetchScheduleData();
 
+      const session = getMarketSession();
+      if (session.state === 'closed' && session.reason === 'midday') {
+        updateMarketUI('paused');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/live');
+        const data = await res.json();
+
+        if (data.success) {
+          const previous2D = current2D;
+          let display2D = data.live2D && data.live2D !== '--' ? data.live2D : '--';
+
+          if (data.setIndex && data.setIndex !== '--') {
+            document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
+          }
+          if (data.value && data.value !== '--') {
+            document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
+          }
+
+          if (display2D !== '--') {
+            current2D = display2D;
+            stopWaitingAnimation(true);
+            document.getElementById('live2D').innerText = current2D;
+
+            if (previous2D !== current2D) {
+              speak2D();
+            }
+
+            if (session.state === 'live') {
+              startWaitingAnimation();
+            }
+          }
+
+          document.getElementById('notice').innerText = data.notice || '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။';
+          updateLastUpdateDisplay(session);
+        }
+      } catch (e) {}
+    }
+
       try {
         const res = await fetch('/api/live');
         const data = await res.json();
