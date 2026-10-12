@@ -359,8 +359,12 @@ async function fetchLiveMarketData(isTargetCapture = false) {
             let todayRecord = await getTodayAdminResults();
             let adminResults = todayRecord.schedule;
 
-            // နေ့လည် ၁၂:၀၁ မှ ညနေ ၂:၀၀ အတွင်း Live လုံးဝမဆွဲတော့ဘဲ Lock ချထားသော တန်ဖိုးကိုသာ တိကျစွာ ပြန်ထုတ်ရန်
-            if (!isWeekend && (currentHour === 12 || currentHour === 13)) {
+            // နေ့လည် ၁၂:၀၁ မှ ညနေ ၂:၀၀ အတွင်း Live လုံးဝမဆွဲတော့ဘဲ Lock ချထားသော တန်ဖိုးကိုသာ တိကျစွာ ပြန်ထုတ်ရန် (Exact Total Minutes Check)
+            const totalMinutes = currentHour * 60 + currentMinute;
+            const middayStart = 12 * 60 + 1;  // 12:01 PM
+            const afternoonStart = 14 * 60;   // 02:00 PM
+
+            if (!isWeekend && totalMinutes >= middayStart && totalMinutes < afternoonStart) {
                 let locked2D = (todayRecord.t1201 && todayRecord.t1201 !== "--") ? todayRecord.t1201 : (adminResults["12:01 PM"]?.modern !== "--" ? adminResults["12:01 PM"].modern : "--");
                 let lockedSetIndex = todayRecord.setIndex1201 || "--";
                 let lockedValue = todayRecord.value1201 || "--";
@@ -386,44 +390,6 @@ async function fetchLiveMarketData(isTargetCapture = false) {
                 return cachedLiveData;
             }
 
-            const url = 'https://www.set.or.th/en/home';
-            const myanmarTime = getMyanmarTime();
-            const currentHour = myanmarTime.getHours();
-            const currentMinute = myanmarTime.getMinutes();
-            const dayOfWeekIndex = myanmarTime.getDay();
-            const isWeekend = (dayOfWeekIndex === 0 || dayOfWeekIndex === 6);
-
-            let todayRecord = await getTodayAdminResults();
-            let adminResults = todayRecord.schedule;
-
-            // နေ့လည် ၁၂:၀၁ မှ ၂:၀၀ အတွင်း Live ဆက်မဆွဲတော့ဘဲ Lock ချထားသော တန်ဖိုးကိုသာ တိကျစွာ ပြန်ထုတ်ရန်
-            if (!isWeekend && ((currentHour === 12 && currentMinute >= 1) || (currentHour > 12 && currentHour < 14))) {
-                let locked2D = (todayRecord.t1201 && todayRecord.t1201 !== "--") ? todayRecord.t1201 : (adminResults["12:01 PM"]?.modern !== "--" ? adminResults["12:01 PM"].modern : "--");
-                let lockedSetIndex = todayRecord.setIndex1201 || "--";
-                let lockedValue = todayRecord.value1201 || "--";
-                
-                const currentTime = myanmarTime.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-                cachedLiveData = {
-                    success: true,
-                    setIndex: lockedSetIndex,
-                    value: lockedValue,
-                    live2D: locked2D,
-                    adminResults: adminResults,
-                    schedule: {
-                        t0930: adminResults["09:30 AM"],
-                        t1201: adminResults["12:01 PM"],
-                        t1400: adminResults["02:00 PM"],
-                        t1630: adminResults["04:30 PM"]
-                    },
-                    notice: "2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။",
-                    time: currentTime
-                };
-                lastFetchTime = Date.now();
-                return cachedLiveData;
-            }
-
-            const url = 'https://www.set.or.th/en/home';
             const url = 'https://www.set.or.th/en/home';
 
             const { data } = await axios.get(url, {
@@ -500,7 +466,6 @@ async function fetchLiveMarketData(isTargetCapture = false) {
                 calculated2D = digit1 + digit2;
             }
 
-            const myanmarTime = getMyanmarTime();
             const currentTime = myanmarTime.toLocaleTimeString('en-US', {
                 hour12: true,
                 hour: '2-digit',
@@ -508,16 +473,12 @@ async function fetchLiveMarketData(isTargetCapture = false) {
                 second: '2-digit'
             });
 
-            const currentHour = myanmarTime.getHours();
-            const currentMinute = myanmarTime.getMinutes();
-
             const dateString = myanmarTime.toLocaleDateString('en-GB', {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric'
             });
 
-            const dayOfWeekIndex = myanmarTime.getDay();
             const dayOfWeek = myanmarTime.toLocaleDateString('en-US', {
                 weekday: 'long'
             });
@@ -533,10 +494,6 @@ async function fetchLiveMarketData(isTargetCapture = false) {
             };
 
             const myanmarDay = daysMap[dayOfWeek] || dayOfWeek;
-            const isWeekend = (dayOfWeekIndex === 0 || dayOfWeekIndex === 6);
-
-            let todayRecord = await getTodayAdminResults();
-            let adminResults = todayRecord.schedule;
 
             if (isTargetCapture) {
                 if (currentHour === 12 && currentMinute === 1) {
@@ -586,8 +543,7 @@ async function fetchLiveMarketData(isTargetCapture = false) {
             let displaySetIndex = setIndex;
             let displayValue = marketValue;
 
-            // နေ့လည် ၁၂:၀၁ ကျော်ပြီးသားဖြစ်ပါက 12:01 တွင် Lock ဖြစ်ခဲ့သည့် တန်ဖိုးများကိုသာ တည်ငြိမ်စွာ ပြသရန်
-            if ((currentHour === 12 && currentMinute >= 1) || (currentHour > 12 && currentHour < 14)) {
+            if (totalMinutes >= middayStart && totalMinutes < afternoonStart) {
                 if (todayRecord.t1201 && todayRecord.t1201 !== "--") {
                     displayLive2D = todayRecord.t1201;
                     displaySetIndex = todayRecord.setIndex1201 || setIndex;
@@ -659,8 +615,11 @@ app.get('/api/live', async (req, res) => {
 
         const currentHour = myanmarTime.getHours();
         const currentMinute = myanmarTime.getMinutes();
+        const totalMinutes = currentHour * 60 + currentMinute;
+        const middayStart = 12 * 60 + 1;
+        const afternoonStart = 14 * 60;
 
-        if ((currentHour === 12 && currentMinute >= 1) || (currentHour > 12 && currentHour < 14)) {
+        if (totalMinutes >= middayStart && totalMinutes < afternoonStart) {
             fallback2D = (todayRecord.t1201 && todayRecord.t1201 !== "--") ? todayRecord.t1201 : (adminResults["12:01 PM"]?.modern !== "--" ? adminResults["12:01 PM"].modern : "--");
             fallbackSetIndex = todayRecord.setIndex1201 || "--";
             fallbackValue = todayRecord.value1201 || "--";
