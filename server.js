@@ -338,7 +338,7 @@ app.get('/api/history', async (req, res) => {
 
 let cachedLiveData = null;
 let lastFetchTime = 0;
-const CACHE_DURATION = 3000;
+const CACHE_DURATION = 1000; // Cache သက်တမ်းကို 1 စက္ကန့်သို့ ပြောင်းထားသည်
 let fetchPromise = null;
 
 async function fetchLiveMarketData(isTargetCapture = false) {
@@ -359,12 +359,12 @@ async function fetchLiveMarketData(isTargetCapture = false) {
             let todayRecord = await getTodayAdminResults();
             let adminResults = todayRecord.schedule;
 
-            // နေ့လည် ၁၂:၀၁ မှ ညနေ ၂:၀၀ အတွင်း Live လုံးဝမဆွဲတော့ဘဲ Lock ချထားသော တန်ဖိုးကိုသာ တိကျစွာ ပြန်ထုတ်ရန် (Exact Total Minutes Check)
             const totalMinutes = currentHour * 60 + currentMinute;
-            const middayStart = 12 * 60 + 1;  // 12:01 PM
-            const afternoonStart = 14 * 60;   // 02:00 PM
+            const middayStart = 12 * 60 + 1;  // 12:01 PM (မိနစ် ၇၂၁)
+            const afternoonStart = 14 * 60;   // 02:00 PM (မိနစ် ၈၄၀)
 
-            if (!isWeekend && totalMinutes >= middayStart && totalMinutes < afternoonStart) {
+            // နေ့လည် ၁၂:၀၁ မှ ညနေ ၂:၀၀ တိတိအထိသာ Lock ချမည် (၂:၀၀ နာရီရောက်လျှင် ချက်ချင်းဖွင့်ပေးမည်)
+            if (!isTargetCapture && !isWeekend && totalMinutes >= middayStart && totalMinutes < afternoonStart) {
                 let locked2D = (todayRecord.t1201 && todayRecord.t1201 !== "--") ? todayRecord.t1201 : (adminResults["12:01 PM"]?.modern !== "--" ? adminResults["12:01 PM"].modern : "--");
                 let lockedSetIndex = todayRecord.setIndex1201 || "--";
                 let lockedValue = todayRecord.value1201 || "--";
