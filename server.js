@@ -573,101 +573,74 @@ app.get('/api/history', async (req, res) => {
 // --------------------------------------------------
 
 async function fetchCurrentSET() {
-    let setIndex = '';
-    let marketValue = '';
+    let setIndex = '--';
+    let marketValue = '--';
     let calculated2D = '--';
 
-    const { data } = await axios.get(
-        'https://www.set.or.th/en/home',
-        {
-            timeout: 8000,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept-Language': 'en-US,en;q=0.9'
+    try {
+        const { data } = await axios.get(
+            'https://www.set.or.th/en/home',
+            {
+                timeout: 8000,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9'
+                }
             }
-        }
-    );
+        );
 
-    const $ = cheerio.load(data);
+        const $ = cheerio.load(data);
 
-    $('.mkt-info-value, .value, h3, span').each((i, el) => {
-        const text = $(el).text().trim();
+        // ဇယားကွက် (Table) ထဲရှိ အတန်းတိုင်းကို လိုက်စစ်ပြီး "SET" Row ကို တိုက်ရိုက်ယူသည်
+        $('tr').each((i, el) => {
+            const firstCol = $(el).find('td, th').first().text().trim();
+            
+            if (firstCol === 'SET') {
+                const cols = $(el).find('td');
+                if (cols.length >= 5) {
+                    // cols[1] = Last (SET Index)
+                    const indexVal = $(cols[1]).text().trim();
+                    // cols[4] = Value (M.Baht)
+                    const valueVal = $(cols[4]).text().trim();
 
-        if (
-            text.includes('.') &&
-            text.length >= 6 &&
-            text.length <= 10 &&
-            !setIndex
-        ) {
-            if (!isNaN(text.replace(/,/g, ''))) {
-                setIndex = text;
-            }
-        }
-    });
-
-    $('tr, div, li').each((i, el) => {
-        const rowText = $(el).text().trim();
-
-        if (
-            (
-                rowText.startsWith('SET') ||
-                rowText.includes('SET \n') ||
-                rowText.includes('SET\t')
-            ) &&
-            !rowText.includes('SET50') &&
-            !rowText.includes('SETTRI') &&
-            !rowText.includes('SETCLMV') &&
-            !rowText.includes('SETHD') &&
-            !rowText.includes('SETESG')
-        ) {
-            $(el).find('td, span, div').each((j, subEl) => {
-                const t = $(subEl).text().trim();
-
-                if (
-                    t.includes(',') &&
-                    t.length >= 7 &&
-                    t.length <= 12
-                ) {
-                    const num = parseFloat(t.replace(/,/g, ''));
-
-                    if (
-                        !isNaN(num) &&
-                        num >= 0 &&
-                        num < 200000 &&
-                        !marketValue
-                    ) {
-                        marketValue = t;
+                    if (indexVal && indexVal.includes('.')) {
+                        setIndex = indexVal;
+                    }
+                    if (valueVal && valueVal.includes(',')) {
+                        marketValue = valueVal;
                     }
                 }
-            });
+            }
+        });
+
+        let digit1 = '--';
+        let digit2 = '--';
+
+        if (setIndex !== '--' && setIndex.includes('.')) {
+            digit1 = setIndex.split('.')[1].slice(-1);
         }
-    });
 
-    let digit1 = '--';
-    let digit2 = '--';
+        if (marketValue !== '--' && marketValue.includes('.')) {
+            digit2 = marketValue
+                .split('.')[0]
+                .replace(/,/g, '')
+                .slice(-1);
+        }
 
-    if (setIndex.includes('.')) {
-        digit1 = setIndex.split('.')[1].slice(-1);
-    }
+        if (digit1 !== '--' && digit2 !== '--') {
+            calculated2D = digit1 + digit2;
+        }
 
-    if (marketValue.includes('.')) {
-        digit2 = marketValue
-            .split('.')[0]
-            .replace(/,/g, '')
-            .slice(-1);
-    }
-
-    if (digit1 !== '--' && digit2 !== '--') {
-        calculated2D = digit1 + digit2;
+    } catch (err) {
+        console.error('fetchCurrentSET error:', err.message);
     }
 
     return {
-        setIndex: setIndex || '--',
-        marketValue: marketValue || '--',
+        setIndex,
+        marketValue,
         calculated2D
     };
 }
-
 // --------------------------------------------------
 // Freeze the latest saved market snapshot
 // --------------------------------------------------
