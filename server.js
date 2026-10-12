@@ -350,6 +350,43 @@ async function fetchLiveMarketData(isTargetCapture = false) {
         let calculated2D = '--';
 
         try {
+            const myanmarTime = getMyanmarTime();
+            const currentHour = myanmarTime.getHours();
+            const currentMinute = myanmarTime.getMinutes();
+            const dayOfWeekIndex = myanmarTime.getDay();
+            const isWeekend = (dayOfWeekIndex === 0 || dayOfWeekIndex === 6);
+
+            let todayRecord = await getTodayAdminResults();
+            let adminResults = todayRecord.schedule;
+
+            // နေ့လည် ၁၂:၀၁ မှ ၂:၀၀ အတွင်း Live ဆက်မဆွဲတော့ဘဲ Lock ချထားသော တန်ဖိုးကိုသာ တိကျစွာ ပြန်ထုတ်ရန်
+            if (!isWeekend && ((currentHour === 12 && currentMinute >= 1) || (currentHour > 12 && currentHour < 14))) {
+                let locked2D = (todayRecord.t1201 && todayRecord.t1201 !== "--") ? todayRecord.t1201 : (adminResults["12:01 PM"]?.modern !== "--" ? adminResults["12:01 PM"].modern : "--");
+                let lockedSetIndex = todayRecord.setIndex1201 || "--";
+                let lockedValue = todayRecord.value1201 || "--";
+                
+                const currentTime = myanmarTime.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                cachedLiveData = {
+                    success: true,
+                    setIndex: lockedSetIndex,
+                    value: lockedValue,
+                    live2D: locked2D,
+                    adminResults: adminResults,
+                    schedule: {
+                        t0930: adminResults["09:30 AM"],
+                        t1201: adminResults["12:01 PM"],
+                        t1400: adminResults["02:00 PM"],
+                        t1630: adminResults["04:30 PM"]
+                    },
+                    notice: "2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။",
+                    time: currentTime
+                };
+                lastFetchTime = Date.now();
+                return cachedLiveData;
+            }
+
+            const url = 'https://www.set.or.th/en/home';
             const url = 'https://www.set.or.th/en/home';
 
             const { data } = await axios.get(url, {
