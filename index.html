@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2D Live Market App - Full Version</title>
-<style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2D Live Market App - Full Version</title>
+  <style>
+- { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; padding-bottom: 90px; overflow-x: hidden; }
     .container { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 15px; }
     
@@ -20,7 +20,7 @@
     
     .status-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: bold; }
     .status-live { color: #ef4444; display: inline-flex; align-items: center; gap: 4px; }
-    .status-paused { color: #10b981; display: inline-flex; align-items: center; gap: 4px; }
+    .status-paused { color: #f59e0b; display: inline-flex; align-items: center; gap: 4px; }
     .spinner { width: 10px; height: 10px; border: 2px solid #ef4444; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
     .status-closed { color: #10b981; display: inline-flex; align-items: center; gap: 4px; }
 
@@ -53,6 +53,7 @@
     .table-row-group { display: flex; flex-direction: column; gap: 8px; }
     .market-row-item { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; background: #0f172a; border-radius: 8px; padding: 10px 8px; align-items: center; text-align: center; border: 1px solid #334155; }
     .row-time-label { font-size: 13px; font-weight: bold; color: #facc15; text-align: left; padding-left: 6px; }
+    .row-time-label.green-label { color: #10b981 !important; }
     .row-val { font-size: 18px; font-weight: bold; color: #facc15; }
 
     .chat-box { background: #1e293b; border-radius: 16px; padding: 15px; border: 1px solid #334155; display: flex; flex-direction: column; height: 260px; }
@@ -77,13 +78,6 @@
     .history-sub-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 12px; font-weight: bold; color: #bfdbfe; border-bottom: 1px solid #3b82f6; padding-bottom: 4px; }
     .history-sub-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 14px; font-weight: bold; color: #ffffff; align-items: center; padding: 2px 0; }
     .history-sub-label { text-align: left; padding-left: 6px; font-size: 12px; color: #facc15; }
-
-    .gold-card { background: #1e293b; border-radius: 16px; padding: 15px; border: 1px solid #334155; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-    .gold-global-box { background: #0f172a; border: 1px solid #eab308; border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 15px; }
-    .gold-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .gold-item-box { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px; text-align: center; display: flex; flex-direction: column; gap: 4px; }
-    .gold-main-price { font-size: 20px; font-weight: bold; color: #facc15; }
-    .gold-sub-change { font-size: 12px; color: #f8fafc; font-weight: normal; }
 
     .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
     .gallery-item { background: #0f172a; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
@@ -159,7 +153,7 @@
           </div>
           
           <div class="market-row-item">
-            <div class="row-time-label">12:01 PM</div>
+            <div class="row-time-label green-label">12:01 PM</div>
             <div id="t1201_modern" class="row-val green-val" style="grid-column: span 3;">--</div>
           </div>
 
@@ -171,7 +165,7 @@
           </div>
 
           <div class="market-row-item">
-            <div class="row-time-label">04:30 PM</div>
+            <div class="row-time-label green-label">04:30 PM</div>
             <div id="t1630_modern" class="row-val green-val" style="grid-column: span 3;">--</div>
           </div>
         </div>
@@ -179,25 +173,20 @@
 
       <div class="chat-box">
         <div class="live-title" style="margin-bottom: 5px;">Live Chatbox</div>
-        <div id="chatStatus" style="font-size:12px;color:#fbbf24;margin-bottom:6px;">Chat ဖွင့်ချိန်ကို စစ်ဆေးနေသည်...</div>
-        <input type="text" id="chatUsername" maxlength="30" placeholder="အမည် (မထည့်လည်းရသည်)" aria-label="Chat အမည်" style="background:#0f172a;border:1px solid #334155;border-radius:8px;color:white;padding:8px 12px;margin-bottom:8px;">
-        <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+        <div id="chatMessages" class="chat-messages"></div>
         <div class="chat-input-row">
-          <input type="text" id="chatInput" maxlength="500" placeholder="စကားပြောရန် စာရိုက်ပါ..." onkeypress="handleKeyPress(event)">
-          <button id="chatSendButton" onclick="sendMessage()">ပို့မည်</button>
+          <input type="text" id="chatName" maxlength="30" placeholder="အမည် (မဖြည့်လည်းရ)" aria-label="Chat display name" style="max-width: 115px; min-width: 0;">
+          <input type="text" id="chatInput" maxlength="500" placeholder="စကားပြောရန် စာရိုက်ပါ..." onkeypress="handleKeyPress(event)" aria-label="Chat message">
+          <button onclick="sendMessage()">ပို့မည်</button>
         </div>
       </div>
     </div>
 
     <!-- PAGE 2: Gold Price -->
     <div id="page-gold" class="tab-content">
-      <div class="gold-card">
-        <h2 class="text-xl font-bold text-center text-yellow-400 mb-4">🪙 ရွှေဈေးနှုန်းများ</h2>
-        <div class="gold-global-box">
-          <div class="text-xs text-slate-400">🌍 ကမ္ဘာ့ရွှေစျေး (Global Gold)</div>
-          <div id="globalGoldVal" class="text-2xl font-bold text-yellow-400 mt-1">--</div>
-        </div>
-        <div id="goldSessionsContainer" class="flex flex-col gap-4"></div>
+      <div class="card">
+        <h2>🪙 ရွှေဈေးနှုန်းများ</h2>
+        <p style="color: #94a3b8; font-size: 14px; margin-top: 10px;">အခေါက်ရွှေနှင့် ၁၅ ပဲရည် ရွှေဈေးနှုန်း အချက်အလက်များ</p>
       </div>
     </div>
 
@@ -208,6 +197,7 @@
         <div class="live-title" style="font-size: 18px; font-weight: bold; color: #ffffff;">2D Calendar</div>
         <span style="font-size: 18px; color: #ffffff; cursor: pointer;">🔍</span>
       </div>
+      
       <div id="historyListContainer" class="history-list-container"></div>
     </div>
 
@@ -246,63 +236,6 @@
     let soundEnabled = true;
     let isLiveActive = false;
 
-    let waitingAnimationTimer = null;
-    let waitingAnimationGeneration = 0;
-    let waitingAnimationVisible = true;
-
-    function stopWaitingAnimation(showRealResult = true) {
-      waitingAnimationGeneration++;
-
-      if (waitingAnimationTimer) {
-        clearInterval(waitingAnimationTimer);
-        waitingAnimationTimer = null;
-      }
-
-      const liveEl = document.getElementById('live2D');
-      if (!liveEl) return;
-
-      liveEl.style.visibility = 'visible';
-      liveEl.style.opacity = '1';
-
-      if (showRealResult) {
-        liveEl.innerText = current2D;
-      }
-    }
-
-    function startWaitingAnimation() {
-      if (!isLiveActive || current2D === "--" || current2D.length !== 2) {
-        stopWaitingAnimation(false);
-        return;
-      }
-
-      const liveEl = document.getElementById('live2D');
-      if (!liveEl) return;
-
-      stopWaitingAnimation(false);
-
-      const generation = waitingAnimationGeneration;
-      waitingAnimationVisible = true;
-
-      liveEl.innerText = current2D;
-      liveEl.style.visibility = 'visible';
-      liveEl.style.opacity = '1';
-
-      waitingAnimationTimer = setInterval(() => {
-        if (generation !== waitingAnimationGeneration || !isLiveActive) return;
-
-        if (waitingAnimationVisible) {
-          liveEl.innerText = current2D;
-          liveEl.style.visibility = 'visible';
-          liveEl.style.opacity = '1';
-        } else {
-          liveEl.style.visibility = 'hidden';
-          liveEl.style.opacity = '0';
-        }
-
-        waitingAnimationVisible = !waitingAnimationVisible;
-      }, 1000);
-    }
-
     function switchTab(pageId, btn) {
       document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -311,19 +244,19 @@
 
       if (pageId === 'page-2d-history') {
         fetchHistoryList();
-      } else if (pageId === 'page-gold') {
-        fetchGoldData();
       }
     }
 
-    function getExactEndpointResult(value) {
-      if (!value || value === '--') return '--';
-      const text = String(value);
+    function extractBoundary2D(value) {
+      if (value === undefined || value === null) return '--';
+      const text = String(value).trim();
+      if (!text || text === '--') return '--';
+      // Backward compatibility: old records like "85 / 14" are displayed as the actual 12:01/4:30 result: "14".
       if (text.includes('/')) {
-        const parts = text.split('/');
-        return parts[parts.length - 1].trim() || '--';
+        const parts = text.split('/').map(v => v.trim()).filter(Boolean);
+        return parts.length ? parts[parts.length - 1] : '--';
       }
-      return text.trim() || '--';
+      return text;
     }
 
     async function fetchHistoryList() {
@@ -343,12 +276,12 @@
               <div class="history-top-results">
                 <div class="history-res-box">
                   <div class="history-res-title">12:01 PM</div>
-                  <div class="history-res-val green-val">${getExactEndpointResult(item.t1201)}</div>
+                  <div class="history-res-val green-val">${extractBoundary2D(item.t1201 && item.t1201 !== '--' ? item.t1201 : item.schedule?.t1201?.modern) || '--'}</div>
                   <div class="history-res-sub"><span>${item.setIndex1201 || item.setIndex || '--'}</span><span>${item.value1201 || item.value || '--'}</span></div>
                 </div>
                 <div class="history-res-box">
                   <div class="history-res-title">4:30 PM</div>
-                  <div class="history-res-val green-val">${getExactEndpointResult(item.t430)}</div>
+                  <div class="history-res-val green-val">${extractBoundary2D(item.t430 && item.t430 !== '--' ? item.t430 : item.schedule?.t1630?.modern) || '--'}</div>
                   <div class="history-res-sub"><span>${item.setIndex430 || item.setIndex || '--'}</span><span>${item.value430 || item.value || '--'}</span></div>
                 </div>
               </div>
@@ -358,58 +291,21 @@
                 </div>
                 <div class="history-sub-row">
                   <div class="history-sub-label">09:30 AM</div>
-                  <div>${item.schedule?.["09:30 AM"]?.modern || '--'}</div>
-                  <div>${item.schedule?.["09:30 AM"]?.internet || '--'}</div>
-                  <div>${item.schedule?.["09:30 AM"]?.tw || '--'}</div>
+                  <div>${item.schedule?.t0930?.modern || '--'}</div>
+                  <div>${item.schedule?.t0930?.internet || '--'}</div>
+                  <div>${item.schedule?.t0930?.tw || '--'}</div>
                 </div>
                 <div class="history-sub-row">
                   <div class="history-sub-label">02:00 PM</div>
-                  <div>${item.schedule?.["02:00 PM"]?.modern || '--'}</div>
-                  <div>${item.schedule?.["02:00 PM"]?.internet || '--'}</div>
-                  <div>${item.schedule?.["02:00 PM"]?.tw || '--'}</div>
+                  <div>${item.schedule?.t1400?.modern || '--'}</div>
+                  <div>${item.schedule?.t1400?.internet || '--'}</div>
+                  <div>${item.schedule?.t1400?.tw || '--'}</div>
                 </div>
               </div>
             </div>
           `).join('');
         }
       } catch (e) {}
-    }
-
-    async function fetchGoldData() {
-      try {
-        const res = await fetch('/api/admin/gold');
-        const data = await res.json();
-        if (data.success) {
-          document.getElementById('globalGoldVal').innerText = data.globalGold !== "--" ? data.globalGold : "--";
-          
-          const container = document.getElementById('goldSessionsContainer');
-          const sessions = data.sessions || {};
-          const sessionKeys = ["09:00 AM", "12:00 PM", "04:00 PM"];
-
-          container.innerHTML = sessionKeys.map(timeKey => {
-            const sData = sessions[timeKey] || { p15: { price: "--", change: "--" }, akhot: { price: "--", change: "--" } };
-            return `
-              <div class="bg-slate-900 border border-slate-700 rounded-xl p-3">
-                <div class="text-xs font-bold text-yellow-400 mb-2 border-b border-slate-800 pb-1">${timeKey} ရွှေစျေးနှုန်းများ</div>
-                <div class="gold-grid">
-                  <div class="gold-item-box">
-                    <span class="text-xs text-slate-400">၁၅ ပဲရည်</span>
-                    <span class="gold-main-price">${sData.p15.price}</span>
-                    <span class="gold-sub-change">${sData.p15.change}</span>
-                  </div>
-                  <div class="gold-item-box">
-                    <span class="text-xs text-slate-400">အခေါက်ရွှေ</span>
-                    <span class="gold-main-price">${sData.akhot.price}</span>
-                    <span class="gold-sub-change">${sData.akhot.change}</span>
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('');
-        }
-      } catch (err) {
-        console.error("Gold fetch error:", err);
-      }
     }
 
     function speak2D() {
@@ -469,82 +365,48 @@
         statusEl.innerHTML = '<span class="spinner"></span> <span>Live</span>';
       } else if (status === 'paused') {
         statusEl.className = 'status-indicator status-paused';
-        statusEl.innerHTML = '<span>✔ နေ့လည် စျေးကွက်အနားယူချိန်</span>';
+        statusEl.innerHTML = '<span>✔ နေ့လည်ပိုင်းစျေးကွက်အနားယူချိန်</span>'; 
       } else {
         statusEl.className = 'status-indicator status-closed';
         statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
       }
     }
 
-    function getMyanmarTimeNow() {
+    function checkMarketSchedule() {
       const now = new Date();
       const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-      return new Date(utc + (3600000 * 6.5));
-    }
-
-    function getMyanmarTimeText() {
-      return getMyanmarTimeNow().toLocaleTimeString('en-US', {
-        hour12: true,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-    }
-
-    function getMarketSession() {
-      const myanmarTime = getMyanmarTimeNow();
+      const myanmarTime = new Date(utc + (3600000 * 6.5));
       const day = myanmarTime.getDay();
+      
+      if (day === 0 || day === 6) {
+        isLiveActive = false;
+        updateMarketUI('closed');
+        document.getElementById('notice').innerText = "စနေ/တနင်္ဂနွေ ပိတ်ရက် ဖြစ်ပါသည်။";
+        return;
+      }
+
       const hours = myanmarTime.getHours();
       const minutes = myanmarTime.getMinutes();
       const seconds = myanmarTime.getSeconds();
       const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-
-      if (day === 0 || day === 6) {
-        return { state: 'closed', reason: 'weekend', fixed: '04:30:00 PM' };
-      }
 
       const morningStart = 9 * 3600 + 30 * 60;
       const morningEnd = 12 * 3600 + 1 * 60;
       const afternoonStart = 14 * 3600;
       const afternoonEnd = 16 * 3600 + 30 * 60;
 
-      if (totalSeconds >= morningStart && totalSeconds < morningEnd) {
-        return { state: 'live', session: 'morning', time: getMyanmarTimeText() };
+      let inMorningLive = (totalSeconds >= morningStart && totalSeconds <= morningEnd);
+      let inAfternoonLive = (totalSeconds >= afternoonStart && totalSeconds <= afternoonEnd);
+
+      if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
+        updateMarketUI('paused');
+      } else if (totalSeconds > afternoonEnd || totalSeconds < morningStart) {
+        updateMarketUI('closed');
       }
 
-      if (totalSeconds >= morningEnd && totalSeconds < afternoonStart) {
-        return { state: 'closed', reason: 'midday', fixed: '12:01:00 PM' };
-      }
-
-      if (totalSeconds >= afternoonStart && totalSeconds < afternoonEnd) {
-        return { state: 'live', session: 'afternoon', time: getMyanmarTimeText() };
-      }
-
-      return { state: 'closed', reason: 'after-market', fixed: '04:30:00 PM' };
-    }
-
-    function updateLastUpdateDisplay(session) {
-      const updateEl = document.getElementById('updateTime');
-      if (!updateEl) return;
-
-      if (session.state === 'live') {
-        updateEl.innerText = 'Last Update: ' + session.time;
-      } else {
-        updateEl.innerText = 'Last Update: ' + session.fixed;
-      }
-    }
-
-    function checkMarketSchedule() {
-      const myanmarTime = getMyanmarTimeNow();
-      const hours = myanmarTime.getHours();
-      const minutes = myanmarTime.getMinutes();
-      const seconds = myanmarTime.getSeconds();
-      const session = getMarketSession();
-
-      if (session.state === 'live') {
+      if (inMorningLive || inAfternoonLive) {
         isLiveActive = true;
         updateMarketUI('live');
-        document.getElementById('notice').innerText = '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။';
 
         if (hours === 11 && minutes === 45 && seconds === 0 && !announcedTimes['m1145']) {
           announcedTimes['m1145'] = true;
@@ -554,47 +416,63 @@
           announcedTimes['m1158'] = true;
           playAnnouncement('min3');
         }
-        if (hours === 16 && minutes === 15 && seconds === 0 && !announcedTimes['e1615']) {
-          announcedTimes['e1615'] = true;
-          playAnnouncement('min15');
-        }
-        if (hours === 16 && minutes === 27 && seconds === 0 && !announcedTimes['e1627']) {
-          announcedTimes['e1627'] = true;
-          playAnnouncement('min3');
-        }
-      } else {
-        isLiveActive = false;
-        stopWaitingAnimation(true);
-        updateMarketUI(session.reason === 'midday' ? 'paused' : 'closed');
 
-        if (session.reason === 'weekend') {
-          document.getElementById('notice').innerText = 'စနေ/တနင်္ဂနွေ ပိတ်ရက် ဖြစ်ပါသည်။';
-        } else {
-          document.getElementById('notice').innerText = '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။';
-        }
-
-        if (hours === 12 && minutes === 1 && !announcedTimes['m1201']) {
+        // 12:01 PM result ကို server.js က Myanmar Time 12:01:00 AM/PM boundary မှာ capture/lock လုပ်သည်။
+        // Front-end က live value ကို ခန့်မှန်းပြီး history result အဖြစ် မသိမ်းပါ။
+        if (hours === 12 && minutes === 1 && seconds === 0 && !announcedTimes['m1201']) {
           announcedTimes['m1201'] = true;
           startMoneyRain();
         }
-        if (hours === 16 && minutes === 30 && !announcedTimes['e1630']) {
+
+        if (hours === 15 && minutes === 15 && seconds === 0 && !announcedTimes['e1515']) {
+          announcedTimes['e1515'] = true;
+          playAnnouncement('min15');
+        }
+        if (hours === 15 && minutes === 27 && seconds === 0 && !announcedTimes['e1527']) {
+          announcedTimes['e1527'] = true;
+          playAnnouncement('min3');
+        }
+
+        // 4:30 PM result ကို server.js က Myanmar Time 16:30:00 boundary မှာ capture/lock လုပ်သည်။
+        // Front-end က live value ကို ခန့်မှန်းပြီး history result အဖြစ် မသိမ်းပါ။
+        if (hours === 16 && minutes === 30 && seconds === 0 && !announcedTimes['e1630']) {
           announcedTimes['e1630'] = true;
           startMoneyRain();
         }
-      }
 
-      updateLastUpdateDisplay(session);
+      } else {
+        isLiveActive = false;
+        
+        if ((hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
+          const statusEl = document.getElementById('marketStatus');
+          statusEl.className = 'status-indicator status-paused';
+          statusEl.innerHTML = '<span>✔ နေ့လည်ပိုင်းစျေးကွက်အနားယူချိန်</span>';
+          document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
+        }
+        else if ((hours === 16 && minutes >= 30) || hours > 16) {
+          const statusEl = document.getElementById('marketStatus');
+          statusEl.className = 'status-indicator status-closed';
+          statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
+          document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
+        } else {
+          if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
+            updateMarketUI('paused');
+          } else {
+            updateMarketUI('closed');
+          }
+        }
+      }
 
       if (hours === 9 && minutes === 0 && seconds === 0 && !announcedTimes['reset_0900']) {
         announcedTimes = { 'reset_0900': true };
-        document.getElementById('t0930_modern').innerText = '--';
-        document.getElementById('t0930_internet').innerText = '--';
-        document.getElementById('t0930_tw').innerText = '--';
-        document.getElementById('t1201_modern').innerText = '--';
-        document.getElementById('t1400_modern').innerText = '--';
-        document.getElementById('t1400_internet').innerText = '--';
-        document.getElementById('t1400_tw').innerText = '--';
-        document.getElementById('t1630_modern').innerText = '--';
+        document.getElementById('t0930_modern').innerText = "--";
+        document.getElementById('t0930_internet').innerText = "--";
+        document.getElementById('t0930_tw').innerText = "--";
+        document.getElementById('t1201_modern').innerText = "--";
+        document.getElementById('t1400_modern').innerText = "--";
+        document.getElementById('t1400_internet').innerText = "--";
+        document.getElementById('t1400_tw').innerText = "--";
+        document.getElementById('t1630_modern').innerText = "--";
       } else if (hours !== 9) {
         announcedTimes['reset_0900'] = false;
       }
@@ -638,9 +516,8 @@
             document.getElementById('t0930_tw').innerText = s0930.tw !== "--" ? s0930.tw : "--";
           }
           const s1201 = data.adminResults["12:01 PM"];
-          if (s1201 && s1201.modern !== "--") {
-            document.getElementById('t1201_modern').innerText = s1201.modern;
-          }
+          const saved1201 = data.t1201 && data.t1201 !== '--' ? data.t1201 : (s1201?.modern || '--');
+          if (saved1201 !== '--') document.getElementById('t1201_modern').innerText = extractBoundary2D(saved1201);
           const s1400 = data.adminResults["02:00 PM"];
           if (s1400) {
             document.getElementById('t1400_modern').innerText = s1400.modern !== "--" ? s1400.modern : "--";
@@ -648,9 +525,8 @@
             document.getElementById('t1400_tw').innerText = s1400.tw !== "--" ? s1400.tw : "--";
           }
           const s1630 = data.adminResults["04:30 PM"];
-          if (s1630 && s1630.modern !== "--") {
-            document.getElementById('t1630_modern').innerText = s1630.modern;
-          }
+          const saved1630 = data.t430 && data.t430 !== '--' ? data.t430 : (s1630?.modern || '--');
+          if (saved1630 !== '--') document.getElementById('t1630_modern').innerText = extractBoundary2D(saved1630);
         }
       } catch (e) {
         console.error("Schedule fetch error:", e);
@@ -663,54 +539,29 @@
       try {
         const res = await fetch('/api/live');
         const data = await res.json();
-
-        if (data.success) {
-          const session = getMarketSession();
-          const previous2D = current2D;
-          let display2D = data.live2D && data.live2D !== '--' ? data.live2D : '--';
-
-          if (session.state === 'closed') {
-            if (session.reason === 'midday') {
-              const locked = data.adminResults?.['12:01 PM']?.modern;
-              if (locked && locked !== '--') display2D = locked;
-            } else {
-              const locked = data.adminResults?.['04:30 PM']?.modern;
-              if (locked && locked !== '--') display2D = locked;
-            }
-          }
-
-          if (data.setIndex && data.setIndex !== '--') {
+        
+        if(data.success) {
+          if (data.live2D && data.live2D !== "--") {
             document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
-          }
-          if (data.value && data.value !== '--') {
             document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
-          }
+            
+            document.getElementById('live2D').innerText = data.live2D;
+            document.getElementById('updateTime').innerText = "Last Update: " + data.time;
+            document.getElementById('notice').innerText = data.notice;
 
-          if (display2D !== '--') {
-            current2D = display2D;
-            stopWaitingAnimation(true);
-            document.getElementById('live2D').innerText = current2D;
-
-            if (previous2D !== current2D) {
+            if(current2D !== data.live2D) {
+              current2D = data.live2D;
               speak2D();
             }
-
-            if (session.state === 'live') {
-              startWaitingAnimation();
-            }
           }
-
-          document.getElementById('notice').innerText = data.notice || '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။';
-          updateLastUpdateDisplay(session);
         }
-      } catch (e) {}
+      } catch(e) {}
     }
 
     function getChatGuestId() {
       const key = '2dLiveMarketChatGuestId';
       let id = '';
       try { id = localStorage.getItem(key) || ''; } catch (e) {}
-
       if (!/^[A-Za-z0-9_-]{12,80}$/.test(id)) {
         if (window.crypto && typeof window.crypto.randomUUID === 'function') {
           id = 'g_' + window.crypto.randomUUID().replace(/-/g, '');
@@ -722,103 +573,74 @@
       return id;
     }
 
-    function setChatAvailability(isOpen, message) {
-      const status = document.getElementById('chatStatus');
-      const input = document.getElementById('chatInput');
-      const button = document.getElementById('chatSendButton');
-
-      if (status) {
-        status.textContent = message || (isOpen ? 'Chat ဖွင့်ထားသည်' : 'Chat ပိတ်ထားသည်');
-        status.style.color = isOpen ? '#34d399' : '#fbbf24';
-      }
-      if (input) input.disabled = !isOpen;
-      if (button) button.disabled = !isOpen;
-    }
-
     async function fetchChat() {
       try {
         const res = await fetch('/api/chat', { cache: 'no-store' });
         const data = await res.json();
-        if (!data.success) {
-          setChatAvailability(false, data.message || 'Chat ကို ယခုအသုံးပြု၍မရပါ။');
-          return;
-        }
-
-        setChatAvailability(
-          !!data.open,
-          data.open ? 'Chat ဖွင့်ထားသည် — မြန်မာစံတော်ချိန်' : (data.message || 'Live Chatbox ပိတ်ထားပါသည်။')
-        );
-
         const chatDiv = document.getElementById('chatMessages');
+        const input = document.getElementById('chatInput');
+        const button = document.querySelector('.chat-input-row button');
+        if (!data.success) return;
         chatDiv.replaceChildren();
-
         if (!data.open) {
           const notice = document.createElement('div');
           notice.className = 'msg';
           notice.textContent = data.message || 'Live Chatbox ပိတ်ထားပါသည်။';
           chatDiv.appendChild(notice);
-        } else {
-          (data.messages || []).forEach(m => {
-            const row = document.createElement('div');
-            row.className = 'msg';
-
-            const name = document.createElement('span');
-            name.className = 'msg-user';
-            name.textContent = String(m.user || 'Guest') + ':';
-
-            const body = document.createElement('span');
-            body.textContent = ' ' + String(m.text || '');
-
-            row.append(name, body);
-            chatDiv.appendChild(row);
-          });
+          input.disabled = true;
+          if (button) button.disabled = true;
+          input.placeholder = 'Chat ပိတ်ထားပါသည်';
+          return;
         }
-
+        input.disabled = false;
+        if (button) button.disabled = false;
+        input.placeholder = 'စကားပြောရန် စာရိုက်ပါ...';
+        (data.messages || []).forEach(m => {
+          const line = document.createElement('div');
+          line.className = 'msg';
+          const name = document.createElement('span');
+          name.className = 'msg-user';
+          name.textContent = String(m.user || 'Guest') + ': ';
+          line.appendChild(name);
+          line.appendChild(document.createTextNode(String(m.text || '')));
+          chatDiv.appendChild(line);
+        });
         chatDiv.scrollTop = chatDiv.scrollHeight;
-      } catch (e) {
-        setChatAvailability(false, 'Chat server နှင့် ချိတ်ဆက်မရပါ။');
-      }
+      } catch(e) { console.error('Chat fetch error:', e); }
     }
 
     async function sendMessage() {
-      const input = document.getElementById('chatInput');
-      const button = document.getElementById('chatSendButton');
-      const text = input.value.trim();
-      if (!text) return;
-
-      if (text.length > 500) {
-        setChatAvailability(true, 'စာလုံး ၅၀၀ ထက် မကျော်ရပါ။');
+      const int = document.getElementById('chatInput');
+      const nameInput = document.getElementById('chatName');
+      const text = int.value.trim();
+      if(!text) return;
+      if(text.length > 500) {
+        alert('စာသားသည် အများဆုံး 500 လုံးအထိသာ ရပါမည်။');
         return;
       }
-
-      const usernameInput = document.getElementById('chatUsername');
-      const username = usernameInput ? usernameInput.value.trim().slice(0, 30) : '';
-      button.disabled = true;
-
+      const sendButton = document.querySelector('.chat-input-row button');
+      if (sendButton) sendButton.disabled = true;
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             guestId: getChatGuestId(),
-            user: username || 'Guest',
+            user: (nameInput.value.trim() || 'Guest').slice(0, 30),
             text
           })
         });
-
         const data = await res.json();
-        if (!res.ok || !data.success) {
-          setChatAvailability(data.open !== false, data.message || 'စာပို့၍မရပါ။');
-          return;
+        if (res.ok && data.success) {
+          int.value = '';
+          await fetchChat();
+        } else if (data.message) {
+          alert(data.message);
         }
-
-        input.value = '';
-        await fetchChat();
-      } catch (e) {
-        setChatAvailability(false, 'စာပို့မရပါ။ Connection ကို စစ်ဆေးပါ။');
+      } catch(e) {
+        alert('Chat server သို့ ချိတ်ဆက်မရပါ။ ထပ်မံကြိုးစားပါ။');
       } finally {
-        button.disabled = false;
-        await fetchChat();
+        if (sendButton) sendButton.disabled = false;
       }
     }
 
@@ -828,7 +650,6 @@
     fetchScheduleData();
     fetchLiveData();
     fetchChat();
-    fetchGoldData();
 
     setInterval(checkMarketSchedule, 1000);
     setInterval(fetchLiveData, 3000);
@@ -837,7 +658,7 @@
 
     function toggleSound() {
       soundEnabled = !soundEnabled;
-      const btn = document.getElementById('audio-btn');
+      const btn = document.getElementById('audio-btn'); 
       if (btn) {
         if (soundEnabled) {
             btn.innerHTML = "🔊 အသံဖွင့်ထားသည်";
