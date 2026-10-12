@@ -508,11 +508,11 @@ async function fetchLiveMarketData(isTargetCapture = false) {
                 await todayRecord.save();
             }
 
-            // ၁၂:၀၁ မှ ၂:၀၀ အတွင်း နှင့် ညနေ ၄:၃၀ ကျော်လွန်ချိန်များတွင် Lock ဖြစ်ပြီးသား ရလဒ်ကို တည်ငြိမ်စွာ ပြန်ထုတ်ပေးရန်
             let displayLive2D = calculated2D;
             let displaySetIndex = setIndex;
             let displayValue = marketValue;
 
+            // နေ့လည် ၁၂:၀၁ ကျော်ပြီးသားဖြစ်ပါက 12:01 တွင် Lock ဖြစ်ခဲ့သည့် တန်ဖိုးများကိုသာ တည်ငြိမ်စွာ ပြသရန်
             if ((currentHour === 12 && currentMinute >= 1) || (currentHour > 12 && currentHour < 14)) {
                 if (todayRecord.t1201 && todayRecord.t1201 !== "--") {
                     displayLive2D = todayRecord.t1201;
@@ -639,7 +639,6 @@ setInterval(async () => {
             console.log(`[Auto-Capture Success] Locked and recorded at ${hour}:${minute}:${second}`);
         }
 
-        // ညနေ ၄:၃၁ အရောက်တွင် တစ်နေ့တာ မှတ်တမ်း တရားဝင် ပြီးဆုံးကြောင်း အတည်ပြုရန်
         if (hour === 16 && minute === 31 && second === 0) {
             console.log(`[Day Complete] Daily history finalized at 4:31 PM.`);
         }
