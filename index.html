@@ -20,7 +20,7 @@
     
     .status-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: bold; }
     .status-live { color: #ef4444; display: inline-flex; align-items: center; gap: 4px; }
-    .status-paused { color: #f59e0b; display: inline-flex; align-items: center; gap: 4px; }
+    .status-paused { color: #10b981; display: inline-flex; align-items: center; gap: 4px; }
     .spinner { width: 10px; height: 10px; border: 2px solid #ef4444; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
     .status-closed { color: #10b981; display: inline-flex; align-items: center; gap: 4px; }
 
@@ -78,7 +78,6 @@
     .history-sub-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 14px; font-weight: bold; color: #ffffff; align-items: center; padding: 2px 0; }
     .history-sub-label { text-align: left; padding-left: 6px; font-size: 12px; color: #facc15; }
 
-    /* ရွှေစျေးစာမျက်နှာအတွက် Styling များနှင့် တာဝန်ခံဒီဇိုင်း */
     .gold-card { background: #1e293b; border-radius: 16px; padding: 15px; border: 1px solid #334155; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
     .gold-global-box { background: #0f172a; border: 1px solid #eab308; border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 15px; }
     .gold-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -190,21 +189,15 @@
       </div>
     </div>
 
-    <!-- PAGE 2: Gold Price (ရွှေစျေး Tab အသစ်) -->
+    <!-- PAGE 2: Gold Price -->
     <div id="page-gold" class="tab-content">
       <div class="gold-card">
         <h2 class="text-xl font-bold text-center text-yellow-400 mb-4">🪙 ရွှေဈေးနှုန်းများ</h2>
-        
-        <!-- ကမ္ဘာ့ရွှေစျေး အပေါ်ထိပ်ဆုံးနေရာ -->
         <div class="gold-global-box">
           <div class="text-xs text-slate-400">🌍 ကမ္ဘာ့ရွှေစျေး (Global Gold)</div>
           <div id="globalGoldVal" class="text-2xl font-bold text-yellow-400 mt-1">--</div>
         </div>
-
-        <!-- တစ်ရက်လျှင် ၃ ကြိမ် (09:00 AM, 12:00 PM, 04:00 PM) ဖြင့် စုစုပေါင်း အကွက် ၆ ကွက် -->
-        <div id="goldSessionsContainer" class="flex flex-col gap-4">
-          <!-- Dynamically populated via JS -->
-        </div>
+        <div id="goldSessionsContainer" class="flex flex-col gap-4"></div>
       </div>
     </div>
 
@@ -215,7 +208,6 @@
         <div class="live-title" style="font-size: 18px; font-weight: bold; color: #ffffff;">2D Calendar</div>
         <span style="font-size: 18px; color: #ffffff; cursor: pointer;">🔍</span>
       </div>
-      
       <div id="historyListContainer" class="history-list-container"></div>
     </div>
 
@@ -299,7 +291,7 @@
         if (generation !== waitingAnimationGeneration || !isLiveActive) return;
 
         if (waitingAnimationVisible) {
-          liveEl.innerText = String(Math.floor(Math.random() * 100)).padStart(2, '0');
+          liveEl.innerText = current2D;
           liveEl.style.visibility = 'visible';
           liveEl.style.opacity = '1';
         } else {
@@ -383,9 +375,6 @@
       } catch (e) {}
     }
 
-    // ==========================================
-    // GOLD PRICE FRONTEND FETCH & UI RENDER
-    // ==========================================
     async function fetchGoldData() {
       try {
         const res = await fetch('/api/admin/gold');
@@ -480,7 +469,7 @@
         statusEl.innerHTML = '<span class="spinner"></span> <span>Live</span>';
       } else if (status === 'paused') {
         statusEl.className = 'status-indicator status-paused';
-        statusEl.innerHTML = '<span>⏸ Live Paused</span>';
+        statusEl.innerHTML = '<span>✔ နေ့လည် စျေးကွက်အနားယူချိန်</span>';
       } else {
         statusEl.className = 'status-indicator status-closed';
         statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';

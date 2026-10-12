@@ -12,7 +12,6 @@ app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 3000;
 
-// MongoDB URI ကို Render Environment Variables မှ ယူမည်။
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
@@ -23,7 +22,6 @@ if (!MONGO_URI) {
         .catch(err => console.error('MongoDB connection error:', err.message));
 }
 
-// MongoDB Schema & Model for Day Data (Admin results & History)
 const dataSchema = new mongoose.Schema({
     dateStr: { type: String, required: true, unique: true },
     dateFormatted: String,
@@ -46,32 +44,17 @@ const dataSchema = new mongoose.Schema({
 
 const DayData = mongoose.model('DayData', dataSchema);
 
-// =====================================================
-// GOLD PRICE SCHEMA & MODEL (ရွှေဈေး သီးသန့် Schema)
-// =====================================================
 const goldSchema = new mongoose.Schema({
-    dateStr: { type: String, required: true, unique: true }, // DD/MM/YYYY
+    dateStr: { type: String, required: true, unique: true },
     dateFormatted: String,
-    globalGold: { type: String, default: "--" }, // ကမ္ဘာ့ရွှေစျေး (မှတ်တမ်းမသိမ်းပါ၊ လက်ရှိပြသရန်)
+    globalGold: { type: String, default: "--" },
     globalGoldHistory: { type: Object, default: { "09:00 AM": "--", "12:00 PM": "--", "04:00 PM": "--" } },
     sessions: {
         type: Object,
         default: {
-            "09:00 AM": {
-                p15: { price: "--", change: "--" },
-                akhot: { price: "--", change: "--" },
-                isLocked: false
-            },
-            "12:00 PM": {
-                p15: { price: "--", change: "--" },
-                akhot: { price: "--", change: "--" },
-                isLocked: false
-            },
-            "04:00 PM": {
-                p15: { price: "--", change: "--" },
-                akhot: { price: "--", change: "--" },
-                isLocked: false
-            }
+            "09:00 AM": { p15: { price: "--", change: "--" }, akhot: { price: "--", change: "--" }, isLocked: false },
+            "12:00 PM": { p15: { price: "--", change: "--" }, akhot: { price: "--", change: "--" }, isLocked: false },
+            "04:00 PM": { p15: { price: "--", change: "--" }, akhot: { price: "--", change: "--" }, isLocked: false }
         }
     },
     createdAt: { type: Date, default: Date.now }
@@ -79,7 +62,6 @@ const goldSchema = new mongoose.Schema({
 
 const GoldData = mongoose.model('GoldData', goldSchema);
 
-// Chat စာများကို MongoDB တွင် သိမ်းမည်။
 const chatMessageSchema = new mongoose.Schema({
     guestId: { type: String, required: true, maxlength: 80 },
     user: { type: String, default: 'Guest', maxlength: 30 },
@@ -98,14 +80,12 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// လက်ရှိမြန်မာစံတော်ချိန် helper
 function getMyanmarTime() {
     const now = new Date();
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     return new Date(utc + (3600000 * 6.5));
 }
 
-// ယနေ့ Admin ရလဒ်များကို Database မှ ရယူရန်
 async function getTodayAdminResults() {
     const myanmarTime = getMyanmarTime();
     const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
@@ -129,9 +109,6 @@ async function getTodayAdminResults() {
     return record;
 }
 
-// =====================================================
-// GOLD PRICE HELPER: ယနေ့ရွှေစျေးအချက်အလက်ရယူရန် (120 Limit FIFO ပါဝင်သည်)
-// =====================================================
 async function getTodayGoldRecord() {
     const myanmarTime = getMyanmarTime();
     const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
@@ -152,7 +129,6 @@ async function getTodayGoldRecord() {
         });
         await record.save();
 
-        // FIFO: မှတ်တမ်း ၁၂၀ ထက်ကျော်လွန်ပါက အဟောင်းဆုံးကို ဖျက်မည်
         const count = await GoldData.countDocuments();
         if (count > 120) {
             const excess = count - 120;
@@ -166,7 +142,6 @@ async function getTodayGoldRecord() {
     return record;
 }
 
-// Admin Login — Render ရှိ ADMIN_PASSWORD ကို အသုံးပြုမည်။
 app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
 
@@ -180,7 +155,6 @@ app.post('/api/admin/login', (req, res) => {
     }
 });
 
-// Admin ရလဒ်သိမ်းဆည်းခြင်း (2D မူလအတိုင်း)
 app.post('/api/admin/save', async (req, res) => {
     try {
         const { password, session, modern, internet, tw } = req.body;
@@ -247,9 +221,6 @@ app.post('/api/admin/save', async (req, res) => {
     }
 });
 
-// =====================================================
-// GOLD PRICE ADMIN SAVE & GET APIs (ရွှေစျေးအတွက် Admin API များ)
-// =====================================================
 app.get('/api/admin/gold', async (req, res) => {
     try {
         const goldRecord = await getTodayGoldRecord();
@@ -277,7 +248,6 @@ app.post('/api/admin/gold/save', async (req, res) => {
         if (type === 'global') {
             if (globalGoldPrice !== undefined) {
                 goldRecord.globalGold = globalGoldPrice;
-                // session အလိုက် global gold မှတ်တမ်းကိုပါ အပ်ဒိတ်လုပ်နိုင်သည် (သို့ 09:00/12:00/04:00 အလိုက်)
                 const myanmarTime = getMyanmarTime();
                 const hr = myanmarTime.getHours();
                 let slotKey = "09:00 AM";
@@ -320,7 +290,6 @@ app.post('/api/admin/gold/save', async (req, res) => {
     }
 });
 
-// ရွှေစျေး မှတ်တမ်း (History list 120 max) ရယူခြင်း
 app.get('/api/gold/history', async (req, res) => {
     try {
         const records = await GoldData.find().sort({ _id: -1 }).limit(120).lean();
@@ -333,7 +302,6 @@ app.get('/api/gold/history', async (req, res) => {
     }
 });
 
-// Admin ရလဒ်များ ရယူခြင်း
 app.get('/api/admin/data', async (req, res) => {
     try {
         const todayRecord = await getTodayAdminResults();
@@ -350,7 +318,6 @@ app.get('/api/admin/data', async (req, res) => {
     }
 });
 
-// History ရယူခြင်း (2D မူလအတိုင်း)
 app.get('/api/history', async (req, res) => {
     try {
         const historyRecords = await DayData.find()
@@ -369,13 +336,10 @@ app.get('/api/history', async (req, res) => {
     }
 });
 
-// =====================================================
-// SCRAPING & CACHING CORE LOGIC (PROMISE-BASED LOCK & PRE-FETCH)
-// =====================================================
 let cachedLiveData = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 3000;
-let fetchPromise = null; // Promise-based Lock ဖြင့် တောင်းဆိုမှုထပ်နေခြင်းကို ကာကွယ်မည်
+let fetchPromise = null;
 
 async function fetchLiveMarketData(isTargetCapture = false) {
     if (fetchPromise) return fetchPromise;
@@ -500,11 +464,10 @@ async function fetchLiveMarketData(isTargetCapture = false) {
             let todayRecord = await getTodayAdminResults();
             let adminResults = todayRecord.schedule;
 
-            // Target Capture အချိန်ရောက်မှသာ Database သို့ တိကျစွာ သိမ်းဆည်းမည်
             if (isTargetCapture) {
                 if (currentHour === 12 && currentMinute === 1) {
                     if (!isWeekend && calculated2D !== "--") {
-                        if (adminResults["12:01 PM"].modern === "--" && !adminResults["12:01 PM"].isLocked) {
+                        if (!adminResults["12:01 PM"].isLocked) {
                             adminResults["12:01 PM"].modern = calculated2D;
                             adminResults["12:01 PM"].internet = calculated2D;
                             adminResults["12:01 PM"].tw = calculated2D;
@@ -523,7 +486,7 @@ async function fetchLiveMarketData(isTargetCapture = false) {
 
                 if (currentHour === 16 && currentMinute === 30) {
                     if (!isWeekend && calculated2D !== "--") {
-                        if (adminResults["04:30 PM"].modern === "--" && !adminResults["04:30 PM"].isLocked) {
+                        if (!adminResults["04:30 PM"].isLocked) {
                             adminResults["04:30 PM"].modern = calculated2D;
                             adminResults["04:30 PM"].internet = calculated2D;
                             adminResults["04:30 PM"].tw = calculated2D;
@@ -545,11 +508,34 @@ async function fetchLiveMarketData(isTargetCapture = false) {
                 await todayRecord.save();
             }
 
+            // ၁၂:၀၁ မှ ၂:၀၀ အတွင်း နှင့် ညနေ ၄:၃၀ ကျော်လွန်ချိန်များတွင် Lock ဖြစ်ပြီးသား ရလဒ်ကို တည်ငြိမ်စွာ ပြန်ထုတ်ပေးရန်
+            let displayLive2D = calculated2D;
+            let displaySetIndex = setIndex;
+            let displayValue = marketValue;
+
+            if ((currentHour === 12 && currentMinute >= 1) || (currentHour > 12 && currentHour < 14)) {
+                if (todayRecord.t1201 && todayRecord.t1201 !== "--") {
+                    displayLive2D = todayRecord.t1201;
+                    displaySetIndex = todayRecord.setIndex1201 || setIndex;
+                    displayValue = todayRecord.value1201 || marketValue;
+                } else if (adminResults["12:01 PM"]?.modern !== "--") {
+                    displayLive2D = adminResults["12:01 PM"].modern;
+                }
+            } else if ((currentHour === 16 && currentMinute >= 30) || currentHour > 16) {
+                if (todayRecord.t430 && todayRecord.t430 !== "--") {
+                    displayLive2D = todayRecord.t430;
+                    displaySetIndex = todayRecord.setIndex430 || setIndex;
+                    displayValue = todayRecord.value430 || marketValue;
+                } else if (adminResults["04:30 PM"]?.modern !== "--") {
+                    displayLive2D = adminResults["04:30 PM"].modern;
+                }
+            }
+
             cachedLiveData = {
                 success: true,
-                setIndex: setIndex || "--",
-                value: marketValue || "--",
-                live2D: calculated2D,
+                setIndex: displaySetIndex || "--",
+                value: displayValue || "--",
+                live2D: displayLive2D,
                 adminResults: adminResults,
                 schedule: {
                     t0930: adminResults["09:30 AM"],
@@ -571,7 +557,6 @@ async function fetchLiveMarketData(isTargetCapture = false) {
     return fetchPromise;
 }
 
-// မူလ Live Market API (Caching ပါဝင်သည်)
 app.get('/api/live', async (req, res) => {
     const now = Date.now();
     
@@ -629,9 +614,6 @@ app.get('/api/live', async (req, res) => {
     }
 });
 
-// =====================================================
-// ROBUST BACKGROUND PRE-FETCH & AUTO-CAPTURE TIMER
-// =====================================================
 setInterval(async () => {
     try {
         const myanmarTime = getMyanmarTime();
@@ -656,14 +638,16 @@ setInterval(async () => {
             await fetchLiveMarketData(true);
             console.log(`[Auto-Capture Success] Locked and recorded at ${hour}:${minute}:${second}`);
         }
+
+        // ညနေ ၄:၃၁ အရောက်တွင် တစ်နေ့တာ မှတ်တမ်း တရားဝင် ပြီးဆုံးကြောင်း အတည်ပြုရန်
+        if (hour === 16 && minute === 31 && second === 0) {
+            console.log(`[Day Complete] Daily history finalized at 4:31 PM.`);
+        }
     } catch (e) {
         console.error("[Auto-Capture Error]:", e.message);
     }
 }, 1000);
 
-// =====================================================
-// Chatbox သီးသန့်အပိုင်း
-// =====================================================
 function getChatScheduleState(now = new Date()) {
     const parts = new Intl.DateTimeFormat('en-GB', {
         timeZone: 'Asia/Yangon',
