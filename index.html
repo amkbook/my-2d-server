@@ -184,7 +184,37 @@
         </div>
       </div>
     </div>
-
+<script>
+async function loadGoldData() {
+    try {
+        const response = await fetch('/api/gold');
+        const data = await response.json();
+        if (data.success) {
+            const goldPage = document.getElementById('page-gold');
+            if (goldPage) {
+                goldPage.innerHTML = `
+                    <div class="card" style="padding: 15px; color: #fff;">
+                        <h2 style="color: #f1c40f; margin-bottom: 10px;">ရွှေဈေးနှုန်းများ (${data.dateFormatted || ''})</h2>
+                        <p style="font-size: 16px; margin-bottom: 15px;">
+                            <b>ကမ္ဘာ့ရွှေဈေး:</b> ${data.globalGold || '--'}
+                        </p>
+                        <hr style="border-color: #444; margin: 10px 0;">
+                        <h3 style="font-size: 16px; color: #f39c12; margin: 10px 0;">အချိန်းအချက် (Sessions)</h3>
+                        <div style="font-size: 14px; line-height: 1.6;">
+                            <p><b>မနက် 09:00 AM:</b> ၁၅ ပဲရည် - ${data.sessions?.["09:00 AM"]?.p15?.price || '--'} (${data.sessions?.["09:00 AM"]?.p15?.change || '--'}), အခေါက် - ${data.sessions?.["09:00 AM"]?.akhot?.price || '--'} (${data.sessions?.["09:00 AM"]?.akhot?.change || '--'})</p>
+                            <p><b>နေ့လည် 12:00 PM:</b> ၁၅ ပဲရည် - ${data.sessions?.["12:00 PM"]?.p15?.price || '--'} (${data.sessions?.["12:00 PM"]?.p15?.change || '--'}), အခေါက် - ${data.sessions?.["12:00 PM"]?.akhot?.price || '--'} (${data.sessions?.["12:00 PM"]?.akhot?.change || '--'})</p>
+                            <p><b>ညနေ 04:00 PM:</b> ၁၅ ပဲရည် - ${data.sessions?.["04:00 PM"]?.p15?.price || '--'} (${data.sessions?.["04:00 PM"]?.p15?.change || '--'}), အခေါက် - ${data.sessions?.["04:00 PM"]?.akhot?.price || '--'} (${data.sessions?.["04:00 PM"]?.akhot?.change || '--'})</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    } catch (err) {
+        console.error('Failed to load gold data:', err);
+    }
+}
+document.addEventListener('DOMContentLoaded', loadGoldData);
+</script>
     <!-- PAGE 2: Gold Price -->
     <div id="page-gold" class="tab-content">
       <div class="card">
