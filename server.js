@@ -120,6 +120,135 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
+// =====================================================
+
+// GOLD PRICE SCHEMA & MODEL (ရွှေဈေး သီးသန့် Schema)
+
+// =====================================================
+
+const goldSchema = new mongoose.Schema({
+
+dateStr: { type: String, required: true, unique: true }, // DD/MM/YYYY
+
+dateFormatted: String,
+
+globalGold: { type: String, default: "--" },
+
+globalGoldHistory: { type: Object, default: { "09:00 AM": "--", "12:00 PM": "--", "04:00 PM": "--" } },
+
+sessions: {
+
+type: Object,
+
+default: {
+
+"09:00 AM": {
+
+p15: { price: "--", change: "--" },
+
+akhot: { price: "--", change: "--" },
+
+isLocked: false
+
+},
+
+"12:00 PM": {
+
+p15: { price: "--", change: "--" },
+
+akhot: { price: "--", change: "--" },
+
+isLocked: false
+
+},
+
+"04:00 PM": {
+
+p15: { price: "--", change: "--" },
+
+akhot: { price: "--", change: "--" },
+
+isLocked: false
+
+}
+
+}
+
+},
+
+createdAt: { type: Date, default: Date.now }
+
+});
+
+
+
+const GoldData = mongoose.model('GoldData', goldSchema);
+
+
+
+async function getTodayGoldRecord() {
+
+const myanmarTime = getMyanmarTime();
+
+const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
+
+
+
+let record = await GoldData.findOne({ dateStr: todayDateStr });
+
+
+
+if (!record) {
+
+record = new GoldData({
+
+dateStr: todayDateStr,
+
+dateFormatted: todayDateStr,
+
+globalGold: "--",
+
+globalGoldHistory: { "09:00 AM": "--", "12:00 PM": "--", "04:00 PM": "--" },
+
+sessions: {
+
+"09:00 AM": { p15: { price: "--", change: "--" }, akhot: { price: "--", change: "--" }, isLocked: false },
+
+"12:00 PM": { p15: { price: "--", change: "--" }, akhot: { price: "--", change: "--" }, isLocked: false },
+
+"04:00 PM": { p15: { price: "--", change: "--" }, akhot: { price: "--", change: "--" }, isLocked: false }
+
+}
+
+});
+
+await record.save();
+
+
+
+const count = await GoldData.countDocuments();
+
+if (count > 120) {
+
+const excess = count - 120;
+
+const oldestRecords = await GoldData.find().sort({ _id: 1 }).limit(excess).select('_id').lean();
+
+if (oldestRecords.length > 0) {
+
+await GoldData.deleteMany({ _id: { $in: oldestRecords.map(r => r._id) } });
+
+}
+
+}
+
+}
+
+
+
+return record;
+
+} 
 // --------------------------------------------------
 // Live Chatbox
 // --------------------------------------------------
