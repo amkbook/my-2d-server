@@ -185,7 +185,75 @@ createdAt: { type: Date, default: Date.now }
 const GoldData = mongoose.model('GoldData', goldSchema);
 
 
+app.get('/api/admin/gold', async (req, res) => {
+    try {
+        const goldRecord = await getTodayGoldRecord();
+        res.json({
+            success: true,
+            globalGold: goldRecord.globalGold,
+            globalGoldHistory: goldRecord.globalGoldHistory,
+            sessions: goldRecord.sessions
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
 
+app.post('/api/admin/gold/save', async (req, res) => {
+    try {
+        const { password, type, session, globalGoldPrice, p15Price, p15Change, akhotPrice, akhotChange } = req.body;
+        
+        if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
+            return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
+        }
+
+        let goldRecord = await getTodayGoldRecord();
+
+        if (type === 'global') {
+            if (globalGoldPrice !== undefined) {
+                goldRecord.globalGold = globalGoldPrice;
+                const myanmarTime = getMyanmarTime();
+                const hr = myanmarTime.getHours();
+                let slotKey = "09:00 AM";
+                if (hr >= 12 && hr < 16) slotKey = "12:00 PM";
+                else if (hr >= 16) slotKey = "04:00 PM";
+                
+                goldRecord.globalGoldHistory[slotKey] = globalGoldPrice;
+                goldRecord.markModified('globalGoldHistory');
+            }
+        } else if (type === 'session') {
+            if (session && goldRecord.sessions[session]) {
+                if (p15Price !== undefined) goldRecord.sessions[session].p15.price = p15Price;
+                if (p15Change !== undefined) goldRecord.sessions[session].p15.change = p15Change;
+                if (akhotPrice !== undefined) goldRecord.sessions[session].akhot.price = akhotPrice;
+                if (akhotChange !== undefined) goldRecord.sessions[session].akhot.change = akhotChange;
+                
+                if (goldRecord.sessions[session].p15.price !== "--" || goldRecord.sessions[session].akhot.price !== "--") {
+                    goldRecord.sessions[session].isLocked = true;
+                }
+                goldRecord.markModified('sessions');
+            } else {
+                return res.status(400).json({ success: false, message: "မှားယွင်းနေသော ရွှေစျေး Session ဖြစ်ပါသည်။" });
+            }
+        }
+
+        await goldRecord.save();
+        res.json({ success: true, message: "ရွှေစျေး အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။", globalGold: goldRecord.globalGold, sessions: goldRecord.sessions });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error occurred" });
+    }
+});
+
+app.get('/api/gold/history', async (req, res) => {
+    try {
+        const records = await GoldData.find().sort({ _id: -1 }).limit(120).lean();
+        res.json({ success: true, history: records });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
 async function getTodayGoldRecord() {
 
 const myanmarTime = getMyanmarTime();
