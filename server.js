@@ -576,7 +576,6 @@ async function fetchCurrentSET() {
     let setIndex = '--';
     let marketValue = '--';
     let calculated2D = '--';
-    let marketStatusVal = ''; // [အသစ်] ဈေးကွက်အခြေအနေ (Closed ဟုတ်မဟုတ် စစ်ရန်)
 
     try {
         const { data } = await axios.get(
@@ -604,12 +603,6 @@ async function fetchCurrentSET() {
                     // cols[4] = Value (M.Baht)
                     const valueVal = $(cols[4]).text().trim();
 
-                    // [အသစ်] ဇယားကွက်ထဲတွင် Closed ဟု ပါရှိမရှိ စစ်ဆေးခြင်း
-                    const statusText = $(el).text().trim().toLowerCase();
-                    if (statusText.includes('closed') || statusText.includes('close')) {
-                        marketStatusVal = 'CLOSED';
-                    }
-
                     if (indexVal && indexVal.includes('.')) {
                         setIndex = indexVal;
                     }
@@ -623,12 +616,22 @@ async function fetchCurrentSET() {
         let digit1 = '--';
         let digit2 = '--';
 
-        // [အသစ်] စနေ၊ တနင်္ဂနွေ မဟုတ်သော ကြားရက် (1 မှ 5) ဖြစ်ပြီး 
-        // Website တွင် ဈေးကွက်ပိတ်ကြောင်း (CLOSED) ပြနေပါက 2D ကို OFF ဟု သတ်မှတ်မည်
-        const now = getMyanmarTime();
-        const currentDay = now.getDay(); // 0 = တနင်္ဂနွေ, 6 = စနေ
+        // ၂၀၂၆ ခုနှစ်အတွက် တရားဝင်ပိတ်ရက်များစာရင်း[cite: 1]
+        const marketHolidays = [
+            '2026-10-13',
+            '2026-10-23',
+            '2026-12-07',
+            '2026-12-10'
+        ];
 
-        if ((currentDay >= 1 && currentDay <= 5) && marketStatusVal === 'CLOSED') {
+        const now = getMyanmarTime();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const currentDateStr = `${year}-${month}-${day}`;
+
+        // ကြားရက် ပိတ်ရက်ဖြစ်ပါက calculated2D ကို OFF ဟု သတ်မှတ်မည်
+        if (marketHolidays.includes(currentDateStr)) {
             calculated2D = 'OFF';
         } else {
             if (setIndex !== '--' && setIndex.includes('.')) {
