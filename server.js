@@ -576,6 +576,7 @@ async function fetchCurrentSET() {
     let setIndex = '--';
     let marketValue = '--';
     let calculated2D = '--';
+    let marketStatusVal = ''; // [အသစ်] ဈေးကွက်အခြေအနေ (Closed ဟုတ်မဟုတ် စစ်ရန်)
 
     try {
         const { data } = await axios.get(
@@ -603,6 +604,12 @@ async function fetchCurrentSET() {
                     // cols[4] = Value (M.Baht)
                     const valueVal = $(cols[4]).text().trim();
 
+                    // [အသစ်] ဇယားကွက်ထဲတွင် Closed ဟု ပါရှိမရှိ စစ်ဆေးခြင်း
+                    const statusText = $(el).text().trim().toLowerCase();
+                    if (statusText.includes('closed') || statusText.includes('close')) {
+                        marketStatusVal = 'CLOSED';
+                    }
+
                     if (indexVal && indexVal.includes('.')) {
                         setIndex = indexVal;
                     }
@@ -616,19 +623,28 @@ async function fetchCurrentSET() {
         let digit1 = '--';
         let digit2 = '--';
 
-        if (setIndex !== '--' && setIndex.includes('.')) {
-            digit1 = setIndex.split('.')[1].slice(-1);
-        }
+        // [အသစ်] စနေ၊ တနင်္ဂနွေ မဟုတ်သော ကြားရက် (1 မှ 5) ဖြစ်ပြီး 
+        // Website တွင် ဈေးကွက်ပိတ်ကြောင်း (CLOSED) ပြနေပါက 2D ကို OFF ဟု သတ်မှတ်မည်
+        const now = getMyanmarTime();
+        const currentDay = now.getDay(); // 0 = တနင်္ဂနွေ, 6 = စနေ
 
-        if (marketValue !== '--' && marketValue.includes('.')) {
-            digit2 = marketValue
-                .split('.')[0]
-                .replace(/,/g, '')
-                .slice(-1);
-        }
+        if ((currentDay >= 1 && currentDay <= 5) && marketStatusVal === 'CLOSED') {
+            calculated2D = 'OFF';
+        } else {
+            if (setIndex !== '--' && setIndex.includes('.')) {
+                digit1 = setIndex.split('.')[1].slice(-1);
+            }
 
-        if (digit1 !== '--' && digit2 !== '--') {
-            calculated2D = digit1 + digit2;
+            if (marketValue !== '--' && marketValue.includes('.')) {
+                digit2 = marketValue
+                    .split('.')[0]
+                    .replace(/,/g, '')
+                    .slice(-1);
+            }
+
+            if (digit1 !== '--' && digit2 !== '--') {
+                calculated2D = digit1 + digit2;
+            }
         }
 
     } catch (err) {
