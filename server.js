@@ -184,7 +184,21 @@ createdAt: { type: Date, default: Date.now }
 
 const GoldData = mongoose.model('GoldData', goldSchema);
 
-
+app.get('/api/gold', async (req, res) => {
+    try {
+        const goldRecord = await getTodayGoldRecord();
+        res.json({
+            success: true,
+            dateFormatted: goldRecord.dateFormatted,
+            globalGold: goldRecord.globalGold,
+            globalGoldHistory: goldRecord.globalGoldHistory,
+            sessions: goldRecord.sessions
+        });
+    } catch (err) {
+        console.error('Error fetching gold data for app:', err);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
 app.get('/api/admin/gold', async (req, res) => {
     try {
         const goldRecord = await getTodayGoldRecord();
