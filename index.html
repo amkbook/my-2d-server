@@ -138,7 +138,17 @@
 
         <button id="audio-btn" class="audio-btn" onclick="toggleSound()">🔊 အသံဖွင့်ထားသည်</button>
       </div>
-
+ <div class="chat-box">
+        <div class="live-title" style="margin-bottom: 5px;">Live Chatbox</div>
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chatName" maxlength="30" placeholder="အမည် (မဖြည့်လည်းရ)" aria-label="Chat display name" style="max-width: 115px; min-width: 0;">
+          <input type="text" id="chatInput" maxlength="500" placeholder="စကားပြောရန် စာရိုက်ပါ..." onkeypress="handleKeyPress(event)" aria-label="Chat message">
+          <button onclick="sendMessage()">ပို့မည်</button>
+        </div>
+      </div>
+    </div>
+<script>
       <div class="schedule-table-container">
         <div class="table-header-row">
           <div></div>
@@ -174,17 +184,7 @@
         </div>
       </div>
 
-      <div class="chat-box">
-        <div class="live-title" style="margin-bottom: 5px;">Live Chatbox</div>
-        <div id="chatMessages" class="chat-messages"></div>
-        <div class="chat-input-row">
-          <input type="text" id="chatName" maxlength="30" placeholder="အမည် (မဖြည့်လည်းရ)" aria-label="Chat display name" style="max-width: 115px; min-width: 0;">
-          <input type="text" id="chatInput" maxlength="500" placeholder="စကားပြောရန် စာရိုက်ပါ..." onkeypress="handleKeyPress(event)" aria-label="Chat message">
-          <button onclick="sendMessage()">ပို့မည်</button>
-        </div>
-      </div>
-    </div>
-<script>
+     
 async function loadGoldData() {
     try {
         const response = await fetch('/api/gold');
