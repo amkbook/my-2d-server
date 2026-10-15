@@ -122,26 +122,29 @@
           </div>
         </div>
 <!-- 2D Result Section Container -->
-<div class="live-result-wrapper" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 15px 0;">
+<div class="live-result-wrapper" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
     
     <!-- ဘယ်ဘက်: နေ့လည် စျေးကွက် ဟော့ထိပ် -->
-    <div class="hot-tip-box" style="background-color: #ff3b30; color: #ffffff; padding: 8px; border-radius: 8px; text-align: center; width: 30%;">
-        <div style="font-size: 11px; font-weight: bold; line-height: 1.2;">နေ့လည်<br>စျေးကွက်<br>ဟော့ထိပ်</div>
-        <div id="noonHotTip" style="font-size: 22px; font-weight: bold; color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.8); margin-top: 4px;">--</div>
+    <div class="hot-tip-box" style="background-color: #ff3b30; color: #ffffff; padding: 6px; border-radius: 8px; text-align: center; width: 27%;">
+        <div style="font-size: 10px; font-weight: bold; line-height: 1.2;">နေ့လည်<br>စျေးကွက်<br>ဟော့ထိပ်</div>
+        <div id="noonHotTip" style="font-size: 18px; font-weight: bold; color: #ffffff; margin-top: 4px; line-height: 1.2;">--</div>
     </div>
 
-    <!-- အလယ်: ပင်မ 2D ရလဒ် (မူလရှိပြီးသား ဂဏန်းပြကွက်) -->
-    <div class="main-2d-display" style="text-align: center; width: 40%;">
-        <div style="font-size: 12px; color: #aaa;">LIVE 2D RESULT</div>
-        <div id="live2dNumber" style="font-size: 45px; font-weight: bold; color: #f5a623;">--</div>
+    <!-- အလယ်: ပင်မ 2D ရလဒ် -->
+    <div class="main-2d-display" style="text-align: center; width: 42%;">
+        <div style="font-size: 11px; color: #aaa;">LIVE 2D RESULT</div>
+        <div id="live2dNumber" style="font-size: 40px; font-weight: bold; color: #f5a623;">--</div>
     </div>
 
     <!-- ညာဘက်: ညနေ စျေးကွက် ဟော့ထိပ် -->
-    <div class="hot-tip-box" style="background-color: #ff3b30; color: #ffffff; padding: 8px; border-radius: 8px; text-align: center; width: 30%;">
-        <div style="font-size: 11px; font-weight: bold; line-height: 1.2;">ညနေ<br>စျေးကွက်<br>ဟော့ထိပ်</div>
-        <div id="eveningHotTip" style="font-size: 22px; font-weight: bold; color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.8); margin-top: 4px;">--</div>
+    <div class="hot-tip-box" style="background-color: #ff3b30; color: #ffffff; padding: 6px; border-radius: 8px; text-align: center; width: 27%;">
+        <div style="font-size: 10px; font-weight: bold; line-height: 1.2;">ညနေ<br>စျေးကွက်<br>ဟော့ထိပ်</div>
+        <div id="eveningHotTip" style="font-size: 18px; font-weight: bold; color: #ffffff; margin-top: 4px; line-height: 1.2;">--</div>
     </div>
 
+</div>
+
+</div>
 </div>
         <div id="live2D" class="live-2d">--</div>
         <div id="updateTime" class="time-badge">Market Closed</div>
@@ -785,14 +788,26 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
             // 9:30 AM ကျော်လွန်ပြီး Live စတင်ချိန်တွင် ဟော့ထိပ်များကို ဖျောက်ရန်
             let isAfterLiveStart = (currentHour > 9 || (currentHour === 9 && currentMinute >= 30));
             
-            if (isAfterLiveStart) {
-                document.getElementById('noonHotTip').innerText = "--";
-                document.getElementById('eveningHotTip').innerText = "--";
-            } else {
-                document.getElementById('noonHotTip').innerText = result.data.noon.digits;
-                document.getElementById('eveningHotTip').innerText = result.data.evening.digits;
+            // နေ့လည် ဟော့ထိပ် Element
+            const noonEl = document.getElementById('noonHotTip');
+            if (noonEl) {
+                if (isAfterLiveStart) {
+                    noonEl.innerText = "--";
+                } else {
+                    const noonDigits = result.data.noon.digits;
+                    noonEl.innerHTML = noonDigits !== "--" ? noonDigits.split('').join('<br>') : "--";
+                }
             }
-        }
+// ညနေ ဟော့ထိပ် Element (အထက်အောက် အစဉ်လိုက် ပေါ်စေရန်)
+            const eveningEl = document.getElementById('eveningHotTip');
+            if (eveningEl) {
+                if (isAfterLiveStart) {
+                    eveningEl.innerText = "--";
+                } else {
+                    const eveningDigits = result.data.evening.digits;
+                    eveningEl.innerHTML = eveningDigits !== "--" ? eveningDigits.split('').join('<br>') : "--";
+                }
+            }
     } catch (error) {
         console.error("Error fetching hot tips:", error);
     }
