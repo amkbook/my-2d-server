@@ -122,11 +122,6 @@
           </div>
         </div>
 
-
-</div>
-
-</div>
-</div>
         <div id="live2D" class="live-2d">--</div>
         <div id="updateTime" class="time-badge">Market Closed</div>
 
@@ -143,7 +138,8 @@
 
         <button id="audio-btn" class="audio-btn" onclick="toggleSound()">🔊 အသံဖွင့်ထားသည်</button>
       </div>
- <div class="chat-box">
+
+      <div class="chat-box">
         <div class="live-title" style="margin-bottom: 5px;">Live Chatbox</div>
         <div id="chatMessages" class="chat-messages"></div>
         <div class="chat-input-row">
@@ -152,7 +148,6 @@
           <button onclick="sendMessage()">ပို့မည်</button>
         </div>
       </div>
-    </div>
 
       <div class="schedule-table-container">
         <div class="table-header-row">
@@ -188,8 +183,10 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
-     <script>
+<script>
 async function loadGoldData() {
     try {
         const response = await fetch('/api/gold');
