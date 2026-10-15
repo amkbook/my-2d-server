@@ -66,30 +66,7 @@
                 <p id="lockNotice" class="text-orange-400 text-xs text-center mt-2 hidden">⚠️ ဤ 2D အချိန်အကွက်အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
             </div>
 
-            <!-- Hot Tip Admin Control Section -->
-<div class="admin-card" style="background: #1e293b; padding: 20px; border-radius: 10px; margin-top: 20px; color: #fff;">
-    <h3>ဟော့ထိပ် (Hot Tip) ထိန်းချုပ်ရန်</h3>
-    
-    <!-- နေ့လည် ဟော့ထိပ် ထည့်သွင်းရန် -->
-    <div style="margin: 15px 0;">
-        <label style="display: block; margin-bottom: 5px;">နေ့လည် စျေးကွက် ဟော့ထိပ် (3-Digits)</label>
-        <div style="display: flex; gap: 10px;">
-            <input type="text" id="adminNoonHotTip" maxlength="3" placeholder="ဥပမာ - 123" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 200px; background: #0f172a; color: #fff;">
-            <button onclick="saveHotTip('noon')" style="background: #22c55e; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">နေ့လည် သိမ်းဆည်းမည်</button>
-        </div>
-    </div>
-
-    <!-- ညနေ ဟော့ထိပ် ထည့်သွင်းရန် -->
-    <div style="margin: 15px 0;">
-        <label style="display: block; margin-bottom: 5px;">ညနေ စျေးကွက် ဟော့ထိပ် (3-Digits)</label>
-        <div style="display: flex; gap: 10px;">
-            <input type="text" id="adminEveningHotTip" maxlength="3" placeholder="ဥပမာ - 456" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 200px; background: #0f172a; color: #fff;">
-            <button onclick="saveHotTip('evening')" style="background: #22c55e; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">ညနေ သိမ်းဆည်းမည်</button>
-        </div>
-    </div>
-    
-    <p id="adminMsg" style="font-size: 13px; margin-top: 10px; color: #38bdf8;"></p>
-</div>
+          
             <!-- GOLD PRICE CONTROL SECTION (ရွှေစျေး ထိန်းချုပ်ရန် သီးသန့်) -->
             <div class="bg-slate-900 p-4 rounded-xl border border-yellow-600/50">
                 <h2 class="text-lg font-semibold text-yellow-400 mb-3">🪙 ရွှေစျေးနှုန်းများ ထိန်းချုပ်ရန်</h2>
@@ -395,52 +372,7 @@
                 alert('ရွှေစျေး သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိသွားပါသည်။');
             }
         }
-        // Hot Tip Admin Functions
-        async function loadHotTipsAdmin() {
-            try {
-                const response = await fetch('/api/hottips');
-                const result = await response.json();
-                if (result.success) {
-                    document.getElementById('adminNoonHotTip').value = result.data.noon.digits !== "--" ? result.data.noon.digits : "";
-                    document.getElementById('adminEveningHotTip').value = result.data.evening.digits !== "--" ? result.data.evening.digits : "";
-                }
-            } catch (err) {
-                console.error("Hot tip load error:", err);
-            }
-        }
-
-        async function saveHotTip(session) {
-            const inputId = session === 'noon' ? 'adminNoonHotTip' : 'adminEveningHotTip';
-            const digits = document.getElementById(inputId).value.trim();
-            const msgEle = document.getElementById('adminMsg');
-            
-            if (!digits || digits.length !== 3) {
-                alert("ကျေးဇူးပြု၍ ဂဏန်း ၃ လုံးတိတိ ထည့်သွင်းပါရန်။");
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/admin/set-hottip', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session, digits })
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    msgEle.innerText = `${session === 'noon' ? 'နေ့လည်' : 'ညနေ'} ဟော့ထိပ် (${digits}) ကို အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။`;
-                    setTimeout(() => { msgEle.innerText = ""; }, 4000);
-                } else {
-                    alert("သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိသွားပါသည်။");
-                }
-            } catch (error) {
-                console.error("Error saving hot tip:", error);
-                alert("ဆာဗာသို့ ချိတ်ဆက်၍မရပါ။");
-            }
-        }
-
-        // Admin Login အောင်မြင်ပြီး Data တွေ load တဲ့နေရာမှာ ဤဖန်ရှင်ကို ထည့်ရန်
-        // loadHotTipsAdmin(); ကို adminLogin() ထဲတွင် ထည့်ခေါ်ပေးပါရန်။
+        
     </script>
 </body>
 </html> 
