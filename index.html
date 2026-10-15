@@ -121,7 +121,28 @@
             <span>✔ စျေးကွက်ပိတ်ချိန်</span>
           </div>
         </div>
+<!-- 2D Result Section Container -->
+<div class="live-result-wrapper" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 15px 0;">
+    
+    <!-- ဘယ်ဘက်: နေ့လည် စျေးကွက် ဟော့ထိပ် -->
+    <div class="hot-tip-box" style="background-color: #ff3b30; color: #ffffff; padding: 8px; border-radius: 8px; text-align: center; width: 30%;">
+        <div style="font-size: 11px; font-weight: bold; line-height: 1.2;">နေ့လည်<br>စျေးကွက်<br>ဟော့ထိပ်</div>
+        <div id="noonHotTip" style="font-size: 22px; font-weight: bold; color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.8); margin-top: 4px;">--</div>
+    </div>
 
+    <!-- အလယ်: ပင်မ 2D ရလဒ် (မူလရှိပြီးသား ဂဏန်းပြကွက်) -->
+    <div class="main-2d-display" style="text-align: center; width: 40%;">
+        <div style="font-size: 12px; color: #aaa;">LIVE 2D RESULT</div>
+        <div id="live2dNumber" style="font-size: 45px; font-weight: bold; color: #f5a623;">--</div>
+    </div>
+
+    <!-- ညာဘက်: ညနေ စျေးကွက် ဟော့ထိပ် -->
+    <div class="hot-tip-box" style="background-color: #ff3b30; color: #ffffff; padding: 8px; border-radius: 8px; text-align: center; width: 30%;">
+        <div style="font-size: 11px; font-weight: bold; line-height: 1.2;">ညနေ<br>စျေးကွက်<br>ဟော့ထိပ်</div>
+        <div id="eveningHotTip" style="font-size: 22px; font-weight: bold; color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.8); margin-top: 4px;">--</div>
+    </div>
+
+</div>
         <div id="live2D" class="live-2d">--</div>
         <div id="updateTime" class="time-badge">Market Closed</div>
 
@@ -751,6 +772,35 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
         }
       }
     }
+    async function fetchHotTips() {
+    try {
+        const response = await fetch('/api/hottips');
+        const result = await response.json();
+        
+        if (result.success) {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            
+            // 9:30 AM ကျော်လွန်ပြီး Live စတင်ချိန်တွင် ဟော့ထိပ်များကို ဖျောက်ရန်
+            let isAfterLiveStart = (currentHour > 9 || (currentHour === 9 && currentMinute >= 30));
+            
+            if (isAfterLiveStart) {
+                document.getElementById('noonHotTip').innerText = "--";
+                document.getElementById('eveningHotTip').innerText = "--";
+            } else {
+                document.getElementById('noonHotTip').innerText = result.data.noon.digits;
+                document.getElementById('eveningHotTip').innerText = result.data.evening.digits;
+            }
+        }
+    } catch (error) {
+        console.error("Error fetching hot tips:", error);
+    }
+}
+
+// 10 စက္ကန့်တစ်ကြိမ် အချိန်ကိုက် စစ်ဆေးမည်
+setInterval(fetchHotTips, 10000);
+fetchHotTips();
   </script>
 </body>
 </html>

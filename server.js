@@ -1452,6 +1452,30 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
+// Server data storage for Hot Tips
+let hotTipData = {
+    noon: { digits: "--", locked: false, date: "" },
+    evening: { digits: "--", locked: false, date: "" }
+};
+
+// Admin မှ ဟော့ထိပ်ဂဏန်း ထည့်သွင်းခြင်း API
+app.post('/api/admin/set-hottip', (req, res) => {
+    const { session, digits } = req.body; 
+    const now = new Date();
+    
+    if (session === 'noon') {
+        hotTipData.noon = { digits, locked: true, date: now.toDateString() };
+    } else if (session === 'evening') {
+        hotTipData.evening = { digits, locked: true, date: now.toDateString() };
+    }
+    
+    res.json({ success: true, message: "Hot tip updated successfully." });
+});
+
+// Client ဘက်သို့ ဟော့ထိပ်ဒေတာ ပို့ပေးရန် API
+app.get('/api/hottips', (req, res) => {
+    res.json({ success: true, data: hotTipData });
+});
 // --------------------------------------------------
 // Start server
 // --------------------------------------------------
