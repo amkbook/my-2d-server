@@ -412,7 +412,7 @@
         async function saveHotTip(session) {
             const inputId = session === 'noon' ? 'adminNoonHotTip' : 'adminEveningHotTip';
             const digits = document.getElementById(inputId).value.trim();
-            const msgEle = document.getElementById('hotTipMsg');
+            const msgEle = document.getElementById('adminMsg');
             
             if (!digits || digits.length !== 3) {
                 alert("ကျေးဇူးပြု၍ ဂဏန်း ၃ လုံးတိတိ ထည့်သွင်းပါရန်။");
