@@ -775,47 +775,7 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
         }
       }
     }
-    async function fetchHotTips() {
-    try {
-        const response = await fetch('/api/hottips');
-        const result = await response.json();
-        
-        if (result.success) {
-            const now = new Date();
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            
-            // 9:30 AM ကျော်လွန်ပြီး Live စတင်ချိန်တွင် ဟော့ထိပ်များကို ဖျောက်ရန်
-            let isAfterLiveStart = (currentHour > 9 || (currentHour === 9 && currentMinute >= 30));
-            
-            // နေ့လည် ဟော့ထိပ် Element
-            const noonEl = document.getElementById('noonHotTip');
-            if (noonEl) {
-                if (isAfterLiveStart) {
-                    noonEl.innerText = "--";
-                } else {
-                    const noonDigits = result.data.noon.digits;
-                    noonEl.innerHTML = noonDigits !== "--" ? noonDigits.split('').join('<br>') : "--";
-                }
-            }
-// ညနေ ဟော့ထိပ် Element (အထက်အောက် အစဉ်လိုက် ပေါ်စေရန်)
-            const eveningEl = document.getElementById('eveningHotTip');
-            if (eveningEl) {
-                if (isAfterLiveStart) {
-                    eveningEl.innerText = "--";
-                } else {
-                    const eveningDigits = result.data.evening.digits;
-                    eveningEl.innerHTML = eveningDigits !== "--" ? eveningDigits.split('').join('<br>') : "--";
-                }
-            }
-    } catch (error) {
-        console.error("Error fetching hot tips:", error);
-    }
-}
-
-// 10 စက္ကန့်တစ်ကြိမ် အချိန်ကိုက် စစ်ဆေးမည်
-setInterval(fetchHotTips, 10000);
-fetchHotTips();
+ 
   </script>
 </body>
 </html>
