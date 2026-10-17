@@ -611,8 +611,16 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
             document.getElementById('t1400_tw').innerText = s1400.tw !== "--" ? s1400.tw : "--";
           }
           const s1630 = data.adminResults["04:30 PM"];
-          const saved1630 = data.t430 && data.t430 !== '--' ? data.t430 : (s1630?.modern || '--');
-          if (saved1630 !== '--') document.getElementById('t1630_modern').innerText = extractBoundary2D(saved1630);
+      let saved1630 = data.t430 && data.t430 !== '--' ? data.t430 : (s1630?.modern || '--');
+      
+      // ညသန်းခေါင် ၁၂:၀၀ ကျော်လွန်သွား၍ ဆာဗာမှ '--' ပို့လာလျှင်သော်လည်းကောင်း၊ 
+      // ဒေတာအသစ်မရှိတော့လျှင်သော်လည်းကောင်း ယခင် ညနေ ၄:၃၀ က ရလဒ်ဟောင်းကို ဆက်လက်ထိန်းသိမ်းမည်
+      if ((saved1630 === '--' || !saved1630) && document.getElementById('t1630_modern').innerText !== '--') {
+          saved1630 = document.getElementById('t1630_modern').innerText;
+      }
+
+      if (saved1630 !== '--') document.getElementById('t1630_modern').innerText = extractBoundary2D(saved1630);
+          
         }
       } catch (e) {
         console.error("Schedule fetch error:", e);
@@ -640,9 +648,16 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
               speak2D();
             }
           }
+          // 💡 ညသန်းခေါင် ၁၂:၀၀ ကျော်၍ ဆာဗာမှ '--' ပို့လာချိန်တွင် ညနေ ၄:၃၀ က ဂဏန်းဟောင်းကို ဆက်ထိန်းရန်
+            const now = new Date();
+            const myanmarTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 6.5));
+            const totalSec = myanmarTime.getHours() * 3600 + myanmarTime.getMinutes() * 60;
+            if ((totalSec > 16 * 3600 + 30 * 60 || totalSec < 9 * 3600 + 30 * 60) && document.getElementById('live2D').innerText !== '--') {
+              document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
+            }
+          }
         }
-      } catch(e) {}
-    }
+        } catch(e) {}
 
     function getChatGuestId() {
       const key = '2dLiveMarketChatGuestId';
