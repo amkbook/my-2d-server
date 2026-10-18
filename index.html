@@ -104,6 +104,87 @@
       0% { transform: translateY(0) rotate(0deg); opacity: 1; }
       100% { transform: translateY(105vh) rotate(360deg); opacity: 0.85; }
     }
+    /* ပင်မ 2D ရလဒ် ဂဏန်းကြီးများအတွက် စတိုင်လ် */
+#live2D {
+  font-size: 65px;
+  font-weight: bold;
+  color: #f39c12;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  line-height: 1;
+}
+
+/* ရှေ့ဂဏန်း */
+.first-digit {
+  display: inline-block;
+}
+
+/* နောက်ဆုံးဂဏန်းနဲ့ အီမိုဂျီတွေ ပါမည့် ကွန်တိန်နာ */
+.last-digit-container {
+  position: relative;
+  display: inline-block;
+  height: 1em;
+  margin-left: 8px;
+}
+
+/* ၁၀ စက္ကန့်တစ်ကြိမ် သိန်းငှက်+ခြင်္သေ့ ပျံသန်းမည့် ဖွဲ့စည်းပုံ */
+@keyframes eagleAndLionCarrying {
+  0% { transform: translateX(-50%) translateY(0px); }
+  40% { transform: translateX(-50%) translateY(-35px); }
+  60% { transform: translateX(-50%) translateY(-35px); }
+  95% { transform: translateX(-50%) translateY(0px); }
+  100% { transform: translateX(-50%) translateY(0px); }
+}
+
+.animated-group-wrapper {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: eagleAndLionCarrying 10s ease-in-out infinite;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+/* သိန်းငှက်၊ ဂဏန်းနှင့် ခြင်္သေ့ အားလုံး၏ အရွယ်အစားကို ပင်မဂဏန်းအတိုင်း တူညီစေရန် */
+.eagle-top-icon, 
+.digit-item, 
+.lion-bottom-icon {
+  font-size: 1em !important;
+  line-height: 1;
+  display: inline-block;
+}
+
+/* သိန်းငှက် တောင်ပံခတ်ခြင်း */
+@keyframes wingFlap {
+  0%, 100% { transform: scaleX(1) rotate(0deg); }
+  50% { transform: scaleX(0.85) rotate(-8deg); }
+}
+
+.eagle-top-icon {
+  animation: wingFlap 0.6s ease-in-out infinite;
+  margin-bottom: -0.1em;
+}
+
+.lion-bottom-icon {
+  margin-top: -0.1em;
+}
+
+/* မနက်ပိုင်းနှင့် ညနေပိုင်းသုံး Subtle Breathing Effect (ဈေးဖွင့်ချိန်များအတွက်) */
+@keyframes marketBreathing {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.market-breathing {
+  animation: marketBreathing 2.5s ease-in-out infinite;
+  display: inline-block;
+}
   </style>
 </head>
 <body>
@@ -630,37 +711,81 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
 async function fetchLiveData() {
       fetchScheduleData();
 
-      try {
-        const res = await fetch('/api/live');
-        const data = await res.json();
-        
-        if(data.success) {
-          if (data.live2D && data.live2D !== "--") {
-            document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
-            document.getElementById('setValue').innerHTML = formatSourceHighlight(data.value, 'value');
-            
-            document.getElementById('live2D').innerText = data.live2D;
-            document.getElementById('updateTime').innerText = "Last Update: " + data.time;
-            document.getElementById('notice').innerText = data.notice;
+  try {
+    const res = await fetch('/api/live');
+    const data = await res.json();
+    
+    // မြန်မာစံတော်ချိန် တွက်ချက်ခြင်း
+    const now = new Date();
+    const myanmarTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 6.5));
+    const currentHour = myanmarTime.getHours();
+    const currentMin = myanmarTime.getMinutes();
+    const currentSec = myanmarTime.getSeconds();
+    const totalSec = currentHour * 3600 + currentMin * 60 + currentSec;
 
-            if(current2D !== data.live2D) {
-              current2D = data.live2D;
-              speak2D();
-            }
+    const morningStart = 9 * 3600 + 30 * 60;       // မနက် ၉:၃၀
+    const morningEnd = 12 * 3600 + 1 * 60;         // နေ့လည် ၁၂:၀၁
+    const afternoonStart = 14 * 3600;              // ညနေ ၂:၀၀
+    const eagleLionStart = 16 * 3600 + 15 * 60;    // ညနေ ၄:၁၅
+    const marketClose = 16 * 3600 + 30 * 60;       // ညနေ ၄:၃၀
+
+    if(data.success) {
+      if (data.setIndex) document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
+      if (data.setValue) document.getElementById('setValue').innerHTML = formatSourceHighlight(data.setValue, 'value');
+      if (data.notice) document.getElementById('notice').innerText = data.notice;
+
+      if (data.live2D && data.live2D !== "--") {
+        document.getElementById('updateTime').innerText = "Last Update: " + data.time;
+
+        const live2DVal = data.live2D; 
+        const live2DEl = document.getElementById('live2D');
+        const firstDigit = live2DVal.length >= 2 ? live2DVal.slice(0, -1) : "";
+        const lastDigit = live2DVal.length >= 2 ? live2DVal.slice(-1) : live2DVal;
+
+        // ၁။ မနက်ပိုင်း (၉:၃၀ - ၁၂:၀၁) နှင့် ညနေပိုင်း (၂:၀၀ - ၄:၁၅) -> Breathing Effect
+        if ((totalSec >= morningStart && totalSec < morningEnd) || (totalSec >= afternoonStart && totalSec < eagleLionStart)) {
+          if (live2DVal.length >= 2) {
+            live2DEl.innerHTML = `<span class="first-digit">${firstDigit}</span><span class="market-breathing" style="margin-left: 6px;">${lastDigit}</span>`;
           } else {
-            // 💡 ညသန်းခေါင် ၁၂:၀၀ ကျော်၍ ဆာဗာမှ '--' ပို့လာချိန်တွင် ညနေ ၄:၃၀ က ဂဏန်းဟောင်းကို ဆက်ထိန်းရန်
-            const now = new Date();
-            const myanmarTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 6.5));
-            const totalSec = myanmarTime.getHours() * 3600 + myanmarTime.getMinutes() * 60;
-            if ((totalSec > 16 * 3600 + 30 * 60 || totalSec < 9 * 3600 + 30 * 60) && document.getElementById('live2D').innerText !== '--') {
-              document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
-            } else {
-              document.getElementById('live2D').innerText = "--";
-            }
+            live2DEl.innerText = live2DVal;
           }
         }
-      } catch(e) {}
+        // ၂။ ညနေပိုင်း အထူးအချိန် (၄:၁၅ - ၄:၃၀) -> သိန်းငှက် + ခြင်္သေ့ ၁၀ စက္ကန့် ပျံသန်းမှု
+        else if (totalSec >= eagleLionStart && totalSec < marketClose) {
+          if (live2DVal.length >= 2) {
+            live2DEl.innerHTML = `
+              <span class="first-digit">${firstDigit}</span>
+              <span class="last-digit-container" style="width: 1em; margin-left: 6px;">
+                <span class="animated-group-wrapper">
+                  <span class="eagle-top-icon">🦅</span>
+                  <span class="digit-item">${lastDigit}</span>
+                  <span class="lion-bottom-icon">🦁</span>
+                </span>
+              </span>
+            `;
+          } else {
+            live2DEl.innerText = live2DVal;
+          }
+        } 
+        // ၃။ အခြားဈေးပိတ်ချိန်များ
+        else {
+          live2DEl.innerText = live2DVal;
+        }
+
+        if(current2D !== data.live2D) {
+          current2D = data.live2D;
+          speak2D();
+        }
+      } else {
+        // 💡 ညသန်းခေါင် ၁၂:၀၀ ကျော်၍ ဆာဗာမှ '--' ပို့လာချိန်တွင် ညနေ ၄:၃၀ က ဂဏန်းဟောင်းကို ဆက်ထိန်းရန်
+        if ((totalSec > marketClose || totalSec < morningStart) && document.getElementById('live2D').innerText !== '--') {
+          document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
+        } else {
+          document.getElementById('live2D').innerText = "--";
+        }
+      }
     }
+  } catch(e) {}
    
     function getChatGuestId() {
       const key = '2dLiveMarketChatGuestId';
