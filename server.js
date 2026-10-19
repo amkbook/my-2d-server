@@ -694,8 +694,19 @@ app.post('/api/admin/hot-numbers', (req, res) => {
             return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
         }
 
-        if (morning !== undefined) hotNumbers.morning = morning;
-        if (evening !== undefined) hotNumbers.evening = evening;
+        // ဤနေရာတွင် liveCache ထဲသို့ တိုက်ရိုက် သိမ်းဆည်းစေခြင်း
+        if (!liveCache.hotNumbers) {
+            liveCache.hotNumbers = { morning: "--", evening: "--" };
+        }
+
+        if (morning !== undefined) {
+            hotNumbers.morning = morning;
+            liveCache.hotNumbers.morning = morning;
+        }
+        if (evening !== undefined) {
+            hotNumbers.evening = evening;
+            liveCache.hotNumbers.evening = evening;
+        }
 
         return res.json({ success: true, message: "ဟော့ထိပ် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။", hotNumbers });
     } catch (err) {
