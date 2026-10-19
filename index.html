@@ -736,9 +736,8 @@ async function fetchLiveData() {
 
     if(data.success) {
       if (data.setIndex) document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
-      if (data.setValue) document.getElementById('setValue').innerHTML = formatSourceHighlight(data.setValue, 'value');
-      if (data.notice) document.getElementById('notice').innerText = data.notice;
-
+     const valToDisplay = data.setValue || data.value || data.marketValue;
+    if (valToDisplay) document.getElementById('setValue').innerHTML = formatSourceHighlight(valToDisplay, 'value');
       if (data.live2D && data.live2D !== "--") {
         document.getElementById('updateTime').innerText = "Last Update: " + data.time;
 
