@@ -689,17 +689,16 @@ app.get('/api/admin/data', async (req, res) => {
 
         return res.json({
             success: true,
-            adminResults: record.schedule,
-            t1201: record.t1201 || '--',
-            t430: record.t430 || '--',
-            setIndex1201: record.setIndex1201 || '--',
-            value1201: record.value1201 || '--',
-            setIndex430: record.setIndex430 || '--',
-            value430: record.value430 || '--'
+            adminResults: record ? (record.schedule || {}) : {},
+            t1201: record ? (record.t1201 || '--') : '--',
+            t430: record ? (record.t430 || '--') : '--',
+            setIndex1201: record ? (record.setIndex1201 || '--') : '--',
+            value1201: record ? (record.value1201 || '--') : '--',
+            setIndex430: record ? (record.setIndex430 || '--') : '--',
+            value430: record ? (record.value430 || '--') : '--'
         });
     } catch (err) {
         console.error('Admin data error:', err.message);
-
         return res.status(500).json({
             success: false,
             message: 'Server error'
