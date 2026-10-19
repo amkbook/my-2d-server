@@ -1263,12 +1263,13 @@ app.get('/api/live', (req, res) => {
     return res.json({
         success: true,
         setIndex: liveCache.setIndex,
-        setValue: liveCache.setValue,
-        live2D: liveCache.live2D,
-        adminResults: liveCache.adminResults || {},
-        schedule: liveCache.schedule || {},
-        notice: liveCache.notice,
-        time: liveCache.time
+       setValue: liveCache.setValue,
+    marketValue: liveCache.setValue, 
+    live2D: liveCache.live2D,
+    adminResults: liveCache.adminResults || {},
+    schedule: liveCache.schedule || {},
+    notice: liveCache.notice,
+    time: liveCache.time
     });
 });
 
