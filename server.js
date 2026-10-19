@@ -1264,7 +1264,7 @@ app.get('/api/live', (req, res) => {
     return res.json({
         success: true,
         setIndex: liveCache.setIndex,
-        value: liveCache.value,
+        setValue: liveCache.setValue,
         live2D: liveCache.live2D,
         adminResults: liveCache.adminResults || {},
         schedule: liveCache.schedule || {},
