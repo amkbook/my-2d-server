@@ -817,7 +817,8 @@ async function fetchCurrentSET() {
                     if (indexVal && indexVal.includes('.')) {
                         setIndex = indexVal;
                     }
-                    if (valueVal && valueVal.includes(',')) {
+                    // valueVal ရှိပြီး အလွတ်မဟုတ်ပါက ယူမည် (comma မပါလည်း ဝင်စေရန် ပြင်ထားသည်)
+                    if (valueVal && valueVal !== '') {
                         marketValue = valueVal;
                     }
                 }
