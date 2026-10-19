@@ -488,6 +488,30 @@ async function enforceChatClosure() {
 }
 
 setInterval(enforceChatClosure, 15000);
+// စျေးကွက်ဖွင့်ရက် (တနင်္လာ-သောကြာ) နံနက် 9:30 အတိတွင် ဟော့ထိပ်ဂဏန်းများ Auto-Reset လုပ်ရန်
+function checkAndResetHotNumbers() {
+    const mmTime = getMyanmarTime();
+    const day = mmTime.getDay(); // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
+    const hours = mmTime.getHours();
+    const minutes = mmTime.getMinutes();
+
+    // နံနက် 9:30 AM အတိ ရောက်ရှိချိန် (hours === 9 && minutes === 30)
+    if (hours === 9 && minutes === 30) {
+        // စနေ (6) နှင့် တနင်္ဂနွေ (0) မဟုတ်ပါက (စျေးကွက်ဖွင့်ရက် တနင်္လာ မှ သောကြာ ဖြစ်ပါက) ရှင်းလင်းမည်
+        if (day !== 0 && day !== 6) {
+            hotNumbers = { morning: "--", evening: "--" };
+            if (liveCache.hotNumbers) {
+                liveCache.hotNumbers = { morning: "--", evening: "--" };
+            }
+            console.log('Trading day 9:30 AM reached: Hot numbers reset successfully.');
+        } else {
+            console.log('Weekend 9:30 AM: Hot numbers retained (No reset on Sat/Sun).');
+        }
+    }
+}
+
+// တစ်မိနစ်လျှင် တစ်ကြိမ် အချိန်ကိုက် စစ်ဆေးပေးခြင်း
+setInterval(checkAndResetHotNumbers, 60000);
 
 // --------------------------------------------------
 // Myanmar time and market schedule helpers
