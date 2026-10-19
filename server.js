@@ -818,7 +818,7 @@ async function fetchCurrentSET() {
                     }
                     // valueVal ရှိပြီး အလွတ်မဟုတ်ပါက ယူမည် (comma မပါလည်း ဝင်စေရန် ပြင်ထားသည်)
                     if (valueVal && valueVal !== '') {
-                        marketValue = valueVal;
+                        marketValue = valueVal;liveCache.setValue = valueVal;
                     }
                 }
             }
