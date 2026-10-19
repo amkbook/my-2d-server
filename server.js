@@ -811,8 +811,7 @@ async function fetchCurrentSET() {
                     // cols[1] = Last (SET Index)
                     const indexVal = $(cols[1]).text().trim();
                     // cols[4] = Value (M.Baht)
-                    const valueVal = $(cols[4]).text().trim();
-                    console.log("Scraped Value Val:", valueVal);
+                    const valueVal = $(cols[4]).text().trim().replace(/,/g, '');
 
                     if (indexVal && indexVal.includes('.')) {
                         setIndex = indexVal;
