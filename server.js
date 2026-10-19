@@ -714,6 +714,13 @@ app.post('/api/admin/hot-numbers', (req, res) => {
         return res.status(500).json({ success: false, message: 'Server error occurred' });
     }
 });
+// Admin အတွက် လက်ရှိ Hot Numbers များကို ထုတ်ပေးရန် API
+app.get('/api/admin/hot-numbers', (req, res) => {
+    return res.json({
+        success: true,
+        hotNumbers: hotNumbers || { morning: "", evening: "" }
+    });
+});
 // --------------------------------------------------
 // Admin data API
 // --------------------------------------------------

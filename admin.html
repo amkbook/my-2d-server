@@ -422,6 +422,31 @@
                 alert("ဆာဗာချိတ်ဆက်ရာတွင် အမှားအယွင်းရှိပါသည်။");
             }
         }
+        // Admin ပန်နယ် ဖွင့်လိုက်သည်နှင့် လက်ရှိ ဟော့ထိပ်ဂဏန်းများကို API မှ လှမ်းဆွဲ၍ Input ထဲသို့ ထည့်ရန်
+async function loadAdminHotNumbers() {
+    try {
+        const response = await fetch('/api/admin/hot-numbers');
+        const data = await response.json();
+        if (data.success && data.hotNumbers) {
+            const morningInput = document.getElementById('hotMorningInput');
+            const eveningInput = document.getElementById('hotEveningInput');
+            
+            if (morningInput && data.hotNumbers.morning) {
+                morningInput.value = data.hotNumbers.morning;
+            }
+            if (eveningInput && data.hotNumbers.evening) {
+                eveningInput.value = data.hotNumbers.evening;
+            }
+        }
+    } catch (err) {
+        console.error('Failed to load hot numbers for admin:', err);
+    }
+}
+
+// မျက်နှာပြင် စတင် Load ဖြစ်ချိန်တွင် ခေါ်ဆိုရန်
+window.addEventListener('DOMContentLoaded', () => {
+    loadAdminHotNumbers();
+});
     </script>
 </body>
 </html> 
