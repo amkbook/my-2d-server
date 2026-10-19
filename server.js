@@ -1308,7 +1308,8 @@ app.get('/api/live', (req, res) => {
     adminResults: liveCache.adminResults || {},
     schedule: liveCache.schedule || {},
     notice: liveCache.notice,
-    time: liveCache.time
+    time: liveCache.time,
+    hotNumbers: liveCache.hotNumbers || { morning: "--", evening: "--" }
     });
 });
 
