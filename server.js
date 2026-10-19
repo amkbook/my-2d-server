@@ -13,6 +13,12 @@ app.use(express.static(__dirname));
 const PORT = process.env.PORT || 3000;
 const LIVE_FETCH_INTERVAL_MS = 3000;
 
+// Hot Numbers Memory State
+let hotNumbers = {
+  morning: "--",
+  evening: "--",
+  lastResetDate: ""
+};
 let liveCache = {
     setIndex: '--',
     setValue: '--',
@@ -679,6 +685,24 @@ app.post('/api/admin/save', async (req, res) => {
     }
 });
 
+// Admin မှ Hot Numbers ထည့်သွင်းရန် API
+app.post('/api/admin/hot-numbers', (req, res) => {
+    try {
+        const { password, morning, evening } = req.body;
+        
+        if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
+            return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
+        }
+
+        if (morning !== undefined) hotNumbers.morning = morning;
+        if (evening !== undefined) hotNumbers.evening = evening;
+
+        return res.json({ success: true, message: "ဟော့ထိပ် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။", hotNumbers });
+    } catch (err) {
+        console.error('Admin hot-numbers save error:', err.message);
+        return res.status(500).json({ success: false, message: 'Server error occurred' });
+    }
+});
 // --------------------------------------------------
 // Admin data API
 // --------------------------------------------------
@@ -1176,6 +1200,19 @@ async function fetchAndUpdateLiveCache() {
 
     liveFetchRunning = true;
 
+    // မနက် ၉:၃၀ Auto Reset Logic (Myanmar Timezone Safe)
+        const nowTime = getMyanmarTime();
+        const todayStr = getMyanmarDateKey(nowTime);
+        const currentHour = nowTime.getHours();
+        const currentMin = nowTime.getMinutes();
+        const totalSec = currentHour * 3600 + currentMin * 60;
+        const morningStartSec = 9 * 3600 + 30 * 60; // 9:30 AM
+
+        if (totalSec >= morningStartSec && hotNumbers.lastResetDate !== todayStr) {
+            hotNumbers.morning = "--";
+            hotNumbers.evening = "--";
+            hotNumbers.lastResetDate = todayStr;
+        }
     try {
         const phaseStart = getMarketPhase();
         const record = await getTodayAdminResults();
@@ -1211,6 +1248,7 @@ async function fetchAndUpdateLiveCache() {
             setValue: result.marketValue,
             marketValue: result.marketValue,
             live2D: result.calculated2D,
+            hotNumbers: hotNumbers,
             adminResults: record.schedule,
             schedule: getScheduleObject(record.schedule),
             notice: '2D Live အချက်အလက်များ ချိတ်ဆက်နေပါသည်။',
