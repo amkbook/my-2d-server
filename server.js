@@ -15,7 +15,7 @@ const LIVE_FETCH_INTERVAL_MS = 3000;
 
 let liveCache = {
     setIndex: '--',
-    value: '--',
+    setValue: '--',
     live2D: '--',
     adminResults: null,
     schedule: null,
@@ -928,7 +928,7 @@ function applyFrozenSnapshot(record, phase) {
     }
 
     liveCache.setIndex = resultIndex;
-    liveCache.value = resultValue;
+    liveCache.setValue = resultValue;
     liveCache.live2D = result2D;
     liveCache.adminResults = record.schedule;
     liveCache.schedule = getScheduleObject(record.schedule);
