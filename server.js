@@ -941,7 +941,8 @@ async function fetchCurrentSET() {
 // Freeze the latest saved market snapshot
 // --------------------------------------------------
 
-function applyFrozenSnapshot(record, phase) {
+// ညသန်းခေါင် ၁၂:၀၀ တွင် ဂဏန်းများ '--' မဖြစ်ဘဲ နောက်ရက် နံနက် ၉:၃၀ ရောက်မှ အသစ်ပြောင်းစေရန် ပြင်ဆင်ထားသော Frozen Snapshot
+async function applyFrozenSnapshot(record, phase) {
     let result2D = '--';
     let resultIndex = '--';
     let resultValue = '--';
@@ -957,44 +958,36 @@ function applyFrozenSnapshot(record, phase) {
             resultIndex = record.setIndex1201 || '--';
             resultValue = record.value1201 || '--';
         }
-    } else if (phase === 'after-market-freeze') {
+    } else if (phase === 'after-market-freeze' || phase === 'closed') {
+        // ၁။ လက်ရှိရက်စွဲ (record) တွင် ညနေ ၄:၃၀ ရလဒ် ရှိပါက ယူမည်
         if (record.t430 && record.t430 !== '--') {
             result2D = record.t430;
             resultIndex = record.setIndex430 || '--';
             resultValue = record.value430 || '--';
-        } else if (record.t1201 && record.t1201 !== '--') {
-            result2D = record.t1201;
-            resultIndex = record.setIndex1201 || '--';
-            resultValue = record.value1201 || '--';
-            fixedTime = '12:01:00 PM';
+        } else {
+            // ၂။ ညသန်းခေါင် ၁၂:၀၀ ကျော်သွား၍ ယနေ့ရက်စွဲအသစ်တွင် ရလဒ်မရှိသေးပါက (မနက် ၉:၃၀ မရောက်သေးပါက)
+            // Database ထဲမှ သေချာပေါက်ရှိပြီးသားဖြစ်သော မနေ့က ညနေ ၄:၃၀ ရလဒ်ကို တိုက်ရိုက်ယူ၍ ဆက်လက်ပြသမည်
+            try {
+                const latestRecord = await DayData.findOne({
+                    t430: { $ne: '--' }
+                }).sort({ _id: -1 });
+
+                if (latestRecord && latestRecord.t430 && latestRecord.t430 !== '--') {
+                    result2D = latestRecord.t430;
+                    resultIndex = latestRecord.setIndex430 || '--';
+                    resultValue = latestRecord.value430 || '--';
+                    fixedTime = '04:30:00 PM';
+                }
+            } catch (err) {
+                console.error('Failed to fetch previous day 4:30 result for freeze snapshot:', err.message);
+            }
         }
-    } else {
-        // Weekend: preserve the last cached display without scraping SET.
-        liveCache.adminResults = record.schedule;
-        liveCache.schedule = getScheduleObject(record.schedule);
-        liveCache.notice = 'စျေးကွက်ပိတ်ချိန်';
-        return;
     }
 
-    if (
-        result2D === '--' ||
-        resultIndex === '--' ||
-        resultValue === '--'
-    ) {
-        // Keep the previous live values on screen until a boundary
-        // capture has successfully saved the result.
-        liveCache.adminResults = record.schedule;
-        liveCache.schedule = getScheduleObject(record.schedule);
-        liveCache.notice =
-            phase === 'midday-freeze'
-                ? 'နေ့လည်ပိုင်းစျေးကွက်အနားယူချိန်'
-                : 'စျေးကွက်ပိတ်ချိန်';
-        return;
-    }
+    if (result2D !== '--') liveCache.live2D = result2D;
+    if (resultIndex !== '--') liveCache.setIndex = resultIndex;
+    if (resultValue !== '--') liveCache.setValue = resultValue;
 
-    liveCache.setIndex = resultIndex;
-    liveCache.setValue = resultValue;
-    liveCache.live2D = result2D;
     liveCache.adminResults = record.schedule;
     liveCache.schedule = getScheduleObject(record.schedule);
     liveCache.time = fixedTime;
