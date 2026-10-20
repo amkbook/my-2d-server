@@ -816,12 +816,12 @@ async function fetchLiveData() {
         const firstDigit = live2DVal.length >= 2 ? live2DVal.slice(0, -1) : "";
         const lastDigit = live2DVal.length >= 2 ? live2DVal.slice(-1) : live2DVal;
 
-        // ၁။ မနက်ပိုင်း (၉:၃၀ - ၁၂:၀၁) နှင့် ညနေပိုင်း (၂:၀၀ - ၄:၁၅) -> Breathing Effect
+        // ၁။ မနက်ပိုင်း (၉:၃၀ - ၁၂:၀၁) နှင့် ညနေပိုင်း (၂:၀၀ - ၄:၁၅) -> Breathing Effect (ဂဏန်းနှစ်လုံးစလုံးအတွက်)
         if ((totalSec >= morningStart && totalSec < morningEnd) || (totalSec >= afternoonStart && totalSec < eagleLionStart)) {
           if (live2DVal.length >= 2) {
-            live2DEl.innerHTML = `<span class="first-digit">${firstDigit}</span><span class="market-breathing" style="margin-left: 6px;">${lastDigit}</span>`;
+            liveDEl.innerHTML = `<span class="first-digit market-breathing">${firstDigit}</span><span class="market-breathing" style="margin-left: 6px;">${lastDigit}</span>`;
           } else {
-            live2DEl.innerText = live2DVal;
+            liveDEl.innerText = live2DVal;
           }
         }
         // ၂။ ညနေပိုင်း အထူးအချိန် (၄:၁၅ - ၄:၃၀) -> သိန်းငှက် + ခြင်္သေ့ ၁၀ စက္ကန့် ပျံသန်းမှု
