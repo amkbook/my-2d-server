@@ -874,17 +874,17 @@ async function fetchCurrentSET() {
             if (firstCol === 'SET') {
                 const cols = $(el).find('td');
                 if (cols.length >= 5) {
-                    // cols[1] = Last (SET Index)
+
                     const indexVal = $(cols[1]).text().trim();
-                    // cols[4] = Value (M.Baht)
+
                     const valueVal = $(cols[4]).text().trim().replace(/,/g, '');
 
                     if (indexVal && indexVal.includes('.')) {
                         setIndex = indexVal;
                     }
-                    // valueVal ရှိပြီး အလွတ်မဟုတ်ပါက ယူမည် (comma မပါလည်း ဝင်စေရန် ပြင်ထားသည်)
+ 
                     if (valueVal && valueVal !== '') {
-                        marketValue = valueVal;liveCache.setValue = valueVal;
+                        marketValue = valueVal;
                     }
                 }
             }
@@ -893,7 +893,7 @@ async function fetchCurrentSET() {
         let digit1 = '--';
         let digit2 = '--';
 
-        // ၂၀၂၆ ခုနှစ်အတွက် တရားဝင်ပိတ်ရက်များစာရင်း[cite: 1]
+
         const marketHolidays = [
             '2026-10-13',
             '2026-10-23',
@@ -907,7 +907,7 @@ async function fetchCurrentSET() {
         const day = String(now.getDate()).padStart(2, '0');
         const currentDateStr = `${year}-${month}-${day}`;
 
-        // ကြားရက် ပိတ်ရက်ဖြစ်ပါက calculated2D ကို OFF ဟု သတ်မှတ်မည်
+        
         if (marketHolidays.includes(currentDateStr)) {
             calculated2D = 'OFF';
         } else {
@@ -915,13 +915,13 @@ async function fetchCurrentSET() {
                 digit1 = setIndex.split('.')[1].slice(-1);
             }
 
-           if (marketValue !== '--') {
-            const cleanVal = marketValue.replace(/,/g, '');
-            const baseVal = cleanVal.includes('.') ? cleanVal.split('.')[0] : cleanVal;
-            if (baseVal.length > 0) {
-                digit2 = baseVal.slice(-1);
+            if (marketValue !== '--') {
+                const cleanVal = marketValue.replace(/,/g, '').trim();
+                const baseVal = cleanVal.includes('.') ? cleanVal.split('.')[0].trim() : cleanVal;
+                if (baseVal.length > 0) {
+                    digit2 = baseVal.slice(-1);
+                }
             }
-        }
 
             if (digit1 !== '--' && digit2 !== '--') {
                 calculated2D = digit1 + digit2;
