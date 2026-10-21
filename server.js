@@ -11,7 +11,7 @@ app.use(express.json({ limit: '16kb' }));
 app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 3000;
-const LIVE_FETCH_INTERVAL_MS = 10000;
+const LIVE_FETCH_INTERVAL_MS = 3000;
 
 // Hot Numbers Memory State
 let hotNumbers = {
