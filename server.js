@@ -1229,7 +1229,7 @@ function scheduleNextBoundaryCapture() {
 // SET website fetch is performed by this interval.
 // --------------------------------------------------
 
-async function fetchAndUpdateLiveCache() {
+ async function fetchAndUpdateLiveCache() {
     if (liveFetchRunning) {
         return;
     }
@@ -1248,8 +1248,9 @@ async function fetchAndUpdateLiveCache() {
         hotNumbers.morning = "--";
         hotNumbers.evening = "--";
         hotNumbers.lastResetDate = todayStr;
-        
+        // 💡 liveCache.live2D = "--"; ကို ဤနေရာတွင် လုံးဝ မထည့်တော့ပါ (Live Data အသစ်က အလိုအလျောက် အစားထိုးသွားပါမည်)
     }
+
     try {
         const phaseStart = getMarketPhase();
         const record = await getTodayAdminResults();
@@ -1268,8 +1269,7 @@ async function fetchAndUpdateLiveCache() {
         const timeAfterFetch = getMyanmarTime();
         const phaseAfterFetch = getMarketPhase(timeAfterFetch);
 
-        // If the request crosses a market boundary, don't publish
-        // the result fetched after the market should have frozen.
+        
         if (
             phaseAfterFetch !== 'morning-live' &&
             phaseAfterFetch !== 'afternoon-live'
@@ -1284,7 +1284,7 @@ async function fetchAndUpdateLiveCache() {
             setIndex: result.setIndex,
             setValue: result.marketValue,
             marketValue: result.marketValue,
-            live2D: (result.calculated2D && result.calculated2D !== '--') ? result.calculated2D : liveCache.live2D,
+            live2D: result.calculated2D, // 💡 တိုက်ရိုက် Result ကိုသာ ယူမည် (တင်းကျပ်သော ternary ကိုဖြုတ်၍ ပုံမှန်အတိုင်း ထားရှိသည်)
             hotNumbers: hotNumbers,
             adminResults: record.schedule,
             schedule: getScheduleObject(record.schedule),
