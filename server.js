@@ -1269,7 +1269,7 @@ function scheduleNextBoundaryCapture() {
         const timeAfterFetch = getMyanmarTime();
         const phaseAfterFetch = getMarketPhase(timeAfterFetch);
 
-        
+
         if (
             phaseAfterFetch !== 'morning-live' &&
             phaseAfterFetch !== 'afternoon-live'
@@ -1280,11 +1280,37 @@ function scheduleNextBoundaryCapture() {
             return;
         }
 
+        let currentCalculated2D = "--";
+        if (result.setIndex !== '--' && result.marketValue !== '--') {
+            const cleanIndex = result.setIndex.trim();
+            const cleanVal = result.marketValue.replace(/,/g, '').trim();
+            
+            let d1 = '--';
+            let d2 = '--';
+
+            if (cleanIndex.includes('.')) {
+                const parts = cleanIndex.split('.');
+                const decPart = parts[1].trim();
+                if (decPart.length > 0) {
+                    d1 = decPart.slice(-1);
+                }
+            }
+
+            const baseVal = cleanVal.includes('.') ? cleanVal.split('.')[0].trim() : cleanVal;
+            if (baseVal.length > 0) {
+                d2 = baseVal.slice(-1);
+            }
+
+            if (d1 !== '--' && d2 !== '--') {
+                currentCalculated2D = d1 + d2;
+            }
+        }
+
         liveCache = {
             setIndex: result.setIndex,
             setValue: result.marketValue,
             marketValue: result.marketValue,
-            live2D: result.calculated2D, // 💡 တိုက်ရိုက် Result ကိုသာ ယူမည် (တင်းကျပ်သော ternary ကိုဖြုတ်၍ ပုံမှန်အတိုင်း ထားရှိသည်)
+            live2D: currentCalculated2D !== '--' ? currentCalculated2D : liveCache.live2D,
             hotNumbers: hotNumbers,
             adminResults: record.schedule,
             schedule: getScheduleObject(record.schedule),
