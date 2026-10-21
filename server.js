@@ -874,17 +874,17 @@ async function fetchCurrentSET() {
             if (firstCol === 'SET') {
                 const cols = $(el).find('td');
                 if (cols.length >= 5) {
-
+                    // cols[1] = Last (SET Index)
                     const indexVal = $(cols[1]).text().trim();
-
+                    // cols[4] = Value (M.Baht)
                     const valueVal = $(cols[4]).text().trim().replace(/,/g, '');
 
                     if (indexVal && indexVal.includes('.')) {
                         setIndex = indexVal;
                     }
- 
+                    // valueVal ရှိပြီး အလွတ်မဟုတ်ပါက ယူမည် (comma မပါလည်း ဝင်စေရန် ပြင်ထားသည်)
                     if (valueVal && valueVal !== '') {
-                        marketValue = valueVal;
+                        marketValue = valueVal;liveCache.setValue = valueVal;
                     }
                 }
             }
@@ -893,7 +893,7 @@ async function fetchCurrentSET() {
         let digit1 = '--';
         let digit2 = '--';
 
-
+        // ၂၀၂၆ ခုနှစ်အတွက် တရားဝင်ပိတ်ရက်များစာရင်း[cite: 1]
         const marketHolidays = [
             '2026-10-13',
             '2026-10-23',
@@ -907,7 +907,7 @@ async function fetchCurrentSET() {
         const day = String(now.getDate()).padStart(2, '0');
         const currentDateStr = `${year}-${month}-${day}`;
 
-        
+        // ကြားရက် ပိတ်ရက်ဖြစ်ပါက calculated2D ကို OFF ဟု သတ်မှတ်မည်
         if (marketHolidays.includes(currentDateStr)) {
             calculated2D = 'OFF';
         } else {
@@ -915,12 +915,11 @@ async function fetchCurrentSET() {
                 digit1 = setIndex.split('.')[1].slice(-1);
             }
 
-            if (marketValue !== '--') {
-                const cleanVal = marketValue.replace(/,/g, '').trim();
-                const baseVal = cleanVal.includes('.') ? cleanVal.split('.')[0].trim() : cleanVal;
-                if (baseVal.length > 0) {
-                    digit2 = baseVal.slice(-1);
-                }
+            if (marketValue !== '--' && marketValue.includes('.')) {
+                digit2 = marketValue
+                    .split('.')[0]
+                    .replace(/,/g, '')
+                    .slice(-1);
             }
 
             if (digit1 !== '--' && digit2 !== '--') {
@@ -942,8 +941,7 @@ async function fetchCurrentSET() {
 // Freeze the latest saved market snapshot
 // --------------------------------------------------
 
-// ညသန်းခေါင် ၁၂:၀၀ တွင် ဂဏန်းများ '--' မဖြစ်ဘဲ နောက်ရက် နံနက် ၉:၃၀ ရောက်မှ အသစ်ပြောင်းစေရန် ပြင်ဆင်ထားသော Frozen Snapshot
-async function applyFrozenSnapshot(record, phase) {
+function applyFrozenSnapshot(record, phase) {
     let result2D = '--';
     let resultIndex = '--';
     let resultValue = '--';
@@ -959,36 +957,44 @@ async function applyFrozenSnapshot(record, phase) {
             resultIndex = record.setIndex1201 || '--';
             resultValue = record.value1201 || '--';
         }
-    } else if (phase === 'after-market-freeze' || phase === 'closed') {
-        // ၁။ လက်ရှိရက်စွဲ (record) တွင် ညနေ ၄:၃၀ ရလဒ် ရှိပါက ယူမည်
+    } else if (phase === 'after-market-freeze') {
         if (record.t430 && record.t430 !== '--') {
             result2D = record.t430;
             resultIndex = record.setIndex430 || '--';
             resultValue = record.value430 || '--';
-        } else {
-            // ၂။ ညသန်းခေါင် ၁၂:၀၀ ကျော်သွား၍ ယနေ့ရက်စွဲအသစ်တွင် ရလဒ်မရှိသေးပါက (မနက် ၉:၃၀ မရောက်သေးပါက)
-            // Database ထဲမှ သေချာပေါက်ရှိပြီးသားဖြစ်သော မနေ့က ညနေ ၄:၃၀ ရလဒ်ကို တိုက်ရိုက်ယူ၍ ဆက်လက်ပြသမည်
-            try {
-                const latestRecord = await DayData.findOne({
-                    t430: { $ne: '--' }
-                }).sort({ _id: -1 });
-
-                if (latestRecord && latestRecord.t430 && latestRecord.t430 !== '--') {
-                    result2D = latestRecord.t430;
-                    resultIndex = latestRecord.setIndex430 || '--';
-                    resultValue = latestRecord.value430 || '--';
-                    fixedTime = '04:30:00 PM';
-                }
-            } catch (err) {
-                console.error('Failed to fetch previous day 4:30 result for freeze snapshot:', err.message);
-            }
+        } else if (record.t1201 && record.t1201 !== '--') {
+            result2D = record.t1201;
+            resultIndex = record.setIndex1201 || '--';
+            resultValue = record.value1201 || '--';
+            fixedTime = '12:01:00 PM';
         }
+    } else {
+        // Weekend: preserve the last cached display without scraping SET.
+        liveCache.adminResults = record.schedule;
+        liveCache.schedule = getScheduleObject(record.schedule);
+        liveCache.notice = 'စျေးကွက်ပိတ်ချိန်';
+        return;
     }
 
-    if (result2D !== '--') liveCache.live2D = result2D;
-    if (resultIndex !== '--') liveCache.setIndex = resultIndex;
-    if (resultValue !== '--') liveCache.setValue = resultValue;
+    if (
+        result2D === '--' ||
+        resultIndex === '--' ||
+        resultValue === '--'
+    ) {
+        // Keep the previous live values on screen until a boundary
+        // capture has successfully saved the result.
+        liveCache.adminResults = record.schedule;
+        liveCache.schedule = getScheduleObject(record.schedule);
+        liveCache.notice =
+            phase === 'midday-freeze'
+                ? 'နေ့လည်ပိုင်းစျေးကွက်အနားယူချိန်'
+                : 'စျေးကွက်ပိတ်ချိန်';
+        return;
+    }
 
+    liveCache.setIndex = resultIndex;
+    liveCache.setValue = resultValue;
+    liveCache.live2D = result2D;
     liveCache.adminResults = record.schedule;
     liveCache.schedule = getScheduleObject(record.schedule);
     liveCache.time = fixedTime;
@@ -1229,7 +1235,7 @@ function scheduleNextBoundaryCapture() {
 // SET website fetch is performed by this interval.
 // --------------------------------------------------
 
- async function fetchAndUpdateLiveCache() {
+async function fetchAndUpdateLiveCache() {
     if (liveFetchRunning) {
         return;
     }
@@ -1237,20 +1243,18 @@ function scheduleNextBoundaryCapture() {
     liveFetchRunning = true;
 
     // မနက် ၉:၃၀ Auto Reset Logic (Myanmar Timezone Safe)
-    const nowTime = getMyanmarTime();
-    const todayStr = getMyanmarDateKey(nowTime);
-    const currentHour = nowTime.getHours();
-    const currentMin = nowTime.getMinutes();
-    const totalSec = currentHour * 3600 + currentMin * 60;
-    const morningStartSec = 9 * 3600 + 30 * 60; // 9:30 AM
+        const nowTime = getMyanmarTime();
+        const todayStr = getMyanmarDateKey(nowTime);
+        const currentHour = nowTime.getHours();
+        const currentMin = nowTime.getMinutes();
+        const totalSec = currentHour * 3600 + currentMin * 60;
+        const morningStartSec = 9 * 3600 + 30 * 60; // 9:30 AM
 
-    if (totalSec >= morningStartSec && hotNumbers.lastResetDate !== todayStr) {
-        hotNumbers.morning = "--";
-        hotNumbers.evening = "--";
-        hotNumbers.lastResetDate = todayStr;
-        // 💡 liveCache.live2D = "--"; ကို ဤနေရာတွင် လုံးဝ မထည့်တော့ပါ (Live Data အသစ်က အလိုအလျောက် အစားထိုးသွားပါမည်)
-    }
-
+        if (totalSec >= morningStartSec && hotNumbers.lastResetDate !== todayStr) {
+            hotNumbers.morning = "--";
+            hotNumbers.evening = "--";
+            hotNumbers.lastResetDate = todayStr;
+        }
     try {
         const phaseStart = getMarketPhase();
         const record = await getTodayAdminResults();
@@ -1269,7 +1273,8 @@ function scheduleNextBoundaryCapture() {
         const timeAfterFetch = getMyanmarTime();
         const phaseAfterFetch = getMarketPhase(timeAfterFetch);
 
-
+        // If the request crosses a market boundary, don't publish
+        // the result fetched after the market should have frozen.
         if (
             phaseAfterFetch !== 'morning-live' &&
             phaseAfterFetch !== 'afternoon-live'
@@ -1280,37 +1285,11 @@ function scheduleNextBoundaryCapture() {
             return;
         }
 
-        let currentCalculated2D = "--";
-        if (result.setIndex !== '--' && result.marketValue !== '--') {
-            const cleanIndex = result.setIndex.trim();
-            const cleanVal = result.marketValue.replace(/,/g, '').trim();
-            
-            let d1 = '--';
-            let d2 = '--';
-
-            if (cleanIndex.includes('.')) {
-                const parts = cleanIndex.split('.');
-                const decPart = parts[1].trim();
-                if (decPart.length > 0) {
-                    d1 = decPart.slice(-1);
-                }
-            }
-
-            const baseVal = cleanVal.includes('.') ? cleanVal.split('.')[0].trim() : cleanVal;
-            if (baseVal.length > 0) {
-                d2 = baseVal.slice(-1);
-            }
-
-            if (d1 !== '--' && d2 !== '--') {
-                currentCalculated2D = d1 + d2;
-            }
-        }
-
         liveCache = {
             setIndex: result.setIndex,
             setValue: result.marketValue,
             marketValue: result.marketValue,
-            live2D: currentCalculated2D !== '--' ? currentCalculated2D : liveCache.live2D,
+            live2D: result.calculated2D,
             hotNumbers: hotNumbers,
             adminResults: record.schedule,
             schedule: getScheduleObject(record.schedule),
