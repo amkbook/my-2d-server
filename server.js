@@ -1236,18 +1236,19 @@ async function fetchAndUpdateLiveCache() {
     liveFetchRunning = true;
 
     // မနက် ၉:၃၀ Auto Reset Logic (Myanmar Timezone Safe)
-        const nowTime = getMyanmarTime();
-        const todayStr = getMyanmarDateKey(nowTime);
-        const currentHour = nowTime.getHours();
-        const currentMin = nowTime.getMinutes();
-        const totalSec = currentHour * 3600 + currentMin * 60;
-        const morningStartSec = 9 * 3600 + 30 * 60; // 9:30 AM
+    const nowTime = getMyanmarTime();
+    const todayStr = getMyanmarDateKey(nowTime);
+    const currentHour = nowTime.getHours();
+    const currentMin = nowTime.getMinutes();
+    const totalSec = currentHour * 3600 + currentMin * 60;
+    const morningStartSec = 9 * 3600 + 30 * 60; // 9:30 AM
 
-        if (totalSec >= morningStartSec && hotNumbers.lastResetDate !== todayStr) {
-            hotNumbers.morning = "--";
-            hotNumbers.evening = "--";
-            hotNumbers.lastResetDate = todayStr;
-        }
+    if (totalSec >= morningStartSec && hotNumbers.lastResetDate !== todayStr) {
+        hotNumbers.morning = "--";
+        hotNumbers.evening = "--";
+        hotNumbers.lastResetDate = todayStr;
+        liveCache.live2D = "--"; // 💡 မနက် ၉:၃၀ ဈေးကွက်ဖွင့်ချိန်တွင် 2D live ကိုပါ အသစ်စတင်ရန် အလိုအလျောက် ရှင်းလင်းပေးခြင်း
+    }
     try {
         const phaseStart = getMarketPhase();
         const record = await getTodayAdminResults();
