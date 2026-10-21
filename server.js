@@ -1248,7 +1248,7 @@ async function fetchAndUpdateLiveCache() {
         hotNumbers.morning = "--";
         hotNumbers.evening = "--";
         hotNumbers.lastResetDate = todayStr;
-        liveCache.live2D = "--"; // 💡 မနက် ၉:၃၀ ဈေးကွက်ဖွင့်ချိန်တွင် 2D live ကိုပါ အသစ်စတင်ရန် အလိုအလျောက် ရှင်းလင်းပေးခြင်း
+        
     }
     try {
         const phaseStart = getMarketPhase();
