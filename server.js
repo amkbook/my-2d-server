@@ -1284,7 +1284,7 @@ async function fetchAndUpdateLiveCache() {
             setIndex: result.setIndex,
             setValue: result.marketValue,
             marketValue: result.marketValue,
-            live2D: result.calculated2D,
+            live2D: (result.calculated2D && result.calculated2D !== '--') ? result.calculated2D : liveCache.live2D,
             hotNumbers: hotNumbers,
             adminResults: record.schedule,
             schedule: getScheduleObject(record.schedule),
