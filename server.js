@@ -915,12 +915,13 @@ async function fetchCurrentSET() {
                 digit1 = setIndex.split('.')[1].slice(-1);
             }
 
-            if (marketValue !== '--' && marketValue.includes('.')) {
-                digit2 = marketValue
-                    .split('.')[0]
-                    .replace(/,/g, '')
-                    .slice(-1);
+           if (marketValue !== '--') {
+            const cleanVal = marketValue.replace(/,/g, '');
+            const baseVal = cleanVal.includes('.') ? cleanVal.split('.')[0] : cleanVal;
+            if (baseVal.length > 0) {
+                digit2 = baseVal.slice(-1);
             }
+        }
 
             if (digit1 !== '--' && digit2 !== '--') {
                 calculated2D = digit1 + digit2;
