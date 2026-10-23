@@ -756,8 +756,8 @@ async function fetchLiveData() {
       if (data.hotNumbers) {
         const morningEl = document.getElementById('hotMorningDisplay');
         const eveningEl = document.getElementById('hotEveningDisplay');
-        if (morningEl) morningEl.innerText = data.hotNumbers.morning || '--';
-        if (eveningEl) eveningEl.innerText = data.hotNumbers.evening || '--';
+        if (morningEl) morningEl.innerText = (data.hotNumbers.morning && data.hotNumbers.morning.number) ? data.hotNumbers.morning.number : '--';
+        if (eveningEl) eveningEl.innerText = (data.hotNumbers.evening && data.hotNumbers.evening.number) ? data.hotNumbers.evening.number : '--';
       }
       if (data.setIndex) document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
      const valToDisplay = data.setValue || data.value || data.marketValue;
