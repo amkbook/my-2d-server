@@ -438,6 +438,7 @@
     try {
         const response = await fetch('/api/admin/hot-numbers');
         const data = await response.json();
+        
         if (data.success && data.hotNumbers) {
             const morningInput = document.getElementById('hotMorningInput');
             const eveningInput = document.getElementById('hotEveningInput');
@@ -449,32 +450,40 @@
             const mData = data.hotNumbers.morning || { number: "--", isLocked: false };
             const eData = data.hotNumbers.evening || { number: "--", isLocked: false };
 
-            // Morning Setup
-            morningInput.value = mData.number !== "--" ? mData.number : "";
+            // Morning Setup (Null Check ဖြင့် ခိုင်မာအောင် ပြင်ဆင်ထားသည်)
+            if (morningInput) morningInput.value = mData.number !== "--" ? mData.number : "";
             if (mData.isLocked) {
-                morningInput.disabled = true;
-                saveMorningBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                saveMorningBtn.disabled = true;
-                morningNotice.classList.remove('hidden');
+                if (morningInput) morningInput.disabled = true;
+                if (saveMorningBtn) {
+                    saveMorningBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    saveMorningBtn.disabled = true;
+                }
+                if (morningNotice) morningNotice.classList.remove('hidden');
             } else {
-                morningInput.disabled = false;
-                saveMorningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                saveMorningBtn.disabled = false;
-                morningNotice.classList.add('hidden');
+                if (morningInput) morningInput.disabled = false;
+                if (saveMorningBtn) {
+                    saveMorningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    saveMorningBtn.disabled = false;
+                }
+                if (morningNotice) morningNotice.classList.add('hidden');
             }
 
-            // Evening Setup
-            eveningInput.value = eData.number !== "--" ? eData.number : "";
+            // Evening Setup (Null Check ဖြင့် ခိုင်မာအောင် ပြင်ဆင်ထားသည်)
+            if (eveningInput) eveningInput.value = eData.number !== "--" ? eData.number : "";
             if (eData.isLocked) {
-                eveningInput.disabled = true;
-                saveEveningBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                saveEveningBtn.disabled = true;
-                eveningNotice.classList.remove('hidden');
+                if (eveningInput) eveningInput.disabled = true;
+                if (saveEveningBtn) {
+                    saveEveningBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    saveEveningBtn.disabled = true;
+                }
+                if (eveningNotice) eveningNotice.classList.remove('hidden');
             } else {
-                eveningInput.disabled = false;
-                saveEveningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                saveEveningBtn.disabled = false;
-                eveningNotice.classList.add('hidden');
+                if (eveningInput) eveningInput.disabled = false;
+                if (saveEveningBtn) {
+                    saveEveningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    saveEveningBtn.disabled = false;
+                }
+                if (eveningNotice) eveningNotice.classList.add('hidden');
             }
         }
     } catch (err) {
