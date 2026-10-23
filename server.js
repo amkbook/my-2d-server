@@ -722,7 +722,7 @@ app.post('/api/admin/save', async (req, res) => {
     }
 });
 
-// 💡 Admin မှ Hot Numbers ထည့်သွင်းရန် API (Session Lock စနစ်ပါရှိသည်)
+// 💡 Admin မှ Hot Numbers ထည့်သွင်းရန် API (Strict Lock စနစ် အပြည့်အစုံပါရှိသည်)
 app.post('/api/admin/hot-numbers', (req, res) => {
     try {
         const { password, morning, evening } = req.body;
@@ -732,19 +732,41 @@ app.post('/api/admin/hot-numbers', (req, res) => {
         }
 
         const todayStr = getMyanmarDateString();
-        hotNumbers.date = todayStr;
-
-        if (morning !== undefined) {
-            hotNumbers.morning = {
-                number: morning.trim() || "--",
-                isLocked: true
+        
+        // နေ့ရက်ပြောင်းသွားပါက သို့မဟုတ် hotNumbers မရှိသေးပါက အစကစရန်
+        if (!hotNumbers || hotNumbers.date !== todayStr) {
+            hotNumbers = {
+                date: todayStr,
+                morning: { number: "--", isLocked: false },
+                evening: { number: "--", isLocked: false }
             };
         }
 
+        // Morning Session ကို သိမ်းဆည်းရန်နှင့် Lock စစ်ဆေးရန်
+        if (morning !== undefined) {
+            if (hotNumbers.morning.isLocked) {
+                return res.status(400).json({
+                    success: false,
+                    message: "မနက်ပိုင်း ဟော့ထိပ်ကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)"
+                });
+            }
+            hotNumbers.morning = {
+                number: morning.trim() || "--",
+                isLocked: true // သိမ်းလိုက်သည်နှင့် ချက်ချင်း Lock ချမည်
+            };
+        }
+
+        // Evening Session ကို သိမ်းဆည်းရန်နှင့် Lock စစ်ဆေးရန်
         if (evening !== undefined) {
+            if (hotNumbers.evening.isLocked) {
+                return res.status(400).json({
+                    success: false,
+                    message: "ညနေပိုင်း ဟော့ထိပ်ကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)"
+                });
+            }
             hotNumbers.evening = {
                 number: evening.trim() || "--",
-                isLocked: true
+                isLocked: true // သိမ်းလိုက်သည်နှင့် ချက်ချင်း Lock ချမည်
             };
         }
 
@@ -752,10 +774,14 @@ app.post('/api/admin/hot-numbers', (req, res) => {
             liveCache.hotNumbers = hotNumbers;
         }
 
-        res.json({ success: true, message: "ဟော့ထိပ် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။", hotNumbers: hotNumbers });
+        return res.json({ 
+            success: true, 
+            message: "ဟော့ထိပ် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။", 
+            hotNumbers: hotNumbers 
+        });
     } catch (err) {
         console.error('Admin hot-numbers save error:', err.message);
-        res.status(500).json({ success: false, message: 'Server error occurred' });
+        return res.status(500).json({ success: false, message: 'Server error occurred' });
     }
 });
 
