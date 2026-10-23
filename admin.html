@@ -424,7 +424,7 @@
 
         const data = await res.json();
         if (data.success) {
-            alert(data.message || "ဟော့ထိပ် ဂဏန်း အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။");
+        
             loadAdminHotNumbers(); // ချက်ချင်း Lock အခြေအနေသို့ ပြောင်းလဲရန် Reload လုပ်မည်
         } else {
             alert(data.message || "သိမ်းဆည်းမှု မအောင်မြင်ပါ။");
