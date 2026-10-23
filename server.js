@@ -13,7 +13,12 @@ app.use(express.static(__dirname));
 const PORT = process.env.PORT || 3000;
 const LIVE_FETCH_INTERVAL_MS = 5000;
 
-// အခြား Code တွေနဲ့ လုံးဝ မငြိစွန်းစေရန် hotNumbers နာမည်ကို ဆက်သုံးခြင်း
+// မြန်မာစံတော်ချိန် ယူမည့် function အသစ်
+function getMyanmarDateString() {
+    const options = { timeZone: 'Asia/Yangon', year: 'numeric', month: '2-digit', day: '2-digit' };
+    return new Intl.DateTimeFormat('en-CA', options).format(new Date());
+}
+// အခြား Code တွေနဲ့ လုံးဝ မငြိွစွန်းစေရန် hotNumbers နာမည်ကို ဆက်လက်သုံးခြင်း
 let hotNumbers = {
     date: getMyanmarDateString(),
     morning: {
