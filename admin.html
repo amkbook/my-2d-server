@@ -66,28 +66,30 @@
                 <p id="lockNotice" class="text-orange-400 text-xs text-center mt-2 hidden">⚠️ ဤ 2D အချိန်အကွက်အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
             </div>
 
-            <!-- Admin Panel Hot 2D Control Box -->
-                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6">
-                    <h2 class="text-lg font-semibold text-yellow-400 mb-3">🔥 ဟော့ထိပ် 2D ထိန်းချုပ်ရန်</h2>
-                    
-                    <div class="mb-3">
-                        <label class="block text-sm text-slate-300 mb-1">ဟော့ထိပ် 12:01 PM (ဥပမာ- 2-3-4)</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="hotMorningInput" placeholder="2-3-4" 
-                                class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400 text-sm">
-                            <button onclick="saveHotNumber('morning')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg transition text-sm whitespace-nowrap">သိမ်းမည်</button>
-                        </div>
-                    </div>
+            <!-- Admin Panel Hot 2D Control Box (အသစ် - Lock စနစ်ပါရှိသည်) -->
+<div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6">
+    <h2 class="text-lg font-semibold text-yellow-400 mb-3">🔥 ဟော့ထိပ် 2D ထိန်းချုပ်ရန်</h2>
+    
+    <div class="mb-3">
+        <label class="block text-sm text-slate-300 mb-1">ဟော့ထိပ် 12:01 PM (ဥပမာ- 2-3-4)</label>
+        <div class="flex gap-2">
+            <input type="text" id="hotMorningInput" placeholder="2-3-4" 
+                class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400 text-sm">
+            <button id="saveMorningBtn" onclick="saveHotNumber('morning')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg transition text-sm whitespace-nowrap">သိမ်းမည်</button>
+        </div>
+        <p id="hotMorningLockNotice" class="text-orange-400 text-xs mt-1 hidden">⚠️ ဤမနက်ပိုင်း ဟော့ထိပ်အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
+    </div>
 
-                    <div class="mb-2">
-                        <label class="block text-sm text-slate-300 mb-1">ဟော့ထိပ် 4:30 PM (ဥပမာ- 7-8-9)</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="hotEveningInput" placeholder="7-8-9" 
-                                class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400 text-sm">
-                            <button onclick="saveHotNumber('evening')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg transition text-sm whitespace-nowrap">သိမ်းမည်</button>
-                        </div>
-                    </div>
-                </div>
+    <div class="mb-2">
+        <label class="block text-sm text-slate-300 mb-1">ဟော့ထိပ် 4:30 PM (ဥပမာ- 7-8-9)</label>
+        <div class="flex gap-2">
+            <input type="text" id="hotEveningInput" placeholder="7-8-9" 
+                class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400 text-sm">
+            <button id="saveEveningBtn" onclick="saveHotNumber('evening')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg transition text-sm whitespace-nowrap">သိမ်းမည်</button>
+        </div>
+        <p id="hotEveningLockNotice" class="text-orange-400 text-xs mt-1 hidden">⚠️ ဤညနေပိုင်း ဟော့ထိပ်အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
+    </div>
+</div>
           
             <!-- GOLD PRICE CONTROL SECTION (ရွှေစျေး ထိန်းချုပ်ရန် သီးသန့်) -->
             <div class="bg-slate-900 p-4 rounded-xl border border-yellow-600/50">
@@ -395,47 +397,84 @@
         }
        
         async function saveHotNumber(type) {
-            const val = type === 'morning' ? document.getElementById('hotMorningInput').value.trim() : document.getElementById('hotEveningInput').value.trim();
-            if (!val) {
-                alert("ကျေးဇူးပြု၍ ဂဏန်းထည့်ပါ။");
-                return;
-            }
+    const inputId = type === 'morning' ? 'hotMorningInput' : 'hotEveningInput';
+    const inputVal = document.getElementById(inputId).value.trim();
+    
+    if (!inputVal) {
+        alert("ကျေးဇူးပြု၍ ဂဏန်းထည့်ပါ။");
+        return;
+    }
 
-            const bodyData = type === 'morning' 
-                ? { password: currentPassword, morning: val } 
-                : { password: currentPassword, evening: val };
-            
-            try {
-                const res = await fetch('/api/admin/hot-numbers', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(bodyData)
-                });
-                const data = await res.json();
-                
-                if (data.success) {
-                    alert("ဟော့ထိပ် ဂဏန်း အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။");
-                } else {
-                    alert(data.message || "သိမ်းဆည်းမှု မအောင်မြင်ပါ။");
-                }
-            } catch (err) {
-                alert("ဆာဗာချိတ်ဆက်ရာတွင် အမှားအယွင်းရှိပါသည်။");
-            }
+    const adminPassword = prompt("Admin စကားဝှက် ထည့်ပါ:");
+    if (!adminPassword) return;
+
+    try {
+        const payload = { password: adminPassword };
+        if (type === 'morning') {
+            payload.morning = inputVal;
+        } else {
+            payload.evening = inputVal;
         }
-        // Admin ပန်နယ် ဖွင့်လိုက်သည်နှင့် လက်ရှိ ဟော့ထိပ်ဂဏန်းများကို API မှ လှမ်းဆွဲ၍ Input ထဲသို့ ထည့်ရန်
-async function loadAdminHotNumbers() {
+
+        const res = await fetch('/api/admin/hot-numbers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message || "ဟော့ထိပ် ဂဏန်း အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။");
+            loadAdminHotNumbers(); // ချက်ချင်း Lock အခြေအနေသို့ ပြောင်းလဲရန် Reload လုပ်မည်
+        } else {
+            alert(data.message || "သိမ်းဆည်းမှု မအောင်မြင်ပါ။");
+        }
+    } catch (err) {
+        console.error('Save hot number error:', err);
+        alert("ဆာဗာချိတ်ဆက်မှုတွင် အမှားအယွင်းရှိပါသည်။");
+    }
+}
+       async function loadAdminHotNumbers() {
     try {
         const response = await fetch('/api/admin/hot-numbers');
         const data = await response.json();
         if (data.success && data.hotNumbers) {
             const morningInput = document.getElementById('hotMorningInput');
             const eveningInput = document.getElementById('hotEveningInput');
+            const saveMorningBtn = document.getElementById('saveMorningBtn');
+            const saveEveningBtn = document.getElementById('saveEveningBtn');
+            const morningNotice = document.getElementById('hotMorningLockNotice');
+            const eveningNotice = document.getElementById('hotEveningLockNotice');
             
-            if (morningInput && data.hotNumbers.morning) {
-                morningInput.value = data.hotNumbers.morning;
+            const mData = data.hotNumbers.morning || { number: "--", isLocked: false };
+            const eData = data.hotNumbers.evening || { number: "--", isLocked: false };
+
+            // Morning Setup
+            morningInput.value = mData.number !== "--" ? mData.number : "";
+            if (mData.isLocked) {
+                morningInput.disabled = true;
+                saveMorningBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                saveMorningBtn.disabled = true;
+                morningNotice.classList.remove('hidden');
+            } else {
+                morningInput.disabled = false;
+                saveMorningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                saveMorningBtn.disabled = false;
+                morningNotice.classList.add('hidden');
             }
-            if (eveningInput && data.hotNumbers.evening) {
-                eveningInput.value = data.hotNumbers.evening;
+
+            // Evening Setup
+            eveningInput.value = eData.number !== "--" ? eData.number : "";
+            if (eData.isLocked) {
+                eveningInput.disabled = true;
+                saveEveningBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                saveEveningBtn.disabled = true;
+                eveningNotice.classList.remove('hidden');
+            } else {
+                eveningInput.disabled = false;
+                saveEveningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                saveEveningBtn.disabled = false;
+                eveningNotice.classList.add('hidden');
             }
         }
     } catch (err) {

@@ -13,11 +13,17 @@ app.use(express.static(__dirname));
 const PORT = process.env.PORT || 3000;
 const LIVE_FETCH_INTERVAL_MS = 5000;
 
-// Hot Numbers Memory State
+// အခြား Code တွေနဲ့ လုံးဝ မငြိစွန်းစေရန် hotNumbers နာမည်ကို ဆက်သုံးခြင်း
 let hotNumbers = {
-  morning: "--",
-  evening: "--",
-  lastResetDate: ""
+    date: getMyanmarDateString(),
+    morning: {
+        number: "--",
+        isLocked: false
+    },
+    evening: {
+        number: "--",
+        isLocked: false
+    }
 };
 let liveCache = {
     setIndex: '--',
@@ -487,23 +493,30 @@ async function enforceChatClosure() {
     }
 }
 
-setInterval(enforceChatClosure, 15000);
-// စျေးကွက်ဖွင့်ရက် (တနင်္လာ-သောကြာ) နံနက် 9:30 အတိတွင် ဟော့ထိပ်ဂဏန်းများ Auto-Reset လုပ်ရန်
+// 💡 နေ့စဉ် နံနက် ၉:၃၀ အတိရောက်ရှိချိန်တွင် ဟော့ထိပ်များ Reset ဖြစ်ရန် (Lock စနစ်အသစ်ဖြင့်)
 function checkAndResetHotNumbers() {
-    const mmTime = getMyanmarTime();
-    const day = mmTime.getDay(); // 0 = Sun, 1 = Mon, 2 = Tue, 3 = Wed, 4 = Thu, 5 = Fri, 6 = Sat
-    const hours = mmTime.getHours();
-    const minutes = mmTime.getMinutes();
+    const now = getMyanmarTime();
+    const todayStr = getMyanmarDateString();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentSecond = now.getSeconds();
+    const totalSec = currentHour * 3600 + currentMinute * 60 + currentSecond;
+    const morningResetSec = 9 * 3600 + 30 * 60; // နံနက် ၉:၃၀
 
-    // နံနက် 9:30 AM အတိ ရောက်ရှိချိန် (hours === 9 && minutes === 30)
-    if (hours === 9 && minutes === 30) {
-        // စနေ (6) နှင့် တနင်္ဂနွေ (0) မဟုတ်ပါက (စျေးကွက်ဖွင့်ရက် တနင်္လာ မှ သောကြာ ဖြစ်ပါက) ရှင်းလင်းမည်
+    const day = now.getDay(); // 0 = Sun, 6 = Sat
+    
+    // စနေ (6) နှင့် တနင်္ဂနွေ (0) မဟုတ်ပါက (သို့မဟုတ် ရက်အပြောင်းအလဲရှိပါက)
+    if (hotNumbers.date !== totalSec && hotNumbers.date !== todayStr && totalSec >= morningResetSec) {
         if (day !== 0 && day !== 6) {
-            hotNumbers = { morning: "--", evening: "--" };
-            if (liveCache.hotNumbers) {
-                liveCache.hotNumbers = { morning: "--", evening: "--" };
+            hotNumbers = {
+                date: todayStr,
+                morning: { number: "--", isLocked: false },
+                evening: { number: "--", isLocked: false }
+            };
+            if (typeof liveCache !== 'undefined' && liveCache) {
+                liveCache.hotNumbers = hotNumbers;
             }
-            console.log('Trading day 9:30 AM reached: Hot numbers reset successfully.');
+            console.log('Trading day 9:30 AM reached: Hot numbers reset successfully with lock system.');
         } else {
             console.log('Weekend 9:30 AM: Hot numbers retained (No reset on Sat/Sun).');
         }
@@ -709,40 +722,48 @@ app.post('/api/admin/save', async (req, res) => {
     }
 });
 
-// Admin မှ Hot Numbers ထည့်သွင်းရန် API
+// 💡 Admin မှ Hot Numbers ထည့်သွင်းရန် API (Session Lock စနစ်ပါရှိသည်)
 app.post('/api/admin/hot-numbers', (req, res) => {
     try {
         const { password, morning, evening } = req.body;
-        
+
         if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
             return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
         }
 
-        // ဤနေရာတွင် liveCache ထဲသို့ တိုက်ရိုက် သိမ်းဆည်းစေခြင်း
-        if (!liveCache.hotNumbers) {
-            liveCache.hotNumbers = { morning: "--", evening: "--" };
-        }
+        const todayStr = getMyanmarDateString();
+        hotNumbers.date = todayStr;
 
         if (morning !== undefined) {
-            hotNumbers.morning = morning;
-            liveCache.hotNumbers.morning = morning;
-        }
-        if (evening !== undefined) {
-            hotNumbers.evening = evening;
-            liveCache.hotNumbers.evening = evening;
+            hotNumbers.morning = {
+                number: morning.trim() || "--",
+                isLocked: true
+            };
         }
 
-        return res.json({ success: true, message: "ဟော့ထိပ် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။", hotNumbers });
+        if (evening !== undefined) {
+            hotNumbers.evening = {
+                number: evening.trim() || "--",
+                isLocked: true
+            };
+        }
+
+        if (typeof liveCache !== 'undefined' && liveCache) {
+            liveCache.hotNumbers = hotNumbers;
+        }
+
+        res.json({ success: true, message: "ဟော့ထိပ် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။", hotNumbers: hotNumbers });
     } catch (err) {
         console.error('Admin hot-numbers save error:', err.message);
-        return res.status(500).json({ success: false, message: 'Server error occurred' });
+        res.status(500).json({ success: false, message: 'Server error occurred' });
     }
 });
-// Admin အတွက် လက်ရှိ Hot Numbers များကို ထုတ်ပေးရန် API
+
+// 💡 Admin အတွက် လက်ရှိ Hot Numbersများကို ထုတ်ပေးရန် API
 app.get('/api/admin/hot-numbers', (req, res) => {
-    return res.json({
+    res.json({
         success: true,
-        hotNumbers: hotNumbers || { morning: "", evening: "" }
+        hotNumbers: hotNumbers || { morning: { number: "--", isLocked: false }, evening: { number: "--", isLocked: false } }
     });
 });
 // --------------------------------------------------
