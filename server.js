@@ -56,11 +56,11 @@ if (!ADMIN_PASSWORD) {
 }
 
 mongoose.connect(process.env.MONGO_URI, {
-    serverSelectionTimeoutMS: 30000, // Timeout အချိန်ကို တိုးမြှင့်ခြင်း
+    serverSelectionTimeoutMS: 50000, 
     socketTimeoutMS: 45000,
 })
-.then(() => console.log('MongoDB Connected Successfully'))
-.catch(err => console.error('MongoDB Connection Error:', err));
+.then(() => console.log('MongoDB successfully connected!'))
+.catch(err => console.error('MongoDB connection error:', err.message));
 
 const defaultSchedule = () => ({
     '09:30 AM': {
@@ -1402,14 +1402,24 @@ app.get('/api/live', (req, res) => {
     return res.json({
         success: true,
         setIndex: liveCache.setIndex,
-       setValue: liveCache.setValue,
-    marketValue: liveCache.setValue, 
-    live2D: liveCache.live2D,
-    adminResults: liveCache.adminResults || {},
-    schedule: liveCache.schedule || {},
-    notice: liveCache.notice,
-    time: liveCache.time,
-    hotNumbers: liveCache.hotNumbers || { morning: "--", evening: "--" }
+        setValue: liveCache.setValue,
+        marketValue: liveCache.setValue, 
+        live2D: liveCache.live2D,
+        adminResults: liveCache.adminResults || {},
+        schedule: liveCache.schedule || {},
+        notice: liveCache.notice,
+        time: liveCache.time,
+        hotNumbers: {
+            date: liveCache.hotNumbers ? liveCache.hotNumbers.date : '',
+            morning: {
+                number: liveCache.hotNumbers && liveCache.hotNumbers.morning ? liveCache.hotNumbers.morning.number : '--',
+                isLocked: liveCache.hotNumbers && liveCache.hotNumbers.morning ? liveCache.hotNumbers.morning.isLocked : false
+            },
+            evening: {
+                number: liveCache.hotNumbers && liveCache.hotNumbers.evening ? liveCache.hotNumbers.evening.number : '--',
+                isLocked: liveCache.hotNumbers && liveCache.hotNumbers.evening ? liveCache.hotNumbers.evening.isLocked : false
+            }
+        }
     });
 });
 
