@@ -1175,6 +1175,13 @@ function scheduleNextBoundaryCapture() {
 
     setTimeout(async () => {
         if (!isWeekendMyanmar()) {
+            
+            // 💡 ၁၂:၀၁:၀၀ (သို့) ၄:၃၀:၀၀ အတိရောက်ချိန်တွင် SET ဝဘ်ဆိုဒ် ဒေတာ Update ဖြစ်ရန် ၅ စက္ကန့် စောင့်ပေးမည်
+            console.log(`Boundary reached (${target.session}). Waiting 5 seconds for SET website to finalize data...`);
+            
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
+            // ၅ စက္ကန့်ပြည့်မှ အပြီးသတ် ဒေတာကို ဆွဲယူမည်
             await captureBoundaryResult(target.session);
 
             // Retry once after a temporary network or scraping failure.
