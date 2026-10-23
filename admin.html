@@ -396,7 +396,7 @@
             }
         }
        
-        async function saveHotNumber(type) {
+      async function saveHotNumber(type) {
     const inputId = type === 'morning' ? 'hotMorningInput' : 'hotEveningInput';
     const inputVal = document.getElementById(inputId).value.trim();
     
@@ -405,11 +405,14 @@
         return;
     }
 
-    const adminPassword = prompt("Admin စကားဝှက် ထည့်ပါ:");
-    if (!adminPassword) return;
+    // တခြားအကွက်များကဲ့သို့ Admin Password တောင်းခံရန်
+    if (!currentPassword) {
+        currentPassword = prompt("Admin စကားဝှက် ထည့်ပါ:");
+        if (!currentPassword) return;
+    }
 
     try {
-        const payload = { password: adminPassword };
+        const payload = { password: currentPassword };
         if (type === 'morning') {
             payload.morning = inputVal;
         } else {
@@ -424,8 +427,8 @@
 
         const data = await res.json();
         if (data.success) {
-        
-            loadAdminHotNumbers(); // ချက်ချင်း Lock အခြေအနေသို့ ပြောင်းလဲရန် Reload လုပ်မည်
+            // alert() များကို လုံးဝဖယ်ရှားပြီး တခြားအကွက်များကဲ့သို့ ချောမွေ့စေသည်
+            loadAdminHotNumbers(); 
         } else {
             alert(data.message || "သိမ်းဆည်းမှု မအောင်မြင်ပါ။");
         }
@@ -434,7 +437,7 @@
         alert("ဆာဗာချိတ်ဆက်မှုတွင် အမှားအယွင်းရှိပါသည်။");
     }
 }
-       async function loadAdminHotNumbers() {
+      async function loadAdminHotNumbers() {
     try {
         const response = await fetch('/api/admin/hot-numbers');
         const data = await response.json();
@@ -450,9 +453,9 @@
             const mData = data.hotNumbers.morning || { number: "--", isLocked: false };
             const eData = data.hotNumbers.evening || { number: "--", isLocked: false };
 
-            // Morning Setup (Null Check ဖြင့် ခိုင်မာအောင် ပြင်ဆင်ထားသည်)
+            // Morning Setup
             if (morningInput) morningInput.value = mData.number !== "--" ? mData.number : "";
-            if (mData.isLocked) {
+            if (mData.isLocked === true || mData.isLocked === 'true') {
                 if (morningInput) morningInput.disabled = true;
                 if (saveMorningBtn) {
                     saveMorningBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -468,9 +471,9 @@
                 if (morningNotice) morningNotice.classList.add('hidden');
             }
 
-            // Evening Setup (Null Check ဖြင့် ခိုင်မာအောင် ပြင်ဆင်ထားသည်)
+            // Evening Setup
             if (eveningInput) eveningInput.value = eData.number !== "--" ? eData.number : "";
-            if (eData.isLocked) {
+            if (eData.isLocked === true || eData.isLocked === 'true') {
                 if (eveningInput) eveningInput.disabled = true;
                 if (saveEveningBtn) {
                     saveEveningBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -490,7 +493,6 @@
         console.error('Failed to load hot numbers for admin:', err);
     }
 }
-
 // မျက်နှာပြင် စတင် Load ဖြစ်ချိန်တွင် ခေါ်ဆိုရန်
 window.addEventListener('DOMContentLoaded', () => {
     loadAdminHotNumbers();
