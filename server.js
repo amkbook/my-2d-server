@@ -55,11 +55,12 @@ if (!ADMIN_PASSWORD) {
     console.error('ERROR: ADMIN_PASSWORD environment variable is missing.');
 }
 
-if (MONGO_URI) {
-    mongoose.connect(MONGO_URI)
-        .then(() => console.log('MongoDB successfully connected!'))
-        .catch(err => console.error('MongoDB connection error:', err.message));
-}
+mongoose.connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 30000, // Timeout အချိန်ကို တိုးမြှင့်ခြင်း
+    socketTimeoutMS: 45000,
+})
+.then(() => console.log('MongoDB Connected Successfully'))
+.catch(err => console.error('MongoDB Connection Error:', err));
 
 const defaultSchedule = () => ({
     '09:30 AM': {
@@ -779,11 +780,22 @@ app.post('/api/admin/hot-numbers', (req, res) => {
             liveCache.hotNumbers = hotNumbers;
         }
 
-        return res.json({ 
+       return res.json({ 
             success: true, 
             message: "ဟော့ထိပ် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။", 
-            hotNumbers: hotNumbers 
+            hotNumbers: {
+                date: hotNumbers.date,
+                morning: {
+                    number: hotNumbers.morning.number,
+                    isLocked: hotNumbers.morning.isLocked
+                },
+                evening: {
+                    number: hotNumbers.evening.number,
+                    isLocked: hotNumbers.evening.isLocked
+                }
+            } 
         });
+    
     } catch (err) {
         console.error('Admin hot-numbers save error:', err.message);
         return res.status(500).json({ success: false, message: 'Server error occurred' });
@@ -794,7 +806,17 @@ app.post('/api/admin/hot-numbers', (req, res) => {
 app.get('/api/admin/hot-numbers', (req, res) => {
     res.json({
         success: true,
-        hotNumbers: hotNumbers || { morning: { number: "--", isLocked: false }, evening: { number: "--", isLocked: false } }
+        hotNumbers: {
+            date: hotNumbers.date,
+            morning: {
+                number: hotNumbers.morning.number,
+                isLocked: hotNumbers.morning.isLocked
+            },
+            evening: {
+                number: hotNumbers.evening.number,
+                isLocked: hotNumbers.evening.isLocked
+            }
+        }
     });
 });
 // --------------------------------------------------
