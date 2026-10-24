@@ -190,6 +190,30 @@
   min-width: 80px;
   letter-spacing: 1px;
 }
+/* Market Holiday Notice Ticker Box */
+.holiday-ticker-card {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1.5px solid #ef4444;
+  border-radius: 12px;
+  padding: 10px 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+}
+
+.holiday-ticker-track {
+  display: inline-block;
+  white-space: nowrap;
+  animation: tickerScroll 18s linear infinite;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fca5a5;
+}
+
+@keyframes tickerScroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
   </style>
 </head>
 <body>
@@ -242,6 +266,10 @@
 
         <button id="audio-btn" class="audio-btn" onclick="toggleSound()">🔊 အသံဖွင့်ထားသည်</button>
       </div>
+      <!-- 🔴 Marquee Ticker ဇယားကွက်အသစ် -->
+<div id="holidayTickerContainer" class="holiday-ticker-card" style="display: none;">
+  <div class="holiday-ticker-track" id="holidayTickerText">--</div>
+</div>
 
       <div class="chat-box">
         <div class="live-title" style="margin-bottom: 5px;">Live Chatbox</div>
@@ -759,6 +787,17 @@ async function fetchLiveData() {
         if (morningEl) morningEl.innerText = (data.hotNumbers.morning && data.hotNumbers.morning.number) ? data.hotNumbers.morning.number : '--';
         if (eveningEl) eveningEl.innerText = (data.hotNumbers.evening && data.hotNumbers.evening.number) ? data.hotNumbers.evening.number : '--';
       }
+      if (data.holidayNotice && data.holidayNotice.trim() !== "") {
+        const tickerContainer = document.getElementById('holidayTickerContainer');
+        const tickerText = document.getElementById('holidayTickerText');
+        if (tickerContainer && tickerText) {
+            tickerContainer.style.display = 'block';
+            tickerText.innerText = data.holidayNotice;
+        }
+    } else {
+        const tickerContainer = document.getElementById('holidayTickerContainer');
+        if (tickerContainer) tickerContainer.style.display = 'none';
+    }
       if (data.setIndex) document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
      const valToDisplay = data.setValue || data.value || data.marketValue;
     if (valToDisplay) document.getElementById('setValue').innerHTML = formatSourceHighlight(valToDisplay, 'value');

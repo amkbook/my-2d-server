@@ -30,15 +30,16 @@ let liveCache = {
     updatedAt: 0
 };
 // 💡 ဆာဗာစတင်ချိန်တွင် Database မှ hotNumbers ကို liveCache သို့ ဦးစွာကြိုတင်တင်ရန်
-async function initializeLiveCacheHotNumbers() {
+async function initializeLiveCacheData() {
     try {
         const record = await getTodayAdminResults();
-        if (record && record.hotNumbers) {
-            liveCache.hotNumbers = record.hotNumbers;
-            console.log("✅ Initialized liveCache.hotNumbers from Database successfully.");
+        if (record) {
+            if (record.hotNumbers) liveCache.hotNumbers = record.hotNumbers;
+            if (record.holidayNotice !== undefined) liveCache.holidayNotice = record.holidayNotice;
+            console.log("✅ Initialized liveCache data from Database successfully.");
         }
     } catch (err) {
-        console.error("❌ Failed to initialize liveCache.hotNumbers:", err.message);
+        console.error("❌ Failed to initialize liveCache data:", err.message);
     }
 }
 let liveFetchRunning = false;
@@ -61,7 +62,7 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .then(async () => {
     console.log('MongoDB successfully connected!');
-    await initializeLiveCacheHotNumbers(); // 👈 ဆာဗာစတင်ချိန်တွင် ဟော့ထိပ်များကို ချက်ချင်း ကြိုတင်တင်မည်
+    await initializeLiveCacheData(); // 👈 ဆာဗာစတင်ချိန်တွင် hotNumbers နှင့် holidayNotice များကို ချက်ချင်း ကြိုတင်တင်မည်
 })
 .catch(err => console.error('MongoDB connection error:', err.message));
 
@@ -130,12 +131,13 @@ const dataSchema = new mongoose.Schema({
         default: defaultSchedule
     },
     hotNumbers: {
-        type: Object,
+       type: Object,
         default: () => ({
             morning: { number: "--", isLocked: false },
             evening: { number: "--", isLocked: false }
         })
-    }
+    },
+    holidayNotice: { type: String, default: "" }
 });
 
 const DayData = mongoose.model('DayData', dataSchema);
@@ -829,6 +831,47 @@ app.get('/api/admin/hot-numbers', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+// Admin မှ Holiday Notice သိမ်းဆည်းရန် API
+app.post('/api/admin/holiday-notice', async (req, res) => {
+    try {
+        const { password, noticeText } = req.body;
+
+        if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
+            return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
+        }
+
+        const record = await getTodayAdminResults();
+        record.holidayNotice = noticeText ? noticeText.trim() : "";
+        await record.save();
+
+        if (typeof liveCache !== 'undefined' && liveCache) {
+            liveCache.holidayNotice = record.holidayNotice;
+        }
+
+        return res.json({
+            success: true,
+            message: "ဈေးကွက်ပိတ်ရက် သတိပေးစာတန်း အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။",
+            holidayNotice: record.holidayNotice
+        });
+    } catch (err) {
+        console.error('Admin holiday-notice save error:', err.message);
+        return res.status(500).json({ success: false, message: 'Server error occurred' });
+    }
+});
+
+// Admin အတွက် လက်ရှိ Holiday Notice ကို ထုတ်ပေးရန် API
+app.get('/api/admin/holiday-notice', async (req, res) => {
+    try {
+        const record = await getTodayAdminResults();
+        res.json({
+            success: true,
+            holidayNotice: record.holidayNotice || ""
+        });
+    } catch (err) {
+        console.error('Get admin holiday-notice error:', err.message);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
 // --------------------------------------------------
 // Admin data API
 // --------------------------------------------------
@@ -1419,6 +1462,7 @@ app.get('/api/live', (req, res) => {
         schedule: liveCache.schedule || {},
         notice: liveCache.notice,
         time: liveCache.time,
+        holidayNotice: liveCache.holidayNotice || "",
         hotNumbers: {
             date: liveCache.hotNumbers ? liveCache.hotNumbers.date : '',
             morning: {
