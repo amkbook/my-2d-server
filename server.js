@@ -18,18 +18,7 @@ function getMyanmarDateString() {
     const options = { timeZone: 'Asia/Yangon', year: 'numeric', month: '2-digit', day: '2-digit' };
     return new Intl.DateTimeFormat('en-CA', options).format(new Date());
 }
-// အခြား Code တွေနဲ့ လုံးဝ မငြိွစွန်းစေရန် hotNumbers နာမည်ကို ဆက်လက်သုံးခြင်း
-let hotNumbers = {
-    date: getMyanmarDateString(),
-    morning: {
-        number: "--",
-        isLocked: false
-    },
-    evening: {
-        number: "--",
-        isLocked: false
-    }
-};
+
 let liveCache = {
     setIndex: '--',
     setValue: '--',
@@ -125,6 +114,13 @@ const dataSchema = new mongoose.Schema({
     schedule: {
         type: Object,
         default: defaultSchedule
+    },
+    hotNumbers: {
+        type: Object,
+        default: () => ({
+            morning: { number: "--", isLocked: false },
+            evening: { number: "--", isLocked: false }
+        })
     }
 });
 
@@ -608,7 +604,11 @@ async function getTodayAdminResults() {
         record = new DayData({
             dateStr,
             dateFormatted: dateStr,
-            schedule: defaultSchedule()
+            schedule: defaultSchedule(),
+            hotNumbers: {
+                morning: { number: "--", isLocked: false },
+                evening: { number: "--", isLocked: false }
+            }
         });
 
         await record.save();
@@ -629,6 +629,14 @@ async function getTodayAdminResults() {
             record.schedule[key].tw ??= '--';
             record.schedule[key].isLocked ??= false;
         }
+    }
+
+    // 💡 hotNumbers မပါသေးပါက ထည့်ပေးရန်
+    if (!record.hotNumbers) {
+        record.hotNumbers = {
+            morning: { number: "--", isLocked: false },
+            evening: { number: "--", isLocked: false }
+        };
     }
 
     return record;
@@ -728,8 +736,8 @@ app.post('/api/admin/save', async (req, res) => {
     }
 });
 
-// 💡 Admin မှ Hot Numbers ထည့်သွင်းရန် API (Strict Lock စနစ် အပြည့်အစုံပါရှိသည်)
-app.post('/api/admin/hot-numbers', (req, res) => {
+// 💡 Admin မှ Hot Numbers ထည့်သွင်းရန် API (Database-backed Persistence & Strict Lock)
+app.post('/api/admin/hot-numbers', async (req, res) => {
     try {
         const { password, morning, evening } = req.body;
 
@@ -737,62 +745,50 @@ app.post('/api/admin/hot-numbers', (req, res) => {
             return res.status(401).json({ success: false, message: "ခွင့်ပြုချက်မရှိပါ (Unauthorized)" });
         }
 
-        const todayStr = getMyanmarDateString();
-        
-        // နေ့ရက်ပြောင်းသွားပါက သို့မဟုတ် hotNumbers မရှိသေးပါက အစကစရန်
-        if (!hotNumbers || hotNumbers.date !== todayStr) {
-            hotNumbers = {
-                date: todayStr,
-                morning: { number: "--", isLocked: false },
-                evening: { number: "--", isLocked: false }
-            };
-        }
+        const record = await getTodayAdminResults();
 
         // Morning Session ကို သိမ်းဆည်းရန်နှင့် Lock စစ်ဆေးရန်
         if (morning !== undefined) {
-            if (hotNumbers.morning.isLocked) {
+            if (record.hotNumbers && record.hotNumbers.morning && record.hotNumbers.morning.isLocked) {
                 return res.status(400).json({
                     success: false,
                     message: "မနက်ပိုင်း ဟော့ထိပ်ကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)"
                 });
             }
-            hotNumbers.morning = {
+            record.hotNumbers.morning = {
                 number: morning.trim() || "--",
-                isLocked: true // သိမ်းလိုက်သည်နှင့် ချက်ချင်း Lock ချမည်
+                isLocked: true
             };
         }
 
         // Evening Session ကို သိမ်းဆည်းရန်နှင့် Lock စစ်ဆေးရန်
         if (evening !== undefined) {
-            if (hotNumbers.evening.isLocked) {
+            if (record.hotNumbers && record.hotNumbers.evening && record.hotNumbers.evening.isLocked) {
                 return res.status(400).json({
                     success: false,
                     message: "ညနေပိုင်း ဟော့ထိပ်ကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)"
                 });
             }
-            hotNumbers.evening = {
+            record.hotNumbers.evening = {
                 number: evening.trim() || "--",
-                isLocked: true // သိမ်းလိုက်သည်နှင့် ချက်ချင်း Lock ချမည်
+                isLocked: true
             };
         }
 
+        record.markModified('hotNumbers');
+        await record.save();
+
         if (typeof liveCache !== 'undefined' && liveCache) {
-            liveCache.hotNumbers = hotNumbers;
+            liveCache.hotNumbers = record.hotNumbers;
         }
 
-       return res.json({ 
+        return res.json({ 
             success: true, 
             message: "ဟော့ထိပ် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။", 
             hotNumbers: {
-                date: hotNumbers.date,
-                morning: {
-                    number: hotNumbers.morning.number,
-                    isLocked: hotNumbers.morning.isLocked
-                },
-                evening: {
-                    number: hotNumbers.evening.number,
-                    isLocked: hotNumbers.evening.isLocked
-                }
+                date: record.dateStr,
+                morning: record.hotNumbers.morning,
+                evening: record.hotNumbers.evening
             } 
         });
     
@@ -802,22 +798,22 @@ app.post('/api/admin/hot-numbers', (req, res) => {
     }
 });
 
-// 💡 Admin အတွက် လက်ရှိ Hot Numbersများကို ထုတ်ပေးရန် API
-app.get('/api/admin/hot-numbers', (req, res) => {
-    res.json({
-        success: true,
-        hotNumbers: {
-            date: hotNumbers.date,
-            morning: {
-                number: hotNumbers.morning.number,
-                isLocked: hotNumbers.morning.isLocked
-            },
-            evening: {
-                number: hotNumbers.evening.number,
-                isLocked: hotNumbers.evening.isLocked
+// 💡 Admin အတွက် လက်ရှိ Hot Numbersများကို Database မှ ထုတ်ပေးရန် API
+app.get('/api/admin/hot-numbers', async (req, res) => {
+    try {
+        const record = await getTodayAdminResults();
+        res.json({
+            success: true,
+            hotNumbers: {
+                date: record.dateStr,
+                morning: record.hotNumbers?.morning || { number: "--", isLocked: false },
+                evening: record.hotNumbers?.evening || { number: "--", isLocked: false }
             }
-        }
-    });
+        });
+    } catch (err) {
+        console.error('Get admin hot-numbers error:', err.message);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 });
 // --------------------------------------------------
 // Admin data API
@@ -1362,7 +1358,7 @@ async function fetchAndUpdateLiveCache() {
             setValue: result.marketValue,
             marketValue: result.marketValue,
             live2D: result.calculated2D,
-            hotNumbers: hotNumbers,
+            hotNumbers: record.hotNumbers,
             adminResults: record.schedule,
             schedule: getScheduleObject(record.schedule),
             notice: '2D Live အချက်အလက်များ အလုပ်လုပ်နေပါသည်။',
