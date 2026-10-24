@@ -29,7 +29,18 @@ let liveCache = {
     time: '--',
     updatedAt: 0
 };
-
+// 💡 ဆာဗာစတင်ချိန်တွင် Database မှ hotNumbers ကို liveCache သို့ ဦးစွာကြိုတင်တင်ရန်
+async function initializeLiveCacheHotNumbers() {
+    try {
+        const record = await getTodayAdminResults();
+        if (record && record.hotNumbers) {
+            liveCache.hotNumbers = record.hotNumbers;
+            console.log("✅ Initialized liveCache.hotNumbers from Database successfully.");
+        }
+    } catch (err) {
+        console.error("❌ Failed to initialize liveCache.hotNumbers:", err.message);
+    }
+}
 let liveFetchRunning = false;
 let boundaryCaptureRunning = false;
 
@@ -48,7 +59,10 @@ mongoose.connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 50000, 
     socketTimeoutMS: 45000,
 })
-.then(() => console.log('MongoDB successfully connected!'))
+.then(async () => {
+    console.log('MongoDB successfully connected!');
+    await initializeLiveCacheHotNumbers(); // 👈 ဆာဗာစတင်ချိန်တွင် ဟော့ထိပ်များကို ချက်ချင်း ကြိုတင်တင်မည်
+})
 .catch(err => console.error('MongoDB connection error:', err.message));
 
 const defaultSchedule = () => ({
