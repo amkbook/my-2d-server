@@ -513,27 +513,24 @@ async function enforceChatClosure() {
 
 // 💡 နေ့စဉ် နံနက် ၉:၃၀ အတိရောက်ရှိချိန်တွင် ဟော့ထိပ်များ Reset ဖြစ်ရန် (Lock စနစ်အသစ်ဖြင့်)
 function checkAndResetHotNumbers() {
-    const now = getMyanmarTime();
-    const todayStr = getMyanmarDateString();
+    const now = new Date();
+    const currentSecond = now.getSeconds();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-    const currentSecond = now.getSeconds();
     const totalSec = currentHour * 3600 + currentMinute * 60 + currentSecond;
     const morningResetSec = 9 * 3600 + 30 * 60; // နံနက် ၉:၃၀
-
+    
     const day = now.getDay(); // 0 = Sun, 6 = Sat
     
-    // စနေ (6) နှင့် တနင်္ဂနွေ (0) မဟုတ်ပါက (သို့မဟုတ် ရက်အပြောင်းအလဲရှိပါက)
-    if (hotNumbers.date !== totalSec && hotNumbers.date !== todayStr && totalSec >= morningResetSec) {
-        if (day !== 0 && day !== 6) {
-            hotNumbers = {
+    // 💡 liveCache ထဲရှိ hotNumbers ကို အသုံးပြုရန် (hotNumbers is not defined ကို ဖြေရှင်းခြင်း)
+    if (liveCache.hotNumbers && liveCache.hotNumbers.date !== todayStr && totalSec >= morningResetSec) {
+        if (day !== 0 && day !== 6) { // စနေ (6) နှင့် တနင်္ဂနွေ (0) မဟုတ်ပါက
+            liveCache.hotNumbers = {
                 date: todayStr,
                 morning: { number: "--", isLocked: false },
                 evening: { number: "--", isLocked: false }
             };
-            if (typeof liveCache !== 'undefined' && liveCache) {
-                liveCache.hotNumbers = hotNumbers;
-            }
+            
             console.log('Trading day 9:30 AM reached: Hot numbers reset successfully with lock system.');
         } else {
             console.log('Weekend 9:30 AM: Hot numbers retained (No reset on Sat/Sun).');
