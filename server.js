@@ -522,7 +522,9 @@ function checkAndResetHotNumbers() {
     
     const day = now.getDay(); // 0 = Sun, 6 = Sat
     
-    // 💡 liveCache ထဲရှိ hotNumbers ကို အသုံးပြုရန် (hotNumbers is not defined ကို ဖြေရှင်းခြင်း)
+    // 💡 ယနေ့ရက်စွဲ (todayStr) ကို ဤနေရာတွင် အဓိပ္ပာယ်သတ်မှတ်ပေးခြင်း
+    const todayStr = liveCache.date || new Date().toISOString().split('T')[0];
+
     if (liveCache.hotNumbers && liveCache.hotNumbers.date !== todayStr && totalSec >= morningResetSec) {
         if (day !== 0 && day !== 6) { // စနေ (6) နှင့် တနင်္ဂနွေ (0) မဟုတ်ပါက
             liveCache.hotNumbers = {
@@ -530,7 +532,6 @@ function checkAndResetHotNumbers() {
                 morning: { number: "--", isLocked: false },
                 evening: { number: "--", isLocked: false }
             };
-            
             console.log('Trading day 9:30 AM reached: Hot numbers reset successfully with lock system.');
         } else {
             console.log('Weekend 9:30 AM: Hot numbers retained (No reset on Sat/Sun).');
