@@ -215,6 +215,43 @@
   0% { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
 }
+/* 🟢 Default Light Mode (ပထမဆုံးစဖွင့်ချိန် အဖြူရောင် အောက်ခံ) */
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+      --nav-bg: #ffffff;
+      --input-bg: #f1f5f9;
+      --row-bg: #f8fafc;
+    }
+
+    /* 🌙 Dark Mode (ညကြည့်စတိုင် ဖွင့်ထားစဉ်) */
+    .dark-mode {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --nav-bg: #1e293b;
+      --input-bg: #0f172a;
+      --row-bg: #0f172a;
+    }
+
+    body {
+      background-color: var(--bg-color) !important;
+      color: var(--text-color) !important;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Toggle Switch Style */
+    .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #3b82f6; }
+    input:checked + .slider:before { transform: translateX(24px); }
   </style>
 </head>
 <body>
@@ -428,18 +465,39 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
       </div>
     </div>
 
-    <!-- PAGE 5: More & Photos -->
+    <!-- PAGE 5: Settings / More (ဘာသာစကားနှင့် ညကြည့်စတိုင်ထည့်သွင်းထားသည်) -->
     <div id="page-more" class="tab-content">
       <div class="card">
-        <h2>⚙ More & နေ့စဉ်ဓာတ်ပုံများ</h2>
-        <div class="gallery-grid">
-          <div class="gallery-item"><div style="padding: 20px; color: #94a3b8;">ဓာတ်ပုံ ၁</div></div>
-          <div class="gallery-item"><div style="padding: 20px; color: #94a3b8;">ဓာတ်ပုံ ၂</div></div>
+        <h2 style="color: var(--text-color);" data-i18n="settingsTitle">⚙ Settings</h2>
+        
+        <div class="settings-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+          <!-- Language Selector -->
+          <div class="settings-item" onclick="toggleLanguage()" style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: var(--text-color); cursor: pointer;">
+            <span data-i18n="langLabel">🌐 ဘာသာစကား (Language: မြန်မာ)</span>
+            <span>➔</span>
+          </div>
+
+          <!-- Dark Mode Toggle -->
+          <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: var(--text-color);">
+            <span data-i18n="darkModeLabel">🌙 ညကြည့်စတိုင် (Dark Mode)</span>
+            <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 26px;">
+              <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this)" style="opacity: 0; width: 0; height: 0;">
+              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
+            </label>
+          </div>
+
+          <!-- အောက်ဆုံး အတန်းနှစ်တန်း (ပုံကြမ်းအဆင့်) -->
+          <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: var(--text-color);">
+            <span data-i18n="aboutLabel">ℹ အပ်ပလီကေးရှင်းအကြောင်း (Draft)</span>
+            <span>➔</span>
+          </div>
+          <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: var(--text-color);">
+            <span data-i18n="privacyLabel">🔒 ကိုယ်ရေးလုံခြုံမှု မူဝါဒ (Draft)</span>
+            <span>➔</span>
+          </div>
         </div>
       </div>
     </div>
-
-  </div>
 
   <div class="bottom-nav">
     <button class="nav-item active" onclick="switchTab('page-home', this)"><span class="nav-icon">🏠</span><span>Home</span></button>
@@ -450,6 +508,64 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
   </div>
 
   <script>
+    let currentLang = localStorage.getItem('app_lang') || 'my';
+
+    // 🌙 Dark Mode initialization (Default က Light Mode ဖြစ်ပြီး User ကဖွင့်မှ Dark ဖြစ်မည်)
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedDarkMode = localStorage.getItem('dark_mode');
+      const toggleEl = document.getElementById('darkModeToggle');
+      
+      if (savedDarkMode === 'true') {
+        document.documentElement.classList.add('dark-mode');
+        if (toggleEl) toggleEl.checked = true;
+      } else {
+        document.documentElement.classList.remove('dark-mode');
+        if (toggleEl) toggleEl.checked = false;
+      }
+      updateLanguageTexts();
+    });
+
+    function toggleDarkMode(checkbox) {
+      if (checkbox.checked) {
+        document.documentElement.classList.add('dark-mode');
+        localStorage.setItem('dark_mode', 'true');
+      } else {
+        document.documentElement.classList.remove('dark-mode');
+        localStorage.setItem('dark_mode', 'false');
+      }
+    }
+
+    // 🌐 Multi-language Support (Myanmar & English)
+    const translations = {
+      my: {
+        settingsTitle: "⚙ Settings",
+        langLabel: "🌐 ဘာသာစကား (Language: မြန်မာ)",
+        darkModeLabel: "🌙 ညကြည့်စတိုင် (Dark Mode)",
+        aboutLabel: "ℹ အပ်ပလီကေးရှင်းအကြောင်း (Draft)",
+        privacyLabel: "🔒 ကိုယ်ရေးလုံခြုံမှု မူဝါဒ (Draft)"
+      },
+      en: {
+        settingsTitle: "⚙ Settings",
+        langLabel: "🌐 Language (English)",
+        darkModeLabel: "🌙 Dark Mode",
+        aboutLabel: "ℹ About App (Draft)",
+        privacyLabel: "🔒 Privacy Policy (Draft)"
+      }
+    };
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'my' ? 'en' : 'my';
+      localStorage.setItem('app_lang', currentLang);
+      updateLanguageTexts();
+    }
+
+    function updateLanguageTexts() {
+      const t = translations[currentLang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.innerText = t[key];
+      });
+    }
     let current2D = "--";
     let announcedTimes = {};
     let soundEnabled = true;
