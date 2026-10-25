@@ -252,6 +252,12 @@
     .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
     input:checked + .slider { background-color: #3b82f6; }
     input:checked + .slider:before { transform: translateX(24px); }
+    /* Chat input placeholders များကို အဖြူရောင်ရင့်ရင့် တောက်ပစေရန် */
+#chatName::placeholder,
+#chatInput::placeholder {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
   </style>
 </head>
 <body>
@@ -472,39 +478,46 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
       </div>
     </div>
 
-    <!-- PAGE 5: Settings / More (ဘာသာစကားနှင့် ညကြည့်စတိုင်ထည့်သွင်းထားသည်) -->
-    <div id="page-more" class="tab-content">
-      <div class="card">
-        <h2 style="color: var(--text-color);" data-i18n="settingsTitle">⚙ Settings</h2>
-        
-        <div class="settings-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
-          <!-- Language Selector -->
-          <div class="settings-item" onclick="toggleLanguage()" style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: var(--text-color); cursor: pointer;">
-            <span data-i18n="langLabel">🌐 ဘာသာစကား (Language: မြန်မာ)</span>
-            <span>➔</span>
-          </div>
-
-          <!-- Dark Mode Toggle -->
-          <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: var(--text-color);">
-            <span data-i18n="darkModeLabel">🌙 ညကြည့်စတိုင် (Dark Mode)</span>
-            <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 26px;">
-              <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this)" style="opacity: 0; width: 0; height: 0;">
-              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
-            </label>
-          </div>
-
-          <!-- အောက်ဆုံး အတန်းနှစ်တန်း (ပုံကြမ်းအဆင့်) -->
-          <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: var(--text-color);">
-            <span data-i18n="aboutLabel">ℹ အပ်ပလီကေးရှင်းအကြောင်း (Draft)</span>
-            <span>➔</span>
-          </div>
-          <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: var(--text-color);">
-            <span data-i18n="privacyLabel">🔒 ကိုယ်ရေးလုံခြုံမှု မူဝါဒ (Draft)</span>
-            <span>➔</span>
-          </div>
+    <!-- PAGE 5: Settings / More -->
+<div id="page-more" class="tab-content">
+  <div class="card" style="background: transparent !important; box-shadow: none !important; border: none !important; padding: 0;">
+    <h2 style="color: var(--text-color); margin-bottom: 15px;" data-i18n="settingsTitle">⚙ Settings</h2>
+    
+    <div class="settings-list" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+      
+      <!-- ၁။ Language Toggle Switch (မြန်မာ | ENG) -->
+      <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: #1e3a8a; border: 1.5px solid #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: #ffffff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); width: 100%; box-sizing: border-box;">
+        <span data-i18n="langLabel">🌐 ဘာသာစကား (Language)</span>
+        <div onclick="toggleLanguage()" style="display: flex; background: #0f172a; border: 1px solid #ef4444; border-radius: 20px; padding: 3px; cursor: pointer;">
+          <span style="padding: 4px 10px; border-radius: 16px; font-size: 13px; font-weight: bold; background: #ef4444; color: #ffffff;">မြန်မာ</span>
+          <span style="padding: 4px 10px; border-radius: 16px; font-size: 13px; font-weight: bold; color: #94a3b8;">ENG</span>
         </div>
       </div>
+
+      <!-- ၂။ Dark Mode Toggle -->
+      <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: #1e3a8a; border: 1.5px solid #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: #ffffff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); width: 100%; box-sizing: border-box;">
+        <span data-i18n="darkModeLabel">🌙 ညကြည့်စတိုင် (Dark Mode)</span>
+        <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 26px;">
+          <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this)" style="opacity: 0; width: 0; height: 0;">
+          <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
+        </label>
+      </div>
+
+      <!-- ၃။ အပ်ပလီကေးရှင်းအကြောင်း -->
+      <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: #1e3a8a; border: 1.5px solid #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: #ffffff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); width: 100%; box-sizing: border-box;">
+        <span data-i18n="aboutLabel">ℹ အပ်ပလီကေးရှင်းအကြောင်း (Draft)</span>
+        <span>➔</span>
+      </div>
+
+      <!-- ၄။ ကိုယ်ရေးလုံခြုံမှု မူဝါဒ -->
+      <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: #1e3a8a; border: 1.5px solid #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: #ffffff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); width: 100%; box-sizing: border-box;">
+        <span data-i18n="privacyLabel">🔒 ကိုယ်ရေးလုံခြုံမှု မူဝါဒ (Draft)</span>
+        <span>➔</span>
+      </div>
+
     </div>
+  </div>
+</div>
 
   <div class="bottom-nav">
     <button class="nav-item active" onclick="switchTab('page-home', this)"><span class="nav-icon">🏠</span><span>Home</span></button>
