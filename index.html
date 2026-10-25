@@ -192,8 +192,8 @@
 }
 /* Market Holiday Notice Ticker Box - Soft Red BG with Glowing White Text */
 .holiday-ticker-card {
-  background: rgba(239, 68, 68, 0.15); /* အနီရောင် အလင်းပျော့ အောက်ခံ */
-  border: 1.5px solid #ef4444;
+  background: #1e3a8a; /* အပြာရောင်ရင့်ရင့် အပြည့်အောက်ခံ */
+  border: 1.5px solid #ef4444; /* လက်ရှိ အနီရောင် ဘောင် အတိုင်း */
   border-radius: 12px;
   padding: 10px 12px;
   overflow: hidden;
@@ -309,13 +309,20 @@
   <div class="holiday-ticker-track" id="holidayTickerText">--</div>
 </div>
 
-      <div class="chat-box">
-        <div class="live-title" style="margin-bottom: 5px;">Live Chatbox</div>
-        <div id="chatMessages" class="chat-messages"></div>
+     <div class="chat-box">
+        <div class="live-title" style="margin-bottom: 8px; color: #10b981; font-weight: bold;" data-i18n="chatTitle">Live Chatbox</div>
+        <div id="chatMessages" class="chat-messages">
+          <div class="msg" style="color: #facc15; font-weight: 650; line-height: 1.5;">
+            Chat ကို မြန်မာစံတော်ချိန်<br>
+            နေ့လည် 11:00 မှ 12:10 နှင့်<br>
+            ညနေ 3:30 မှ 4:40 အတွင်းသာ<br>
+            အသုံးပြုနိုင်ပါသည်။
+          </div>
+        </div>
         <div class="chat-input-row">
-          <input type="text" id="chatName" maxlength="30" placeholder="အမည် (မဖြည့်လည်းရ)" aria-label="Chat display name" style="max-width: 115px; min-width: 0;">
-          <input type="text" id="chatInput" maxlength="500" placeholder="စကားပြောရန် စာရိုက်ပါ..." onkeypress="handleKeyPress(event)" aria-label="Chat message">
-          <button onclick="sendMessage()">ပို့မည်</button>
+          <input type="text" id="chatName" maxlength="30" placeholder="အမည် (မဖြည့်လည်းရ)" style="max-width: 115px; min-width: 0; color: #ffffff;" aria-label="Chat display name">
+          <input type="text" id="chatInput" maxlength="500" placeholder="စကားပြောရန် စာရိုက်ပါ..." onkeypress="handleKeyPress(event)" style="color: #ffffff;" aria-label="Chat message">
+          <button onclick="sendMessage()" data-i18n="sendBtn">ပို့မည်</button>
         </div>
       </div>
 
