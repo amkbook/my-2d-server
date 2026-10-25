@@ -977,7 +977,7 @@ async function fetchLiveData() {
       return id;
     }
 
-    async function fetchChat() {
+   async function fetchChat() {
       try {
         const res = await fetch('/api/chat', { cache: 'no-store' });
         const data = await res.json();
@@ -985,23 +985,34 @@ async function fetchLiveData() {
         const input = document.getElementById('chatInput');
         const button = document.querySelector('.chat-input-row button');
         if (!data.success) return;
+        
         chatDiv.replaceChildren();
+        
+        // 🛑 Chat ပိတ်ထားချိန် (အဝါရောင် သတိပေးချက် ၄ တန်းနှင့် တောက်ပသော အရောင်များ)
         if (!data.open) {
           const notice = document.createElement('div');
           notice.className = 'msg';
-          notice.textContent = data.message || 'Live Chatbox ပိတ်ထားပါသည်။';
+          notice.style.cssText = "color: #facc15; font-weight: 650; line-height: 1.5;";
+          notice.innerHTML = `Chat ကို မြန်မာစံတော်ချိန်<br>နေ့လည် 11:00 မှ 12:10 နှင့်<br>ညနေ 3:30 မှ 4:40 အတွင်းသာ<br>အသုံးပြုနိုင်ပါသည်။`;
           chatDiv.appendChild(notice);
+          
           input.disabled = true;
           if (button) button.disabled = true;
           input.placeholder = 'Chat ပိတ်ထားပါသည်';
+          input.style.color = "#ffffff"; // အဖြူရောင်ရင့်ရင့်
           return;
         }
+        
+        // ✅ Chat ဖွင့်ချိန်
         input.disabled = false;
         if (button) button.disabled = false;
         input.placeholder = 'စကားပြောရန် စာရိုက်ပါ...';
+        input.style.color = "#ffffff";
+        
         (data.messages || []).forEach(m => {
           const line = document.createElement('div');
           line.className = 'msg';
+          line.style.color = "#ffffff";
           const name = document.createElement('span');
           name.className = 'msg-user';
           name.textContent = String(m.user || 'Guest') + ': ';
