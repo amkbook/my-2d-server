@@ -18,7 +18,12 @@ function getMyanmarDateString() {
     const options = { timeZone: 'Asia/Yangon', year: 'numeric', month: '2-digit', day: '2-digit' };
     return new Intl.DateTimeFormat('en-CA', options).format(new Date());
 }
-
+// Hot Numbers Memory State
+let hotNumbers = {
+    morning: "--",
+    evening: "--",
+    lastResetDate: ""
+};
 let liveCache = {
     setIndex: '--',
     setValue: '--',
