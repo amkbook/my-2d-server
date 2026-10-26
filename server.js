@@ -999,17 +999,37 @@ async function fetchCurrentSET() {
             if (firstCol === 'SET') {
                 const cols = $(el).find('td');
                 if (cols.length >= 5) {
-                    // cols[1] = Last (SET Index)
-                    const indexVal = $(cols[1]).text().trim();
-                    // cols[4] = Value (M.Baht)
-                    const valueVal = $(cols[4]).text().trim().replace(/,/g, '');
+                    // 💡 SET ဘက်မှ Column နေရာအပြောင်းအလဲကို ကျော်လွှားနိုင်ရန် cell တိုင်းကို Loop ပတ်၍ ရှာမည်
+                    cols.each((j, colEl) => {
+                        const cellText = $(colEl).text().trim().replace(/,/g, '');
+
+                        // ဒဿဒက (.) ပါရှိပြီး ၅ လုံးမှ ၉ လုံးကြားရှိပါက ၎င်းသည် SET Index ဖြစ်သည် (ဥပမာ - 1,562.92)
+                        if (cellText.includes('.') && cellText.length >= 5 && cellText.length <= 9 && !isNaN(parseFloat(cellText))) {
+                            if (setIndex === '--') {
+                                setIndex = cellText;
+                            }
+                        }
+
+                        // ဒဿဒကမပါဘဲ ကိန်းဂဏန်းကြီးဖြစ်ပါက Market Value ဖြစ်သည် (9:30 အစောပိုင်းငယ်ငယ်လေးများမှအစ အားလုံးပါဝင်စေရန် > 0)
+                        if (!isNaN(parseFloat(cellText)) && parseFloat(cellText) > 0 && cellText !== setIndex && cellText.length >= 3) {
+                            if (marketValue === '--') {
+                                marketValue = cellText;
+                                liveCache.setValue = cellText;
+                            }
+                        }
+                    });
+
+                    // Backup အနေဖြင့် မူလ Column ညွှန်းကိန်းများကိုလည်း ထည့်သွင်းစစ်ဆေးပေးမည်
+                    const indexVal = $(cols[2]).text().trim() || $(cols[1]).text().trim();
+                    const valueVal = $(cols[5]).text().trim().replace(/,/g, '') || $(cols[4]).text().trim().replace(/,/g, '');
 
                     if (indexVal && indexVal.includes('.')) {
                         setIndex = indexVal;
                     }
-                    // valueVal ရှိပြီး အလွတ်မဟုတ်ပါက ယူမည် (comma မပါလည်း ဝင်စေရန် ပြင်ထားသည်)
+                    
                     if (valueVal && valueVal !== '') {
-                        marketValue = valueVal;liveCache.setValue = valueVal;
+                        marketValue = valueVal;
+                        liveCache.setValue = valueVal;
                     }
                 }
             }
@@ -1018,12 +1038,13 @@ async function fetchCurrentSET() {
         let digit1 = '--';
         let digit2 = '--';
 
-        // ၂၀၂၆ ခုနှစ်အတွက် တရားဝင်ပိတ်ရက်များစာရင်း[cite: 1]
+        // ၂၀၂၆ ခုနှစ်အတွက် တရားဝင်ပိတ်ရက်များစာရင်း (၂၀၂၆-၁၂-၃၁ ကို ထပ်တိုးထားသည်)
         const marketHolidays = [
             '2026-10-13',
             '2026-10-23',
             '2026-12-07',
-            '2026-12-10'
+            '2026-12-10',
+            '2026-12-31'
         ];
 
         const now = getMyanmarTime();
@@ -1040,11 +1061,9 @@ async function fetchCurrentSET() {
                 digit1 = setIndex.split('.')[1].slice(-1);
             }
 
-            if (marketValue !== '--' && marketValue.includes('.')) {
-                digit2 = marketValue
-                    .split('.')[0]
-                    .replace(/,/g, '')
-                    .slice(-1);
+            if (marketValue !== '--') {
+                const valPart = marketValue.includes('.') ? marketValue.split('.')[0] : marketValue;
+                digit2 = valPart.replace(/,/g, '').slice(-1);
             }
 
             if (digit1 !== '--' && digit2 !== '--') {
