@@ -1433,6 +1433,7 @@ async function fetchAndUpdateLiveCache() {
             marketValue: result.marketValue,
             live2D: result.calculated2D,
             hotNumbers: record.hotNumbers,
+            holidayNotice: record.holidayNotice || "",
             adminResults: record.schedule,
             schedule: getScheduleObject(record.schedule),
             notice: '2D Live အချက်အလက်များ အလုပ်လုပ်နေပါသည်။',
