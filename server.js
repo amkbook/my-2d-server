@@ -1120,6 +1120,7 @@ async function applyFrozenSnapshot(record, phase) {
     liveCache.setValue = resultValue;
     liveCache.marketValue = resultValue;
     liveCache.live2D = result2D;
+    liveCache.hotNumbers = activeRecord.hotNumbers || record.hotNumbers || { morning: "--", evening: "--" };
     liveCache.adminResults = activeRecord.schedule || record.schedule;
     liveCache.schedule = getScheduleObject(activeRecord.schedule || record.schedule);
     liveCache.time = fixedTime;
