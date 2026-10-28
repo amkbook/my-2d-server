@@ -42,12 +42,20 @@
     .set-label { font-size: 12px; color: #94a3b8; }
     .set-value { font-size: 16px; font-weight: bold; color: #e2e8f0; margin-top: 2px; }
 
-    .source-digit {
-      color: #38bdf8 !important;
-      text-shadow: 0 0 10px rgba(56, 189, 248, 0.8), 0 0 20px rgba(56, 189, 248, 0.5);
+   .source-digit {
+      background: linear-gradient(135deg, #fff275 0%, #ffd700 50%, #ffa500 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 
+          1px 1px 0px #b8860b,
+          2px 2px 0px #996515,
+          3px 3px 0px #664200,
+          0px 4px 10px rgba(0, 0, 0, 0.6);
       font-weight: 900;
+      font-size: 1.25em; /* မူလ ပတ်ဝန်းကျင်စာသားထက် ၂၅% ပိုမိုကြီးမားထင်ရှားစေသည် */
+      display: inline-block;
+      vertical-align: middle; /* ဘေးနားရှိ စာသားများနှင့် အနေအထား အလယ်တည့်တည့် လှပစွာ ညီညာစေရန် */
     }
-
     .green-val {
       color: #10b981 !important;
       text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
