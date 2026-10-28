@@ -332,6 +332,27 @@
     .lang-toggle-container.eng-mode .lang-slider-bg {
       transform: translateX(52px);
     }
+    /* 🟢 SET Index နှင့် Value ဂဏန်းများအတွက် ၁.၃ စက္ကန့်စာ 3D Flip Animation */
+    @keyframes metricFlipAnim {
+      0% {
+        transform: perspective(400px) rotateX(90deg);
+        opacity: 0;
+      }
+      50% {
+        transform: perspective(400px) rotateX(-20deg);
+        opacity: 0.7;
+      }
+      100% {
+        transform: perspective(400px) rotateX(0deg);
+        opacity: 1;
+      }
+    }
+
+    .number-flip-animate {
+      animation: metricFlipAnim 1.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      display: inline-block;
+      transform-origin: top center;
+    }
   </style>
 </head>
 <body>
@@ -1035,9 +1056,30 @@ async function fetchLiveData() {
         const tickerContainer = document.getElementById('holidayTickerContainer');
         if (tickerContainer) tickerContainer.style.display = 'none';
     }
-      if (data.setIndex) document.getElementById('setIndex').innerHTML = formatSourceHighlight(data.setIndex, 'index');
-     const valToDisplay = data.setValue || data.value || data.marketValue;
-    if (valToDisplay) document.getElementById('setValue').innerHTML = formatSourceHighlight(valToDisplay, 'value');
+   // SET Index ဂဏန်းများအတွက် သီးသန့် အန်နီမေးရှင်းထိန်းချုပ်ခြင်း
+      if (data.setIndex) {
+        const setIndexEl = document.getElementById('setIndex');
+        const formattedIndex = formatSourceHighlight(data.setIndex, 'index');
+        if (setIndexEl.innerHTML !== formattedIndex) {
+          setIndexEl.innerHTML = formattedIndex;
+          setIndexEl.classList.remove('number-flip-animate');
+          void setIndexEl.offsetWidth; // Trigger reflow to restart animation
+          setIndexEl.classList.add('number-flip-animate');
+        }
+      }
+
+      // Value(M.Bath) ဂဏန်းများအတွက် သီးသန့် အန်နီမေးရှင်းထိန်းချုပ်ခြင်း
+      const valToDisplay = data.setValue || data.value || data.marketValue;
+      if (valToDisplay) {
+        const setValueEl = document.getElementById('setValue');
+        const formattedValue = formatSourceHighlight(valToDisplay, 'value');
+        if (setValueEl.innerHTML !== formattedValue) {
+          setValueEl.innerHTML = formattedValue;
+          setValueEl.classList.remove('number-flip-animate');
+          void setValueEl.offsetWidth; // Trigger reflow to restart animation
+          setValueEl.classList.add('number-flip-animate');
+        }
+      }
       if (data.live2D && data.live2D !== "--") {
         document.getElementById('updateTime').innerText = "Last Update: " + data.time;
 
