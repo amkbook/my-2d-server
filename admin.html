@@ -53,17 +53,25 @@
                         class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm text-slate-300 mb-1">TW ဂဏန်း</label>
+                <!-- Modern & Internet (Joint Lock) -->
+                <button id="saveModernInternetBtn" onclick="saveModernInternetData()" 
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2 rounded-lg transition mb-2">
+                    Modern & Internet သိမ်းဆည်းမည်
+                </button>
+                <p id="lockNotice" class="text-orange-400 text-xs text-center mb-3 hidden">⚠️ Modern & Internet အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
+
+                <!-- TW (Independent Lock) -->
+                <div class="mb-3 mt-4 pt-3 border-t border-slate-800">
+                    <label class="block text-sm text-slate-300 mb-1">TW ဂဏန်း (သီးသန့် လော့ခ်စနစ်)</label>
                     <input type="text" id="twInput" placeholder="ဥပမာ - 12" 
                         class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
                 </div>
 
-                <button id="saveBtn" onclick="saveData()" 
-                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2 rounded-lg transition">
-                    2D အချက်အလက် သိမ်းဆည်းမည်
+                <button id="saveTwBtn" onclick="saveTwData()" 
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-slate-950 font-bold py-2 rounded-lg transition">
+                    TW အချက်အလက် သိမ်းဆည်းမည်
                 </button>
-                <p id="lockNotice" class="text-orange-400 text-xs text-center mt-2 hidden">⚠️ ဤ 2D အချိန်အကွက်အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
+                <p id="twLockNotice" class="text-orange-400 text-xs text-center mt-2 hidden">⚠️ TW အကွက်အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
             </div>
 
             <!-- Admin Panel Hot 2D Control Box (အသစ် - Lock စနစ်ပါရှိသည်) -->
@@ -211,35 +219,49 @@
             }
         }
 
-        function updateFormFields() {
+       function updateFormFields() {
             if (!cachedAdminData) return;
             const session = document.getElementById('sessionSelect').value;
-            const sessionData = cachedAdminData[session] || { modern: "--", internet: "--", tw: "--", isLocked: false };
+            const sessionData = cachedAdminData[session] || { modern: "--", internet: "--", tw: "--", isLocked: false, isTwLocked: false };
 
             const modernInput = document.getElementById('modernInput');
             const internetInput = document.getElementById('internetInput');
             const twInput = document.getElementById('twInput');
-            const saveBtn = document.getElementById('saveBtn');
+            const saveModernInternetBtn = document.getElementById('saveModernInternetBtn');
+            const saveTwBtn = document.getElementById('saveTwBtn');
             const lockNotice = document.getElementById('lockNotice');
+            const twLockNotice = document.getElementById('twLockNotice');
 
             modernInput.value = sessionData.modern !== "--" ? sessionData.modern : "";
             internetInput.value = sessionData.internet !== "--" ? sessionData.internet : "";
             twInput.value = sessionData.tw !== "--" ? sessionData.tw : "";
 
+            // Modern & Internet Lock Check
             if (sessionData.isLocked) {
                 modernInput.disabled = true;
                 internetInput.disabled = true;
-                twInput.disabled = true;
-                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                saveBtn.disabled = true;
+                saveModernInternetBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                saveModernInternetBtn.disabled = true;
                 lockNotice.classList.remove('hidden');
             } else {
                 modernInput.disabled = false;
                 internetInput.disabled = false;
-                twInput.disabled = false;
-                saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                saveBtn.disabled = false;
+                saveModernInternetBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                saveModernInternetBtn.disabled = false;
                 lockNotice.classList.add('hidden');
+            }
+
+            // TW Independent Lock Check
+            if (sessionData.isTwLocked) {
+                twInput.disabled = true;
+                saveTwBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                saveTwBtn.disabled = true;
+                twLockNotice.classList.remove('hidden');
+            } else {
+                twInput.disabled = false;
+                saveTwBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                saveTwBtn.disabled = false;
+                twLockNotice.classList.add('hidden');
             }
         }
 
@@ -247,22 +269,53 @@
             await loadAdminData();
         }
 
-        async function saveData() {
+        // Modern & Internet သိမ်းဆည်းရန် (Joint)
+        async function saveModernInternetData() {
             const session = document.getElementById('sessionSelect').value;
             const modern = document.getElementById('modernInput').value;
             const internet = document.getElementById('internetInput').value;
-            const tw = document.getElementById('twInput').value;
             const statusText = document.getElementById('saveStatus');
 
             try {
-                const response = await fetch('/api/admin/save', {
+                const response = await fetch('/api/admin/save-modern-internet', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         password: currentPassword,
                         session: session,
                         modern: modern,
-                        internet: internet,
+                        internet: internet
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    cachedAdminData = data.adminResults;
+                    updateFormFields();
+                    statusText.innerText = data.message;
+                    statusText.classList.remove('hidden');
+                    setTimeout(() => statusText.classList.add('hidden'), 4000);
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('Modern & Internet သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိသွားပါသည်။');
+            }
+        }
+
+        // TW သီးသန့် သိမ်းဆည်းရန် (Independent)
+        async function saveTwData() {
+            const session = document.getElementById('sessionSelect').value;
+            const tw = document.getElementById('twInput').value;
+            const statusText = document.getElementById('saveStatus');
+
+            try {
+                const response = await fetch('/api/admin/save-tw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        password: currentPassword,
+                        session: session,
                         tw: tw
                     })
                 });
@@ -278,10 +331,10 @@
                     alert(data.message);
                 }
             } catch (err) {
-                alert('သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိသွားပါသည်။');
+                alert('TW သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိသွားပါသည်။');
             }
         }
-
+        
         // ==========================================
         // GOLD ADMIN FUNCTIONS
         // ==========================================

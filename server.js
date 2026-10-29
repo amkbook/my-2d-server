@@ -76,27 +76,31 @@ const defaultSchedule = () => ({
         modern: '--',
         internet: '--',
         tw: '--',
-        isLocked: false
+        isLocked: false,
+        isTwLocked: false
     },
     '12:01 PM': {
         modern: '--',
         internet: '--',
         tw: '--',
         isLocked: false,
-        isAuto: true
+        isAuto: true,
+        isTwLocked: false,
     },
     '02:00 PM': {
         modern: '--',
         internet: '--',
         tw: '--',
-        isLocked: false
+        isLocked: false,
+        isTwLocked: false
     },
     '04:30 PM': {
         modern: '--',
         internet: '--',
         tw: '--',
         isLocked: false,
-        isAuto: true
+        isAuto: true,
+        isTwLocked: false,
     }
 });
 
@@ -681,38 +685,23 @@ app.post('/api/admin/login', (req, res) => {
     });
 });
 
-app.post('/api/admin/save', async (req, res) => {
+// 1. Modern & Internet သိမ်းဆည်းရန် API (isLocked ကို ထိန်းချုပ်မည်)
+app.post('/api/admin/save-modern-internet', async (req, res) => {
     try {
-        const {
-            password,
-            session,
-            modern,
-            internet,
-            tw
-        } = req.body;
-
-        if (!ADMIN_PASSWORD || password !== ADMIN_PASSWORD) {
-            return res.status(401).json({
-                success: false,
-                message: 'ခွင့်ပြုချက်မရှိပါ (Unauthorized)'
-            });
+        const { password, session, modern, internet } = req.body;
+        if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
+            return res.status(401).json({ success: false, message: 'ခွင့်ပြုချက်မရှိပါ (Unauthorized)' });
         }
 
         const record = await getTodayAdminResults();
         const results = record.schedule;
 
         if (!session || !results[session]) {
-            return res.status(400).json({
-                success: false,
-                message: 'မှားယွင်းနေသော Session ဖြစ်ပါသည်။'
-            });
+            return res.status(400).json({ success: false, message: 'မှားယွင်းနေသော Session ဖြစ်ပါသည်။' });
         }
 
         if (results[session].isLocked) {
-            return res.status(400).json({
-                success: false,
-                message: `${session} အတွက် ဂဏန်းများကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)`
-            });
+            return res.status(400).json({ success: false, message: 'Modern နှင့် Internet အချက်အလက်များကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)' });
         }
 
         if (modern !== undefined && modern !== '') {
@@ -723,16 +712,55 @@ app.post('/api/admin/save', async (req, res) => {
             results[session].internet = internet;
         }
 
+        if (results[session].modern !== '--' || results[session].internet !== '--') {
+            results[session].isLocked = true; // Modern နှင့် Internet အတွက် တွဲလျက် Lock မည်[cite: 8]
+        }
+
+        record.schedule = results;
+        record.markModified('schedule');
+        await record.save();
+
+        return res.json({
+            success: true,
+            message: `${session} ၏ Modern နှင့် Internet အချက်အလက်များ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။`,
+            adminResults: results
+        });
+    } catch (err) {
+        console.error('Admin save modern-internet error:', err.message);
+        return res.status(500).json({ success: false, message: 'Server error occurred' });
+    }
+});
+
+// 2. TW သီးသန့် သိမ်းဆည်းရန် API (isTwLocked ကို သီးသန့် ထိန်းချုပ်မည်)[cite: 8]
+app.post('/api/admin/save-tw', async (req, res) => {
+    try {
+        const { password, session, tw } = req.body;
+        if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
+            return res.status(401).json({ success: false, message: 'ခွင့်ပြုချက်မရှိပါ (Unauthorized)' });
+        }
+
+        const record = await getTodayAdminResults();
+        const results = record.schedule;
+
+        if (!session || !results[session]) {
+            return res.status(400).json({ success: false, message: 'မှားယွင်းနေသော Session ဖြစ်ပါသည်။' });
+        }
+
+        // record.schedule ရှိ တစ်ခုချင်းစီအတွက် isTwLocked မပါသေးပါက default အနေဖြင့် false ထည့်ပေးရန်
+        if (results[session].isTwLocked === undefined) {
+            results[session].isTwLocked = false;
+        }
+
+        if (results[session].isTwLocked) {
+            return res.status(400).json({ success: false, message: 'TW အချက်အလက်ကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)' });
+        }
+
         if (tw !== undefined && tw !== '') {
             results[session].tw = tw;
         }
 
-        if (
-            results[session].modern !== '--' ||
-            results[session].internet !== '--' ||
-            results[session].tw !== '--'
-        ) {
-            results[session].isLocked = true;
+        if (results[session].tw !== '--') {
+            results[session].isTwLocked = true; // TW တစ်ခုတည်းကိုသာ သီးသန့် Lock မည်[cite: 8]
         }
 
         record.schedule = results;
@@ -742,16 +770,12 @@ app.post('/api/admin/save', async (req, res) => {
 
         return res.json({
             success: true,
-            message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။`,
+            message: `${session} ၏ TW အချက်အလက်များ သိမ်းဆည်းပြီး သီးသန့် Lock ချလိုက်ပါပြီ။`,
             adminResults: results
         });
     } catch (err) {
-        console.error('Admin save error:', err.message);
-
-        return res.status(500).json({
-            success: false,
-            message: 'Server error occurred'
-        });
+        console.error('Admin save TW error:', err.message);
+        return res.status(500).json({ success: false, message: 'Server error occurred' });
     }
 });
 
@@ -1339,8 +1363,7 @@ function scheduleNextBoundaryCapture() {
 
         scheduleNextBoundaryCapture();
     }, delay);
-}
-
+    
 // --------------------------------------------------
 // Live cache updater
 // During midday/after close/weekends, no external
