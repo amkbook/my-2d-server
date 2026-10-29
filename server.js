@@ -76,31 +76,27 @@ const defaultSchedule = () => ({
         modern: '--',
         internet: '--',
         tw: '--',
-        isLocked: false,
-        isTwLocked: false
+        isLocked: false
     },
     '12:01 PM': {
         modern: '--',
         internet: '--',
         tw: '--',
         isLocked: false,
-        isAuto: true,
-        isTwLocked: false,
+        isAuto: true
     },
     '02:00 PM': {
         modern: '--',
         internet: '--',
         tw: '--',
-        isLocked: false,
-        isTwLocked: false
+        isLocked: false
     },
     '04:30 PM': {
         modern: '--',
         internet: '--',
         tw: '--',
         isLocked: false,
-        isAuto: true,
-        isTwLocked: false,
+        isAuto: true
     }
 });
 
@@ -665,24 +661,58 @@ async function getTodayAdminResults() {
     return record;
 }
 
-// 1. Modern & Internet သိမ်းဆည်းရန် API (isLocked ကို ထိန်းချုပ်မည်)
-app.post('/api/admin/save-modern-internet', async (req, res) => {
+// --------------------------------------------------
+// Admin login and manual 2D result saving
+// --------------------------------------------------
+
+app.post('/api/admin/login', (req, res) => {
+    const { password } = req.body;
+
+    if (ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
+        return res.json({
+            success: true,
+            message: 'Login successful'
+        });
+    }
+
+    return res.status(401).json({
+        success: false,
+        message: 'စကားဝှက် (Password) မှားယွင်းနေပါသည်။'
+    });
+});
+
+app.post('/api/admin/save', async (req, res) => {
     try {
-        const { password, session, modern, internet } = req.body;
-        if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
-            return res.status(401).json({ success: false, message: 'ခွင့်ပြုချက်မရှိပါ (Unauthorized)' });
+        const {
+            password,
+            session,
+            modern,
+            internet,
+            tw
+        } = req.body;
+
+        if (!ADMIN_PASSWORD || password !== ADMIN_PASSWORD) {
+            return res.status(401).json({
+                success: false,
+                message: 'ခွင့်ပြုချက်မရှိပါ (Unauthorized)'
+            });
         }
 
         const record = await getTodayAdminResults();
-        if (!record.schedule) record.schedule = defaultSchedule();
         const results = record.schedule;
 
         if (!session || !results[session]) {
-            return res.status(400).json({ success: false, message: 'မှားယွင်းနေသော Session ဖြစ်ပါသည်။' });
+            return res.status(400).json({
+                success: false,
+                message: 'မှားယွင်းနေသော Session ဖြစ်ပါသည်။'
+            });
         }
 
-        if (results[session].isLocked === true) {
-            return res.status(400).json({ success: false, message: 'Modern နှင့် Internet အချက်အလက်များကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)' });
+        if (results[session].isLocked) {
+            return res.status(400).json({
+                success: false,
+                message: `${session} အတွက် ဂဏန်းများကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)`
+            });
         }
 
         if (modern !== undefined && modern !== '') {
@@ -693,72 +723,37 @@ app.post('/api/admin/save-modern-internet', async (req, res) => {
             results[session].internet = internet;
         }
 
-        if ((results[session].modern && results[session].modern !== '--') || (results[session].internet && results[session].internet !== '--')) {
+        if (tw !== undefined && tw !== '') {
+            results[session].tw = tw;
+        }
+
+        if (
+            results[session].modern !== '--' ||
+            results[session].internet !== '--' ||
+            results[session].tw !== '--'
+        ) {
             results[session].isLocked = true;
         }
 
         record.schedule = results;
         record.markModified('schedule');
+
         await record.save();
 
         return res.json({
             success: true,
-            message: `${session} ၏ Modern နှင့် Internet အချက်အလက်များ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။`,
+            message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။`,
             adminResults: results
         });
     } catch (err) {
-        console.error('Admin save modern-internet error:', err.message);
-        return res.status(500).json({ success: false, message: 'Server error occurred' });
-    }
-});
+        console.error('Admin save error:', err.message);
 
-// 2. TW သီးသန့် သိမ်းဆည်းရန် API (isTwLocked ကို သီးသန့် ထိန်းချုပ်မည်)
-app.post('/api/admin/save-tw', async (req, res) => {
-    try {
-        const { password, session, tw } = req.body;
-        if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
-            return res.status(401).json({ success: false, message: 'ခွင့်ပြုချက်မရှိပါ (Unauthorized)' });
-        }
-
-        const record = await getTodayAdminResults();
-        if (!record.schedule) record.schedule = defaultSchedule();
-        const results = record.schedule;
-
-        if (!session || !results[session]) {
-            return res.status(400).json({ success: false, message: 'မှားယွင်းနေသော Session ဖြစ်ပါသည်။' });
-        }
-
-        if (results[session].isTwLocked === undefined || results[session].isTwLocked === null) {
-            results[session].isTwLocked = false;
-        }
-
-        if (results[session].isTwLocked === true) {
-            return res.status(400).json({ success: false, message: 'TW အချက်အလက်ကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)' });
-        }
-
-        if (tw !== undefined && tw !== '') {
-            results[session].tw = tw;
-        }
-
-        if (results[session].tw && results[session].tw !== '--') {
-            results[session].isTwLocked = true; // TW တစ်ခုတည်းကိုသာ သီးသန့် Lock မည်
-        }
-
-        record.schedule = results;
-        record.markModified('schedule');
-        await record.save();
-
-        return res.json({
-            success: true,
-            message: `${session} ၏ TW အချက်အလက်များ သိမ်းဆည်းပြီး သီးသန့် Lock ချလိုက်ပါပြီ။`,
-            adminResults: results
+        return res.status(500).json({
+            success: false,
+            message: 'Server error occurred'
         });
-    } catch (err) {
-        console.error('Admin save TW error:', err.message);
-        return res.status(500).json({ success: false, message: 'Server error occurred' });
     }
 });
-
 
 // 💡 Admin မှ Hot Numbers ထည့်သွင်းရန် API (Database-backed Persistence & Strict Lock)
 app.post('/api/admin/hot-numbers', async (req, res) => {
@@ -1086,43 +1081,53 @@ async function fetchCurrentSET() {
         calculated2D
     };
 }
+// --------------------------------------------------
 // Freeze the latest saved market snapshot
-(async () => {
+// --------------------------------------------------
+
+async function applyFrozenSnapshot(record, phase) {
     let result2D = '--';
     let resultIndex = '--';
     let resultValue = '--';
-    let fixedTime = '04:30:00 PM';
-    const phase = getMarketPhase(); // 💡 phase ကို ဤနေရာတွင် သတ်မှတ်ပေးပါ
 
-    try {
-        const record = await getTodayAdminResults();
-        if (record) {
-            if (record.t430 && record.t430 !== '--') {
-                result2D = record.t430;
-                resultIndex = record.setIndex430 || '--';
-                resultValue = record.value430 || '--';
-            } else if (record.t1201 && record.t1201 !== '--') {
-                result2D = record.t1201;
-                resultIndex = record.setIndex1201 || '--';
-                resultValue = record.value1201 || '--';
-                fixedTime = '12:01:00 PM';
-            }
+    let fixedTime = phase === 'midday-freeze' ? '12:01:00 PM' : '04:30:00 PM';
 
-            liveCache.setIndex = resultIndex;
-            liveCache.setValue = resultValue;
-            liveCache.marketValue = resultValue;
-            liveCache.live2D = result2D;
-            liveCache.hotNumbers = record.hotNumbers || { morning: "--", evening: "--" };
-            liveCache.adminResults = record.schedule || {};
-            liveCache.schedule = getScheduleObject(record.schedule);
-            liveCache.time = fixedTime;
-            liveCache.updatedAt = Date.now();
-            liveCache.notice = phase === 'closed' ? 'ဈေးကွက်ပိတ်ချိန်ပါပြီ' : 'နောက်ဆုံးရလဒ်များ';
+    let activeRecord = record;
+    const nowTime = getMyanmarTime();
+    
+    // ယနေ့ record ထဲမှာ တန်ဖိုးမရှိသေးလျှင် (ညသန်းခေါင်ကျော် မှ မနက်ပိုင်း Live အသစ်မဝင်လာမီအထိ)
+    // မနေ့က နောက်ဆုံးရလဒ် (4:30 သို့မဟုတ် 12:01) ကို ရှာထုတ်မည်
+    if (!activeRecord || (activeRecord.t430 === '--' && activeRecord.t1201 === '--')) {
+        const latestRecord = await DayData.findOne({ dateStr: { $ne: getMyanmarDateKey(nowTime) } }).sort({ _id: -1 }).lean();
+        if (latestRecord) {
+            activeRecord = latestRecord;
         }
-    } catch (snapshotErr) {
-        console.error('Snapshot automation error:', snapshotErr.message);
     }
-})();
+
+    if (activeRecord) {
+        if (activeRecord.t430 && activeRecord.t430 !== '--') {
+            result2D = activeRecord.t430;
+            resultIndex = activeRecord.setIndex430 || '--';
+            resultValue = activeRecord.value430 || '--';
+        } else if (activeRecord.t1201 && activeRecord.t1201 !== '--') {
+            result2D = activeRecord.t1201;
+            resultIndex = activeRecord.setIndex1201 || '--';
+            resultValue = activeRecord.value1201 || '--';
+            fixedTime = '12:01:00 PM';
+        }
+    }
+
+    liveCache.setIndex = resultIndex;
+    liveCache.setValue = resultValue;
+    liveCache.marketValue = resultValue;
+    liveCache.live2D = result2D;
+    liveCache.hotNumbers = activeRecord.hotNumbers || record.hotNumbers || { morning: "--", evening: "--" };
+    liveCache.adminResults = activeRecord.schedule || record.schedule;
+    liveCache.schedule = getScheduleObject(activeRecord.schedule || record.schedule);
+    liveCache.time = fixedTime;
+    liveCache.updatedAt = Date.now();
+    liveCache.notice = phase === 'closed' ? 'စျေးਕွက်ပိတ်ချိန်' : 'နောက်ဆုံးရလဒ်များ';
+}
 
 // --------------------------------------------------
 // Capture automatic results at 12:01 and 4:30
@@ -1260,13 +1265,13 @@ function scheduleNextBoundaryCapture() {
         {
             hour: 12,
             minute: 1,
-            second: 5,
+            second: 0,
             session: '12:01 PM'
         },
         {
             hour: 16,
             minute: 30,
-            second: 5,
+            second: 0,
             session: '04:30 PM'
         }
     ];
@@ -1316,6 +1321,7 @@ function scheduleNextBoundaryCapture() {
 
     setTimeout(async () => {
         if (!isWeekendMyanmar()) {
+            
             // 💡 ၁၂:၀၁:၀၀ (သို့) ၄:၃၀:၀၀ အတိရောက်ချိန်တွင် SET ဝဘ်ဆိုဒ် ဒေတာ Update ဖြစ်ရန် ၅ စက္ကန့် စောင့်ပေးမည်
             console.log(`Boundary reached (${target.session}). Waiting 5 seconds for SET website to finalize data...`);
             
@@ -1373,7 +1379,7 @@ async function fetchAndUpdateLiveCache() {
         // 💡 1. စနေ သို့မဟုတ် တနင်္ဂနွေ ပိတ်ရက်ဖြစ်ပါက SET ဝဘ်ဆိုဒ်သို့ လုံးဝ မသွားတော့ဘဲ ငြိမ်သက်စွာ ဆက်ပြမည်
         if (isWeekendMyanmar(nowTime)) {
             const record = await getTodayAdminResults();
-            await captureBoundaryResult(record, 'closed');
+            await applyFrozenSnapshot(record, 'closed');
             return;
         }
 
@@ -1398,7 +1404,7 @@ async function fetchAndUpdateLiveCache() {
             phaseStart === 'after-market-freeze' ||
             phaseStart === 'closed'
         ) {
-            await captureBoundaryResult(record, phaseStart);
+            await applyFrozenSnapshot(record, phaseStart);
             return;
         }
 
@@ -1412,13 +1418,13 @@ async function fetchAndUpdateLiveCache() {
             phaseAfterFetch !== 'afternoon-live'
         ) {
             const latest = await getTodayAdminResults();
-            await captureBoundaryResult(latest, phaseAfterFetch);
+            await applyFrozenSnapshot(latest, phaseAfterFetch);
             return;
         }
 
         // မနက် 9:30 ကျော်၍ Live ဆွဲချိန် SET ဘက်မှ ဒေတာ မရောက်သေးပါက အဟောင်း ဆက်ပြမည်
         if (result.setIndex === '--' || result.marketValue === '--' || result.calculated2D === '--') {
-            await captureBoundaryResult(record, 'after-market-freeze');
+            await applyFrozenSnapshot(record, 'after-market-freeze');
             return;
         }
 
@@ -1442,7 +1448,7 @@ async function fetchAndUpdateLiveCache() {
         try {
             const record = await getTodayAdminResults();
             const phase = getMarketPhase();
-            await captureBoundaryResult(record, phase);
+            await applyFrozenSnapshot(record, phase);
         } catch (fallbackError) {
             console.error('Live fallback error:', fallbackError.message);
         }
@@ -1450,7 +1456,6 @@ async function fetchAndUpdateLiveCache() {
         liveFetchRunning = false;
     }
 }
-
 setInterval(
     fetchAndUpdateLiveCache,
     LIVE_FETCH_INTERVAL_MS
