@@ -1090,15 +1090,15 @@ async function fetchCurrentSET() {
 // Freeze the latest saved market snapshot
 // --------------------------------------------------
 
-if (activeRecord) {
-        if (activeRecord.t430 && activeRecord.t430 !== '--') {
-            result2D = activeRecord.t430;
-            resultIndex = activeRecord.setIndex430 || '--';
-            resultValue = activeRecord.value430 || '--';
-        } else if (activeRecord.t1201 && activeRecord.t1201 !== '--') {
-            result2D = activeRecord.t1201;
-            resultIndex = activeRecord.setIndex1201 || '--';
-            resultValue = activeRecord.value1201 || '--';
+if (record) {
+        if (record.t430 && record.t430 !== '--') {
+            result2D = record.t430;
+            resultIndex = record.setIndex430 || '--';
+            resultValue = record.value430 || '--';
+        } else if (record.t1201 && record.t1201 !== '--') {
+            result2D = record.t1201;
+            resultIndex = record.setIndex1201 || '--';
+            resultValue = record.value1201 || '--';
             fixedTime = '12:01:00 PM';
         }
     }
@@ -1107,9 +1107,9 @@ if (activeRecord) {
     liveCache.setValue = resultValue;
     liveCache.marketValue = resultValue;
     liveCache.live2D = result2D;
-    liveCache.hotNumbers = activeRecord.hotNumbers || record.hotNumbers || { morning: "--", evening: "--" };
-    liveCache.adminResults = activeRecord.schedule || record.schedule;
-    liveCache.schedule = getScheduleObject(activeRecord.schedule || record.schedule);
+    liveCache.hotNumbers = record.hotNumbers || record.hotNumbers || { morning: "--", evening: "--" };
+    liveCache.adminResults = record.schedule || record.schedule;
+    liveCache.schedule = getScheduleObject(record.schedule || record.schedule);
     liveCache.time = fixedTime;
     liveCache.updatedAt = Date.now();
     liveCache.notice = phase === 'closed' ? 'စျေးਕွက်ပိတ်ချိန်' : 'နောက်ဆုံးရလဒ်များ';
