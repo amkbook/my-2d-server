@@ -665,26 +665,6 @@ async function getTodayAdminResults() {
     return record;
 }
 
-// --------------------------------------------------
-// Admin login and manual 2D result saving
-// --------------------------------------------------
-
-app.post('/api/admin/login', (req, res) => {
-    const { password } = req.body;
-
-    if (ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
-        return res.json({
-            success: true,
-            message: 'Login successful'
-        });
-    }
-
-    return res.status(401).json({
-        success: false,
-        message: 'စကားဝှက် (Password) မှားယွင်းနေပါသည်။'
-    });
-});
-
 // 1. Modern & Internet သိမ်းဆည်းရန် API (isLocked ကို ထိန်းချုပ်မည်)
 app.post('/api/admin/save-modern-internet', async (req, res) => {
     try {
@@ -694,13 +674,14 @@ app.post('/api/admin/save-modern-internet', async (req, res) => {
         }
 
         const record = await getTodayAdminResults();
+        if (!record.schedule) record.schedule = defaultSchedule();
         const results = record.schedule;
 
         if (!session || !results[session]) {
             return res.status(400).json({ success: false, message: 'မှားယွင်းနေသော Session ဖြစ်ပါသည်။' });
         }
 
-        if (results[session].isLocked) {
+        if (results[session].isLocked === true) {
             return res.status(400).json({ success: false, message: 'Modern နှင့် Internet အချက်အလက်များကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)' });
         }
 
@@ -712,8 +693,8 @@ app.post('/api/admin/save-modern-internet', async (req, res) => {
             results[session].internet = internet;
         }
 
-        if (results[session].modern !== '--' || results[session].internet !== '--') {
-            results[session].isLocked = true; // Modern နှင့် Internet အတွက် တွဲလျက် Lock မည်[cite: 8]
+        if ((results[session].modern && results[session].modern !== '--') || (results[session].internet && results[session].internet !== '--')) {
+            results[session].isLocked = true;
         }
 
         record.schedule = results;
@@ -731,7 +712,7 @@ app.post('/api/admin/save-modern-internet', async (req, res) => {
     }
 });
 
-// 2. TW သီးသန့် သိမ်းဆည်းရန် API (isTwLocked ကို သီးသန့် ထိန်းချုပ်မည်)[cite: 8]
+// 2. TW သီးသန့် သိမ်းဆည်းရန် API (isTwLocked ကို သီးသန့် ထိန်းချုပ်မည်)
 app.post('/api/admin/save-tw', async (req, res) => {
     try {
         const { password, session, tw } = req.body;
@@ -740,18 +721,18 @@ app.post('/api/admin/save-tw', async (req, res) => {
         }
 
         const record = await getTodayAdminResults();
+        if (!record.schedule) record.schedule = defaultSchedule();
         const results = record.schedule;
 
         if (!session || !results[session]) {
             return res.status(400).json({ success: false, message: 'မှားယွင်းနေသော Session ဖြစ်ပါသည်။' });
         }
 
-        // record.schedule ရှိ တစ်ခုချင်းစီအတွက် isTwLocked မပါသေးပါက default အနေဖြင့် false ထည့်ပေးရန်
-        if (results[session].isTwLocked === undefined) {
+        if (results[session].isTwLocked === undefined || results[session].isTwLocked === null) {
             results[session].isTwLocked = false;
         }
 
-        if (results[session].isTwLocked) {
+        if (results[session].isTwLocked === true) {
             return res.status(400).json({ success: false, message: 'TW အချက်အလက်ကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)' });
         }
 
@@ -759,13 +740,12 @@ app.post('/api/admin/save-tw', async (req, res) => {
             results[session].tw = tw;
         }
 
-        if (results[session].tw !== '--') {
-            results[session].isTwLocked = true; // TW တစ်ခုတည်းကိုသာ သီးသန့် Lock မည်[cite: 8]
+        if (results[session].tw && results[session].tw !== '--') {
+            results[session].isTwLocked = true; // TW တစ်ခုတည်းကိုသာ သီးသန့် Lock မည်
         }
 
         record.schedule = results;
         record.markModified('schedule');
-
         await record.save();
 
         return res.json({
@@ -778,6 +758,7 @@ app.post('/api/admin/save-tw', async (req, res) => {
         return res.status(500).json({ success: false, message: 'Server error occurred' });
     }
 });
+
 
 // 💡 Admin မှ Hot Numbers ထည့်သွင်းရန် API (Database-backed Persistence & Strict Lock)
 app.post('/api/admin/hot-numbers', async (req, res) => {
