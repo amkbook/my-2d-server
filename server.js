@@ -1086,11 +1086,10 @@ async function fetchCurrentSET() {
         calculated2D
     };
 }
-// --------------------------------------------------
 // Freeze the latest saved market snapshot
-// --------------------------------------------------
-
-if (record) {
+try {
+    const record = await getTodayAdminResults();
+    if (record) {
         if (record.t430 && record.t430 !== '--') {
             result2D = record.t430;
             resultIndex = record.setIndex430 || '--';
@@ -1101,18 +1100,21 @@ if (record) {
             resultValue = record.value1201 || '--';
             fixedTime = '12:01:00 PM';
         }
-    }
 
-    liveCache.setIndex = resultIndex;
-    liveCache.setValue = resultValue;
-    liveCache.marketValue = resultValue;
-    liveCache.live2D = result2D;
-    liveCache.hotNumbers = record.hotNumbers || record.hotNumbers || { morning: "--", evening: "--" };
-    liveCache.adminResults = record.schedule || record.schedule;
-    liveCache.schedule = getScheduleObject(record.schedule || record.schedule);
-    liveCache.time = fixedTime;
-    liveCache.updatedAt = Date.now();
-    liveCache.notice = phase === 'closed' ? 'စျေးਕွက်ပိတ်ချိန်' : 'နောက်ဆုံးရလဒ်များ';
+        liveCache.setIndex = resultIndex;
+        liveCache.setValue = resultValue;
+        liveCache.marketValue = resultValue;
+        liveCache.live2D = result2D;
+        liveCache.hotNumbers = record.hotNumbers || { morning: "--", evening: "--" };
+        liveCache.adminResults = record.schedule || {};
+        liveCache.schedule = getScheduleObject(record.schedule);
+        liveCache.time = fixedTime;
+        liveCache.updatedAt = Date.now();
+        liveCache.notice = phase === 'closed' ? 'ဈေးကွက်ပိတ်ချိန်ပီ' : 'နောက်ဆုံးရလဒ်များ';
+    }
+} catch (snapshotErr) {
+    console.error('Snapshot automation error:', snapshotErr.message);
+}
 
 // --------------------------------------------------
 // Capture automatic results at 12:01 and 4:30
