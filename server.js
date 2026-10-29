@@ -1085,31 +1085,7 @@ async function fetchCurrentSET() {
 // Freeze the latest saved market snapshot
 // --------------------------------------------------
 
-async function applyFrozenSnapshot(record, phase) {
-    let result2D = '--';
-    let resultIndex = '--';
-    let resultValue = '--';
-    let fixedTime = phase === 'midday-freeze' ? '12:01:00 PM' : '04:30:00 PM';
-
-    let activeRecord = record;
-    const nowTime = getMyanmarTime();
-    
-    // 🛡️ အင်ဂျင်နီယာ Guard Condition: Boundary Capture ပြုလုပ်နေစဉ် (သို့မဟုတ် ချက်ချင်းပြီးစ ကြားကာလအတွင်း) 
-    // Database တွင် ယနေ့တန်ဖိုးများ အပြည့်အစုံ မရောက်သေးပါက မနေ့က/ယခင်က အဟောင်းသို့ မကူးပြောင်းစေရန် ကာကွယ်ခြင်း
-    const isDuringBoundaryBuffer = (activeRecord && (
-        (activeRecord.t1201 === '--' && phase === 'midday-freeze') || 
-        (activeRecord.t430 === '--' && phase === 'after-market-freeze')
-    ));
-
-    // ယနေ့ record ထဲမှာ တန်ဖိုးမရှိသေးလျှင် (သို့မဟုတ် Boundary Buffer ဖြစ်နေလျှင် မနေ့က အဟောင်းသို့ မကူးပြောင်းစေရန် တားဆီးမည်)
-    if (!activeRecord || ((activeRecord.t430 === '--' && activeRecord.t1201 === '--') && !isDuringBoundaryBuffer)) {
-        const latestRecord = await DayData.findOne({ dateStr: { $ne: getMyanmarDateKey(nowTime) } }).sort({ _id: -1 }).lean();
-        if (latestRecord && !isDuringBoundaryBuffer) {
-            activeRecord = latestRecord;
-        }
-    }
-
-    if (activeRecord) {
+if (activeRecord) {
         if (activeRecord.t430 && activeRecord.t430 !== '--') {
             result2D = activeRecord.t430;
             resultIndex = activeRecord.setIndex430 || '--';
@@ -1132,7 +1108,6 @@ async function applyFrozenSnapshot(record, phase) {
     liveCache.time = fixedTime;
     liveCache.updatedAt = Date.now();
     liveCache.notice = phase === 'closed' ? 'စျေးਕွက်ပိတ်ချိန်' : 'နောက်ဆုံးရလဒ်များ';
-}
 
 // --------------------------------------------------
 // Capture automatic results at 12:01 and 4:30
@@ -1270,17 +1245,18 @@ function scheduleNextBoundaryCapture() {
         {
             hour: 12,
             minute: 1,
-            second: 0,
+            second: 5,
             session: '12:01 PM'
         },
         {
             hour: 16,
             minute: 30,
-            second: 0,
+            second: 5,
             session: '04:30 PM'
         }
     ];
-
+    // ... ကျန်သည့် ကုဒ်များ ပုံမှန်အတိုင်း ...
+}
     let target = null;
 
     for (const t of targets) {
