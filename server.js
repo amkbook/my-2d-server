@@ -1347,6 +1347,7 @@ function scheduleNextBoundaryCapture() {
         scheduleNextBoundaryCapture();
     }, delay);
 }
+
 // --------------------------------------------------
 // Live cache updater
 // During midday/after close/weekends, no external
@@ -1366,7 +1367,7 @@ async function fetchAndUpdateLiveCache() {
         // 💡 1. စနေ သို့မဟုတ် တနင်္ဂနွေ ပိတ်ရက်ဖြစ်ပါက SET ဝဘ်ဆိုဒ်သို့ လုံးဝ မသွားတော့ဘဲ ငြိမ်သက်စွာ ဆက်ပြမည်
         if (isWeekendMyanmar(nowTime)) {
             const record = await getTodayAdminResults();
-            await applyFrozenSnapshot(record, 'closed');
+            await captureBoundaryResult(record, 'closed');
             return;
         }
 
@@ -1391,7 +1392,7 @@ async function fetchAndUpdateLiveCache() {
             phaseStart === 'after-market-freeze' ||
             phaseStart === 'closed'
         ) {
-            await applyFrozenSnapshot(record, phaseStart);
+            await captureBoundaryResult(record, phaseStart);
             return;
         }
 
@@ -1405,13 +1406,13 @@ async function fetchAndUpdateLiveCache() {
             phaseAfterFetch !== 'afternoon-live'
         ) {
             const latest = await getTodayAdminResults();
-            await applyFrozenSnapshot(latest, phaseAfterFetch);
+            await captureBoundaryResult(latest, phaseAfterFetch);
             return;
         }
 
         // မနက် 9:30 ကျော်၍ Live ဆွဲချိန် SET ဘက်မှ ဒေတာ မရောက်သေးပါက အဟောင်း ဆက်ပြမည်
         if (result.setIndex === '--' || result.marketValue === '--' || result.calculated2D === '--') {
-            await applyFrozenSnapshot(record, 'after-market-freeze');
+            await captureBoundaryResult(record, 'after-market-freeze');
             return;
         }
 
@@ -1435,7 +1436,7 @@ async function fetchAndUpdateLiveCache() {
         try {
             const record = await getTodayAdminResults();
             const phase = getMarketPhase();
-            await applyFrozenSnapshot(record, phase);
+            await captureBoundaryResult(record, phase);
         } catch (fallbackError) {
             console.error('Live fallback error:', fallbackError.message);
         }
@@ -1443,6 +1444,7 @@ async function fetchAndUpdateLiveCache() {
         liveFetchRunning = false;
     }
 }
+
 setInterval(
     fetchAndUpdateLiveCache,
     LIVE_FETCH_INTERVAL_MS
