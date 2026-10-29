@@ -1088,6 +1088,10 @@ async function fetchCurrentSET() {
 }
 // Freeze the latest saved market snapshot
 (async () => {
+    let result2D = '--';
+    let resultIndex = '--';
+    let resultValue = '--';
+    let fixedTime = '04:30:00 PM';
     try {
         const record = await getTodayAdminResults();
         if (record) {
