@@ -1264,8 +1264,7 @@ function scheduleNextBoundaryCapture() {
             session: '04:30 PM'
         }
     ];
-    // ... ကျန်သည့် ကုဒ်များ ပုံမှန်အတိုင်း ...
-}
+
     let target = null;
 
     for (const t of targets) {
@@ -1311,7 +1310,6 @@ function scheduleNextBoundaryCapture() {
 
     setTimeout(async () => {
         if (!isWeekendMyanmar()) {
-            
             // 💡 ၁၂:၀၁:၀၀ (သို့) ၄:၃၀:၀၀ အတိရောက်ချိန်တွင် SET ဝဘ်ဆိုဒ် ဒေတာ Update ဖြစ်ရန် ၅ စက္ကန့် စောင့်ပေးမည်
             console.log(`Boundary reached (${target.session}). Waiting 5 seconds for SET website to finalize data...`);
             
@@ -1348,7 +1346,7 @@ function scheduleNextBoundaryCapture() {
 
         scheduleNextBoundaryCapture();
     }, delay);
-    
+}
 // --------------------------------------------------
 // Live cache updater
 // During midday/after close/weekends, no external
