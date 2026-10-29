@@ -1092,6 +1092,8 @@ async function fetchCurrentSET() {
     let resultIndex = '--';
     let resultValue = '--';
     let fixedTime = '04:30:00 PM';
+    const phase = getMarketPhase(); // 💡 phase ကို ဤနေရာတွင် သတ်မှတ်ပေးပါ
+
     try {
         const record = await getTodayAdminResults();
         if (record) {
