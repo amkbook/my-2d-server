@@ -1094,11 +1094,17 @@ async function applyFrozenSnapshot(record, phase) {
     let activeRecord = record;
     const nowTime = getMyanmarTime();
     
-    // ယနေ့ record ထဲမှာ တန်ဖိုးမရှိသေးလျှင် (ညသန်းခေါင်ကျော် မှ မနက်ပိုင်း Live အသစ်မဝင်လာမီအထိ)
-    // မနေ့က နောက်ဆုံးရလဒ် (4:30 သို့မဟုတ် 12:01) ကို ရှာထုတ်မည်
-    if (!activeRecord || (activeRecord.t430 === '--' && activeRecord.t1201 === '--')) {
+    // 🛡️ အင်ဂျင်နီယာ Guard Condition: Boundary Capture ပြုလုပ်နေစဉ် (သို့မဟုတ် ချက်ချင်းပြီးစ ကြားကာလအတွင်း) 
+    // Database တွင် ယနေ့တန်ဖိုးများ အပြည့်အစုံ မရောက်သေးပါက မနေ့က/ယခင်က အဟောင်းသို့ မကူးပြောင်းစေရန် ကာကွယ်ခြင်း
+    const isDuringBoundaryBuffer = (activeRecord && (
+        (activeRecord.t1201 === '--' && phase === 'midday-freeze') || 
+        (activeRecord.t430 === '--' && phase === 'after-market-freeze')
+    ));
+
+    // ယနေ့ record ထဲမှာ တန်ဖိုးမရှိသေးလျှင် (သို့မဟုတ် Boundary Buffer ဖြစ်နေလျှင် မနေ့က အဟောင်းသို့ မကူးပြောင်းစေရန် တားဆီးမည်)
+    if (!activeRecord || ((activeRecord.t430 === '--' && activeRecord.t1201 === '--') && !isDuringBoundaryBuffer)) {
         const latestRecord = await DayData.findOne({ dateStr: { $ne: getMyanmarDateKey(nowTime) } }).sort({ _id: -1 }).lean();
-        if (latestRecord) {
+        if (latestRecord && !isDuringBoundaryBuffer) {
             activeRecord = latestRecord;
         }
     }
