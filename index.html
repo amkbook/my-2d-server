@@ -708,9 +708,12 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
       });
     }
     let current2D = "--";
-    let announcedTimes = {};
-    let soundEnabled = true;
-    let isLiveActive = false;
+  let announcedTimes = {};
+  let soundEnabled = true;
+  let isLiveActive = false;
+
+  // 🔴 4:15 မှ 4:30 အတွင်း ၁ မိနစ်လျှင် အနည်းဆုံး ၁ ကြိမ် အသံထွက်စေရန်အတွက် ခြေရာခံဗေဒင်
+  let lastAudioAnnounceTime = 0;
 
     function switchTab(pageId, btn) {
       document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
@@ -1108,10 +1111,30 @@ async function fetchLiveData() {
           live2DEl.innerText = live2DVal;
         }
 
-        if(current2D !== data.live2D) {
-          current2D = data.live2D;
-          speak2D();
-        }
+       // 🔴 အသံထွက်စနစ် ထိန်းချုပ်မှု အသစ် (ညနေ 4:15 မှ 4:30 အထိ အထူးသီးသန့် စနစ်)
+          const currentTimeMs = now.getTime();
+          const range415 = 16 * 3600 + 15 * 60; // ညနေ 4:15 စတင်သည့် စက္ကန့်တန်ဖိုး
+          const isInSpecialRange = (totalSec >= range415 && totalSec <= marketClose);
+
+          if (isInSpecialRange) {
+            // 1. ဂဏန်းအသစ်သို့ ပြောင်းသွားပါက ချက်ချင်းအသံထွက်မည်၊ တိုင်ပတ်အချိန်ကိုလည်း အသစ်တင်မည်
+            if (current2D !== data.live2D) {
+              current2D = data.live2D;
+              speak2D();
+              lastAudioAnnounceTime = currentTimeMs;
+            } 
+            // 2. ဂဏန်းမပြောင်းဘဲ ငြိမ်နေသော်လည်း ၁ မိနစ် (60,000 ms) ပြည့်သွားပါက လက်ရှိဂဏန်းကို ထပ်မံအသံထွက်ပေးမည်
+            else if (currentTimeMs - lastAudioAnnounceTime >= 60000) {
+              speak2D();
+              lastAudioAnnounceTime = currentTimeMs;
+            }
+          } else {
+            // 4:15 မတိုင်မီ ပုံမှန်အတိုင်း ဂဏန်းအပြောင်းအလဲရှိမှသာ အသံထွက်သည့်စနစ်
+            if (current2D !== data.live2D) {
+              current2D = data.live2D;
+              speak2D();
+            }
+          }
       } else {
         // 💡 ညသန်းခေါင် ၁၂:၀၀ ကျော်၍ ဆာဗာမှ '--' ပို့လာချိန်တွင် ညနေ ၄:၃၀ က ဂဏန်းဟောင်းကို ဆက်ထိန်းရန်
         if ((totalSec > marketClose || totalSec < morningStart) && document.getElementById('live2D').innerText !== '--') {
