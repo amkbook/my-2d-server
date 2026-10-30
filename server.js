@@ -660,6 +660,24 @@ async function getTodayAdminResults() {
 
     return record;
 }
+// --------------------------------------------------
+// Admin login route
+// --------------------------------------------------
+app.post('/api/admin/login', (req, res) => {
+    const { password } = req.body;
+
+    if (ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
+        return res.json({
+            success: true,
+            message: 'Login successful'
+        });
+    }
+
+    return res.status(401).json({
+        success: false,
+        message: 'စကားဝှက် (Password) မှားယွင်းနေပါသည်။'
+    });
+});
 
 // --------------------------------------------------
 // Admin login and manual 2D result saving
