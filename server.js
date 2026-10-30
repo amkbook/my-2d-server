@@ -665,22 +665,6 @@ async function getTodayAdminResults() {
 // Admin login and manual 2D result saving
 // --------------------------------------------------
 
-app.post('/api/admin/login', (req, res) => {
-    const { password } = req.body;
-
-    if (ADMIN_PASSWORD && password === ADMIN_PASSWORD) {
-        return res.json({
-            success: true,
-            message: 'Login successful'
-        });
-    }
-
-    return res.status(401).json({
-        success: false,
-        message: 'စကားဝှက် (Password) မှားယွင်းနေပါသည်။'
-    });
-});
-
 app.post('/api/admin/save', async (req, res) => {
     try {
         const {
@@ -698,16 +682,37 @@ app.post('/api/admin/save', async (req, res) => {
             });
         }
 
-        const record = await getTodayAdminResults();
+        let record = await getTodayAdminResults();
+        
+        // အကယ်၍ ယနေ့အတွက် Record မရှိသေးပါက အလိုအလျောက် အသစ်ဖန်တီးမည်
         if (!record) {
-            return res.status(404).json({
-                success: false,
-                message: 'ယနေ့အတွက် Admin Record မရှိသေးပါ။'
+            const AdminModel = mongoose.models.AdminResult || mongoose.model('AdminResult', new mongoose.Schema({
+                date: String,
+                schedule: Object,
+                hotNumbers: Object,
+                holidayNotice: String
+            }));
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            record = new AdminModel({
+                date: todayStr,
+                schedule: {
+                    "09:30 AM": { modern: '--', internet: '--', tw: '--', isLocked: false },
+                    "12:01 PM": { modern: '--', internet: '--', tw: '--', isLocked: false },
+                    "02:00 PM": { modern: '--', internet: '--', tw: '--', isLocked: false },
+                    "04:30 PM": { modern: '--', internet: '--', tw: '--', isLocked: false }
+                },
+                hotNumbers: { morning: '--', evening: '--' }
             });
         }
 
         if (!record.schedule) {
-            record.schedule = {};
+            record.schedule = {
+                "09:30 AM": { modern: '--', internet: '--', tw: '--', isLocked: false },
+                "12:01 PM": { modern: '--', internet: '--', tw: '--', isLocked: false },
+                "02:00 PM": { modern: '--', internet: '--', tw: '--', isLocked: false },
+                "04:30 PM": { modern: '--', internet: '--', tw: '--', isLocked: false }
+            };
         }
 
         const results = record.schedule;
@@ -719,7 +724,6 @@ app.post('/api/admin/save', async (req, res) => {
             });
         }
 
-        // Session structure မရှိသေးပါက ကနဦး တန်ဖိုးများဖြင့် အစပျိုးပေးမည်
         if (!results[session]) {
             results[session] = {
                 modern: '--',
@@ -729,14 +733,7 @@ app.post('/api/admin/save', async (req, res) => {
             };
         }
 
-        // TW သို့မဟုတ် Modern/Internet ခွဲထုတ်သိမ်းဆည်းရာတွင် အလွယ်တကူ Lock ကျွတ်နေခြင်း မရှိစေရန် စစ်ဆေးချက်
-        if (results[session].isLocked) {
-            // အကယ်၍ Lock ဖြစ်ပြီးသားဖြစ်သော်လည်း Admin ဘက်မှ အတင်း Update ထည့်လိုပါက သို့မဟုတ် တားဆီးလိုပါက 
-            // ဤနေရာတွင် စစ်ဆေးမှုကို ဖြတ်နိုင်ပါသည်။ လက်ရှိတွင် Lock ဖြစ်ပါက ထပ်မံပြင်ခွင့်မပြုသော ပုံစံအတိုင်း ထားရှိသည်။
-            // (သို့သော် တန်ဖိုးအသစ် တစ်ခုခု ဖြည့်သွင်းခွင့်ပြုလိုပါက isLocked စစ်ဆေးမှုကို ကျော်နိုင်သည်)
-        }
-
-        // ရလာဒ်များကို ထည့်သွင်းခြင်း (ကွက်လပ် သို့မဟုတ် undefined မဟုတ်မှသာ အစားထိုးမည်)
+        // တန်ဖိုးများကို ထည့်သွင်းခြင်း
         if (modern !== undefined && modern !== '') {
             results[session].modern = modern;
         }
@@ -749,7 +746,7 @@ app.post('/api/admin/save', async (req, res) => {
             results[session].tw = tw;
         }
 
-        // တန်ဖိုးတစ်ခုခု (-- မဟုတ်တော့ဘဲ) ဝင်လာပါက isLocked ကို true သို့ အလိုအလျောက် ပြောင်းလဲမည်
+        // တစ်ခုခု ပါလာပါက Lock ချမည်
         if (
             (results[session].modern && results[session].modern !== '--') ||
             (results[session].internet && results[session].internet !== '--') ||
@@ -765,7 +762,7 @@ app.post('/api/admin/save', async (req, res) => {
 
         return res.json({
             success: true,
-            message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီး Lock ချလိုက်ပါပြီ။`,
+            message: `${session} ဇယားကွက် အချက်အလက်များ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။`,
             adminResults: results
         });
     } catch (err) {
