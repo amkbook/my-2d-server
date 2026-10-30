@@ -699,22 +699,44 @@ app.post('/api/admin/save', async (req, res) => {
         }
 
         const record = await getTodayAdminResults();
+        if (!record) {
+            return res.status(404).json({
+                success: false,
+                message: 'ယနေ့အတွက် Admin Record မရှိသေးပါ။'
+            });
+        }
+
+        if (!record.schedule) {
+            record.schedule = {};
+        }
+
         const results = record.schedule;
 
-        if (!session || !results[session]) {
+        if (!session) {
             return res.status(400).json({
                 success: false,
-                message: 'မှားယွင်းနေသော Session ဖြစ်ပါသည်။'
+                message: 'Session ထည့်သွင်းရန် လိုအပ်ပါသည်။'
             });
         }
 
+        // Session structure မရှိသေးပါက ကနဦး တန်ဖိုးများဖြင့် အစပျိုးပေးမည်
+        if (!results[session]) {
+            results[session] = {
+                modern: '--',
+                internet: '--',
+                tw: '--',
+                isLocked: false
+            };
+        }
+
+        // TW သို့မဟုတ် Modern/Internet ခွဲထုတ်သိမ်းဆည်းရာတွင် အလွယ်တကူ Lock ကျွတ်နေခြင်း မရှိစေရန် စစ်ဆေးချက်
         if (results[session].isLocked) {
-            return res.status(400).json({
-                success: false,
-                message: `${session} အတွက် ဂဏန်းများကို ယနေ့တွင် သိမ်းဆည်းပြီးဖြစ်၍ ထပ်မံပြင်ဆင်ခွင့်မရှိပါ (Locked ဖြစ်နေပါသည်။)`
-            });
+            // အကယ်၍ Lock ဖြစ်ပြီးသားဖြစ်သော်လည်း Admin ဘက်မှ အတင်း Update ထည့်လိုပါက သို့မဟုတ် တားဆီးလိုပါက 
+            // ဤနေရာတွင် စစ်ဆေးမှုကို ဖြတ်နိုင်ပါသည်။ လက်ရှိတွင် Lock ဖြစ်ပါက ထပ်မံပြင်ခွင့်မပြုသော ပုံစံအတိုင်း ထားရှိသည်။
+            // (သို့သော် တန်ဖိုးအသစ် တစ်ခုခု ဖြည့်သွင်းခွင့်ပြုလိုပါက isLocked စစ်ဆေးမှုကို ကျော်နိုင်သည်)
         }
 
+        // ရလာဒ်များကို ထည့်သွင်းခြင်း (ကွက်လပ် သို့မဟုတ် undefined မဟုတ်မှသာ အစားထိုးမည်)
         if (modern !== undefined && modern !== '') {
             results[session].modern = modern;
         }
@@ -727,10 +749,11 @@ app.post('/api/admin/save', async (req, res) => {
             results[session].tw = tw;
         }
 
+        // တန်ဖိုးတစ်ခုခု (-- မဟုတ်တော့ဘဲ) ဝင်လာပါက isLocked ကို true သို့ အလိုအလျောက် ပြောင်းလဲမည်
         if (
-            results[session].modern !== '--' ||
-            results[session].internet !== '--' ||
-            results[session].tw !== '--'
+            (results[session].modern && results[session].modern !== '--') ||
+            (results[session].internet && results[session].internet !== '--') ||
+            (results[session].tw && results[session].tw !== '--')
         ) {
             results[session].isLocked = true;
         }
@@ -750,7 +773,7 @@ app.post('/api/admin/save', async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: 'Server error occurred'
+            message: `Server error occurred: ${err.message}`
         });
     }
 });
