@@ -595,19 +595,28 @@ function getMarketPhase(date = getMyanmarTime()) {
         date.getSeconds();
 
     const startAM = 9 * 3600 + 30 * 60;
-    const endAM = 12 * 3600 + 60;
+    const endAM = 12 * 3600 + 60;         // 12:01:00
+    const bufferAM = 12 * 3600 + 65;      // 12:01:05 အထိသာ Buffer ပေးမည် (၅ စက္ကန့်)
+    
     const startPM = 14 * 3600;
-    const endPM = 16 * 3600 + 30 * 60;
+    const endPM = 16 * 3600 + 30 * 60;    // 04:30:00
+    const bufferPM = 16 * 3600 + 30 * 60 + 5; // 04:30:05 အထိသာ Buffer ပေးမည် (၅ စက္ကန့်)
 
     if (seconds >= startAM && seconds < endAM) {
         return 'morning-live';
+    }
+    if (seconds >= endAM && seconds < bufferAM) {
+        return 'morning-live'; // ၅ စက္ကန့် Buffer စောင့်မည်
     }
 
     if (seconds >= startPM && seconds < endPM) {
         return 'afternoon-live';
     }
+    if (seconds >= endPM && seconds < bufferPM) {
+        return 'afternoon-live'; // ၅ စက္ကန့် Buffer စောင့်မည်
+    }
 
-    if (seconds >= endAM && seconds < startPM) {
+    if (seconds >= bufferAM && seconds < startPM) {
         return 'midday-freeze';
     }
 
@@ -1232,13 +1241,13 @@ async function applyFrozenSnapshot(record, phase) {
     let resultIndex = '--';
     let resultValue = '--';
 
-    let fixedTime = phase === 'midday-freeze' ? '12:01:00 PM' : '04:30:00 PM';
+    // 💡 တောင်းဆိုချက်အတိုင်း UI တွင် ပြသမည့် Last Update အချိန်ကို 12:01:00 PM နှင့် 04:30:00 PM ဟု အတိအကျ ပုံသေပြမည်
+    let fixedTime = (phase === 'midday-freeze' || phase === 'morning-live') ? '12:01:00 PM' : '04:30:00 PM';
 
     let activeRecord = record;
     const nowTime = getMyanmarTime();
     
-    // ယနေ့ record ထဲမှာ တန်ဖိုးမရှိသေးလျှင် (ညသန်းခေါင်ကျော် မှ မနက်ပိုင်း Live အသစ်မဝင်လာမီအထိ)
-    // မနေ့က နောက်ဆုံးရလဒ် (4:30 သို့မဟုတ် 12:01) ကို ရှာထုတ်မည်
+    
     if (!activeRecord || (activeRecord.t430 === '--' && activeRecord.t1201 === '--')) {
         const latestRecord = await DayData.findOne({ dateStr: { $ne: getMyanmarDateKey(nowTime) } }).sort({ _id: -1 }).lean();
         if (latestRecord) {
@@ -1247,15 +1256,26 @@ async function applyFrozenSnapshot(record, phase) {
     }
 
     if (activeRecord) {
-        if (activeRecord.t430 && activeRecord.t430 !== '--') {
-            result2D = activeRecord.t430;
-            resultIndex = activeRecord.setIndex430 || '--';
-            resultValue = activeRecord.value430 || '--';
-        } else if (activeRecord.t1201 && activeRecord.t1201 !== '--') {
-            result2D = activeRecord.t1201;
-            resultIndex = activeRecord.setIndex1201 || '--';
-            resultValue = activeRecord.value1201 || '--';
-            fixedTime = '12:01:00 PM';
+        if (phase === 'midday-freeze' || phase === 'morning-live') {
+            if (activeRecord.t1201 && activeRecord.t1201 !== '--') {
+                result2D = activeRecord.t1201;
+                resultIndex = activeRecord.setIndex1201 || '--';
+                resultValue = activeRecord.value1201 || '--';
+            } else {
+                result2D = liveCache.live2D !== '--' ? liveCache.live2D : (activeRecord.schedule?.['12:01 PM']?.modern || '--');
+                resultIndex = liveCache.setIndex;
+                resultValue = liveCache.setValue;
+            }
+        } else {
+            if (activeRecord.t430 && activeRecord.t430 !== '--') {
+                result2D = activeRecord.t430;
+                resultIndex = activeRecord.setIndex430 || '--';
+                resultValue = activeRecord.value430 || '--';
+            } else {
+                result2D = liveCache.live2D !== '--' ? liveCache.live2D : (activeRecord.schedule?.['04:30 PM']?.modern || '--');
+                resultIndex = liveCache.setIndex;
+                resultValue = liveCache.setValue;
+            }
         }
     }
 
@@ -1263,12 +1283,12 @@ async function applyFrozenSnapshot(record, phase) {
     liveCache.setValue = resultValue;
     liveCache.marketValue = resultValue;
     liveCache.live2D = result2D;
-    liveCache.hotNumbers = activeRecord.hotNumbers || record.hotNumbers || { morning: "--", evening: "--" };
-    liveCache.adminResults = activeRecord.schedule || record.schedule;
-    liveCache.schedule = getScheduleObject(activeRecord.schedule || record.schedule);
-    liveCache.time = fixedTime;
+    liveCache.hotNumbers = activeRecord?.hotNumbers || record?.hotNumbers || { morning: "--", evening: "--" };
+    liveCache.adminResults = activeRecord?.schedule || record?.schedule;
+    liveCache.schedule = getScheduleObject(activeRecord?.schedule || record?.schedule);
+    liveCache.time = fixedTime; // 👈 12:01:00 PM သို့မဟုတ် 04:30:00 PM ဟု အတိအကျ ပုံသေချိတ်ဆက်ပေးသည်
     liveCache.updatedAt = Date.now();
-    liveCache.notice = phase === 'closed' ? 'စျေးਕွက်ပိတ်ချိန်' : 'နောက်ဆုံးရလဒ်များ';
+    liveCache.notice = phase === 'closed' ? 'စျေးကွက်ပိတ်ချိန်' : 'နောက်ဆုံးရလဒ်များ';
 }
 
 // --------------------------------------------------

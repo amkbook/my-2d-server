@@ -917,26 +917,33 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
         }
 
       } else {
-        isLiveActive = false;
-        
-        if ((hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
-          const statusEl = document.getElementById('marketStatus');
-          statusEl.className = 'status-indicator status-paused';
-          statusEl.innerHTML = '<span>✔ နေ့လည်ပိုင်းစျေးကွက်အနားယူချိန်</span>';
-          document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
-        }
-        else if ((hours === 16 && minutes >= 30) || hours > 16) {
-          const statusEl = document.getElementById('marketStatus');
-          statusEl.className = 'status-indicator status-closed';
-          statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
-          document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
-        } else {
-          if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
-            updateMarketUI('paused');
-          } else {
-            updateMarketUI('closed');
+          isLiveActive = false;
+          
+          // 12:01 PM နှင့် 4:30 PM အတိရောက်ချိန်တွင် အချက်ပြမှုများ ချောမွေ့စေရန် (5-Second Buffer Support)
+          if (hours === 12 && minutes === 1 && seconds <= 5) {
+              document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
           }
-        }
+          else if (hours === 16 && minutes === 30 && seconds <= 5) {
+              document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
+          }
+          else if ((hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
+              const statusEl = document.getElementById('marketStatus');
+              statusEl.className = 'status-indicator status-paused';
+              statusEl.innerHTML = '<span>✔ နေ့လည်ပိုင်းစျေးကွက်အနားယူချိန်</span>';
+              document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
+          }
+          else if ((hours === 16 && minutes >= 30) || hours > 16) {
+              const statusEl = document.getElementById('marketStatus');
+              statusEl.className = 'status-indicator status-closed';
+              statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
+              document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
+          } else {
+              if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
+                  updateMarketUI('paused');
+              } else {
+                  updateMarketUI('closed');
+              }
+          }
       }
 
       if (hours === 9 && minutes === 0 && seconds === 0 && !announcedTimes['reset_0900']) {
