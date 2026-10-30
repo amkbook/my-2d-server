@@ -195,8 +195,12 @@
                     currentPassword = pwd;
                     document.getElementById('loginSection').classList.add('hidden');
                     document.getElementById('controlSection').classList.remove('hidden');
+                    
+                    // လော့ဂ်အင် အောင်မြင်မှသာ Data များကို စတင်ခေါ်ယူမည်
                     loadAdminData();
                     loadAdminGoldData();
+                    loadAdminHotNumbers();
+                    loadAdminHolidayNotice();
                 } else {
                     errorText.classList.remove('hidden');
                 }
@@ -219,7 +223,7 @@
             }
         }
 
-       function updateFormFields() {
+        function updateFormFields() {
             if (!cachedAdminData) return;
             const session = document.getElementById('sessionSelect').value;
             const sessionData = cachedAdminData[session] || { modern: "--", internet: "--", tw: "--", isLocked: false, isTwLocked: false };
@@ -236,7 +240,6 @@
             internetInput.value = sessionData.internet !== "--" ? sessionData.internet : "";
             twInput.value = sessionData.tw !== "--" ? sessionData.tw : "";
 
-            // Modern & Internet Lock Check
             if (sessionData.isLocked) {
                 modernInput.disabled = true;
                 internetInput.disabled = true;
@@ -251,7 +254,6 @@
                 lockNotice.classList.add('hidden');
             }
 
-            // TW Independent Lock Check
             if (sessionData.isTwLocked) {
                 twInput.disabled = true;
                 saveTwBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -269,7 +271,6 @@
             await loadAdminData();
         }
 
-        // Modern & Internet သိမ်းဆည်းရန် (Joint)
         async function saveModernInternetData() {
             const session = document.getElementById('sessionSelect').value;
             const modern = document.getElementById('modernInput').value;
@@ -303,7 +304,6 @@
             }
         }
 
-        // TW သီးသန့် သိမ်းဆည်းရန် (Independent)
         async function saveTwData() {
             const session = document.getElementById('sessionSelect').value;
             const tw = document.getElementById('twInput').value;
@@ -335,9 +335,6 @@
             }
         }
         
-        // ==========================================
-        // GOLD ADMIN FUNCTIONS
-        // ==========================================
         async function loadAdminGoldData() {
             try {
                 const response = await fetch('/api/admin/gold');
@@ -461,152 +458,145 @@
                 alert('ရွှေစျေး သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိသွားပါသည်။');
             }
         }
-       
-      async function saveHotNumber(type) {
-    const inputId = type === 'morning' ? 'hotMorningInput' : 'hotEveningInput';
-    const inputVal = document.getElementById(inputId).value.trim();
-    
-    if (!inputVal) {
-        alert("ကျေးဇူးပြု၍ ဂဏန်းထည့်ပါ။");
-        return;
-    }
-
-    // တခြားအကွက်များကဲ့သို့ Admin Password တောင်းခံရန်
-    if (!currentPassword) {
-        currentPassword = prompt("Admin စကားဝှက် ထည့်ပါ:");
-        if (!currentPassword) return;
-    }
-
-    try {
-        const payload = { password: currentPassword };
-        if (type === 'morning') {
-            payload.morning = inputVal;
-        } else {
-            payload.evening = inputVal;
-        }
-
-        const res = await fetch('/api/admin/hot-numbers', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-        if (data.success) {
-            // alert() များကို လုံးဝဖယ်ရှားပြီး တခြားအကွက်များကဲ့သို့ ချောမွေ့စေသည်
-            loadAdminHotNumbers(); 
-        } else {
-            alert(data.message || "သိမ်းဆည်းမှု မအောင်မြင်ပါ။");
-        }
-    } catch (err) {
-        console.error('Save hot number error:', err);
-        alert("ဆာဗာချိတ်ဆက်မှုတွင် အမှားအယွင်းရှိပါသည်။");
-    }
-}
-      async function loadAdminHotNumbers() {
-    try {
-        const response = await fetch('/api/admin/hot-numbers');
-        const data = await response.json();
         
-        if (data.success && data.hotNumbers) {
-            const morningInput = document.getElementById('hotMorningInput');
-            const eveningInput = document.getElementById('hotEveningInput');
-            const saveMorningBtn = document.getElementById('saveMorningBtn');
-            const saveEveningBtn = document.getElementById('saveEveningBtn');
-            const morningNotice = document.getElementById('hotMorningLockNotice');
-            const eveningNotice = document.getElementById('hotEveningLockNotice');
+        async function saveHotNumber(type) {
+            const inputId = type === 'morning' ? 'hotMorningInput' : 'hotEveningInput';
+            const inputVal = document.getElementById(inputId).value.trim();
             
-            const mData = data.hotNumbers.morning || { number: "--", isLocked: false };
-            const eData = data.hotNumbers.evening || { number: "--", isLocked: false };
-
-            // Morning Setup
-            if (morningInput) morningInput.value = mData.number !== "--" ? mData.number : "";
-            if (mData.isLocked === true || mData.isLocked === 'true') {
-                if (morningInput) morningInput.disabled = true;
-                if (saveMorningBtn) {
-                    saveMorningBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                    saveMorningBtn.disabled = true;
-                }
-                if (morningNotice) morningNotice.classList.remove('hidden');
-            } else {
-                if (morningInput) morningInput.disabled = false;
-                if (saveMorningBtn) {
-                    saveMorningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    saveMorningBtn.disabled = false;
-                }
-                if (morningNotice) morningNotice.classList.add('hidden');
+            if (!inputVal) {
+                alert("ကျေးဇူးပြု၍ ဂဏန်းထည့်ပါ။");
+                return;
             }
 
-            // Evening Setup
-            if (eveningInput) eveningInput.value = eData.number !== "--" ? eData.number : "";
-            if (eData.isLocked === true || eData.isLocked === 'true') {
-                if (eveningInput) eveningInput.disabled = true;
-                if (saveEveningBtn) {
-                    saveEveningBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                    saveEveningBtn.disabled = true;
+            if (!currentPassword) {
+                currentPassword = prompt("Admin စကားဝှက် ထည့်ပါ:");
+                if (!currentPassword) return;
+            }
+
+            try {
+                const payload = { password: currentPassword };
+                if (type === 'morning') {
+                    payload.morning = inputVal;
+                } else {
+                    payload.evening = inputVal;
                 }
-                if (eveningNotice) eveningNotice.classList.remove('hidden');
-            } else {
-                if (eveningInput) eveningInput.disabled = false;
-                if (saveEveningBtn) {
-                    saveEveningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    saveEveningBtn.disabled = false;
+
+                const res = await fetch('/api/admin/hot-numbers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    loadAdminHotNumbers(); 
+                } else {
+                    alert(data.message || "သိမ်းဆည်းမှု မအောင်မြင်ပါ။");
                 }
-                if (eveningNotice) eveningNotice.classList.add('hidden');
+            } catch (err) {
+                console.error('Save hot number error:', err);
+                alert("ဆာဗာချိတ်ဆက်မှုတွင် အမှားအယွင်းရှိပါသည်။");
             }
         }
-    } catch (err) {
-        console.error('Failed to load hot numbers for admin:', err);
-    }
-}
-// မျက်နှာပြင် စတင် Load ဖြစ်ချိန်တွင် ခေါ်ဆိုရန်
-window.addEventListener('DOMContentLoaded', () => {
-    loadAdminHotNumbers();
-    loadAdminHolidayNotice();
-});
-async function saveHolidayNotice() {
-    const noticeText = document.getElementById('holidayNoticeInput').value.trim();
-    
-    if (!currentPassword) {
-        currentPassword = prompt("Admin စကားဝှက် ထည့်ပါ:");
-        if (!currentPassword) return;
-    }
 
-    try {
-        const res = await fetch('/api/admin/holiday-notice', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: currentPassword, noticeText })
-        });
+        async function loadAdminHotNumbers() {
+            try {
+                const response = await fetch('/api/admin/hot-numbers');
+                const data = await response.json();
+                
+                if (data.success && data.hotNumbers) {
+                    const morningInput = document.getElementById('hotMorningInput');
+                    const eveningInput = document.getElementById('hotEveningInput');
+                    const saveMorningBtn = document.getElementById('saveMorningBtn');
+                    const saveEveningBtn = document.getElementById('saveEveningBtn');
+                    const morningNotice = document.getElementById('hotMorningLockNotice');
+                    const eveningNotice = document.getElementById('hotEveningLockNotice');
+                    
+                    const mData = data.hotNumbers.morning || { number: "--", isLocked: false };
+                    const eData = data.hotNumbers.evening || { number: "--", isLocked: false };
 
-        const data = await res.json();
-        if (data.success) {
-            alert(data.message);
-            loadAdminHolidayNotice();
-        } else {
-            alert(data.message || "သိမ်းဆည်းမှု မအောင်မြင်ပါ။");
-        }
-    } catch (err) {
-        console.error('Save holiday notice error:', err);
-        alert("ဆာဗာချိတ်ဆက်မှုတွင် အမှားအယွင်းရှိပါသည်။");
-    }
-}
+                    if (morningInput) morningInput.value = mData.number !== "--" ? mData.number : "";
+                    if (mData.isLocked === true || mData.isLocked === 'true') {
+                        if (morningInput) morningInput.disabled = true;
+                        if (saveMorningBtn) {
+                            saveMorningBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                            saveMorningBtn.disabled = true;
+                        }
+                        if (morningNotice) morningNotice.classList.remove('hidden');
+                    } else {
+                        if (morningInput) morningInput.disabled = false;
+                        if (saveMorningBtn) {
+                            saveMorningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            saveMorningBtn.disabled = false;
+                        }
+                        if (morningNotice) morningNotice.classList.add('hidden');
+                    }
 
-async function loadAdminHolidayNotice() {
-    try {
-        const response = await fetch('/api/admin/holiday-notice');
-        const data = await response.json();
-        
-        if (data.success) {
-            const noticeInput = document.getElementById('holidayNoticeInput');
-            if (noticeInput) {
-                noticeInput.value = data.holidayNotice || "";
+                    if (eveningInput) eveningInput.value = eData.number !== "--" ? eData.number : "";
+                    if (eData.isLocked === true || eData.isLocked === 'true') {
+                        if (eveningInput) eveningInput.disabled = true;
+                        if (saveEveningBtn) {
+                            saveEveningBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                            saveEveningBtn.disabled = true;
+                        }
+                        if (eveningNotice) eveningNotice.classList.remove('hidden');
+                    } else {
+                        if (eveningInput) eveningInput.disabled = false;
+                        if (saveEveningBtn) {
+                            saveEveningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            saveEveningBtn.disabled = false;
+                        }
+                        if (eveningNotice) eveningNotice.classList.add('hidden');
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load hot numbers for admin:', err);
             }
         }
-    } catch (err) {
-        console.error('Failed to load holiday notice for admin:', err);
-    }
-}
+
+        async function saveHolidayNotice() {
+            const noticeText = document.getElementById('holidayNoticeInput').value.trim();
+            
+            if (!currentPassword) {
+                currentPassword = prompt("Admin စကားဝှက် ထည့်ပါ:");
+                if (!currentPassword) return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/holiday-notice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: currentPassword, noticeText })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    loadAdminHolidayNotice();
+                } else {
+                    alert(data.message || "သိမ်းဆည်းမှု မအောင်မြင်ပါ။");
+                }
+            } catch (err) {
+                console.error('Save holiday notice error:', err);
+                alert("ဆာဗာချိတ်ဆက်မှုတွင် အမှားအယွင်းရှိပါသည်။");
+            }
+        }
+
+        async function loadAdminHolidayNotice() {
+            try {
+                const response = await fetch('/api/admin/holiday-notice');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const noticeInput = document.getElementById('holidayNoticeInput');
+                    if (noticeInput) {
+                        noticeInput.value = data.holidayNotice || "";
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load holiday notice for admin:', err);
+            }
+        }
     </script>
 </body>
 </html> 
