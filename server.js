@@ -1231,8 +1231,8 @@ async function captureBoundaryResult(session) {
         liveCache.schedule = getScheduleObject(record.schedule);
         liveCache.time =
             session === '12:01 PM'
-                ? '12:01:00 PM'
-                : '04:30:00 PM';
+                ? '12:01:05 PM'
+                : '04:30:05 PM';
         liveCache.updatedAt = Date.now();
         liveCache.notice =
             session === '12:01 PM'
@@ -1265,13 +1265,13 @@ function scheduleNextBoundaryCapture() {
         {
             hour: 12,
             minute: 1,
-            second: 0,
+            second: 5,
             session: '12:01 PM'
         },
         {
             hour: 16,
             minute: 30,
-            second: 0,
+            second: 5,
             session: '04:30 PM'
         }
     ];
