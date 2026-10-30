@@ -678,6 +678,110 @@ app.post('/api/admin/login', (req, res) => {
         message: 'စကားဝှက် (Password) မှားယွင်းနေပါသည်။'
     });
 });
+// --------------------------------------------------
+// Modern & Internet သိမ်းဆည်းရန် Route
+// --------------------------------------------------
+app.post('/api/admin/save-modern-internet', async (req, res) => {
+    try {
+        const { password, session, modern, internet } = req.body;
+
+        if (!ADMIN_PASSWORD || password !== ADMIN_PASSWORD) {
+            return res.status(401).json({ success: false, message: 'ခွင့်ပြုချက်မရှိပါ (Unauthorized)' });
+        }
+
+        let record = await getTodayAdminResults();
+        if (!record) {
+            const AdminModel = mongoose.models.AdminResult || mongoose.model('AdminResult', new mongoose.Schema({
+                date: String, schedule: Object, hotNumbers: Object, holidayNotice: String
+            }));
+            record = new AdminModel({
+                date: new Date().toISOString().split('T')[0],
+                schedule: {
+                    "09:30 AM": { modern: '--', internet: '--', tw: '--', isLocked: false, isTwLocked: false },
+                    "02:00 PM": { modern: '--', internet: '--', tw: '--', isLocked: false, isTwLocked: false }
+                },
+                hotNumbers: { morning: '--', evening: '--' }
+            });
+        }
+
+        if (!record.schedule) record.schedule = {};
+        if (!record.schedule[session]) {
+            record.schedule[session] = { modern: '--', internet: '--', tw: '--', isLocked: false, isTwLocked: false };
+        }
+
+        if (modern !== undefined && modern !== '') record.schedule[session].modern = modern;
+        if (internet !== undefined && internet !== '') record.schedule[session].internet = internet;
+
+        if (record.schedule[session].modern !== '--' || record.schedule[session].internet !== '--') {
+            record.schedule[session].isLocked = true;
+        }
+
+        record.markModified('schedule');
+        await record.save();
+
+        return res.json({
+            success: true,
+            message: `${session} Modern & Internet အချက်အလက်များ သိမ်းဆည်းပြီးပါပြီ။`,
+            adminResults: record.schedule
+        });
+    } catch (err) {
+        console.error('Save modern internet error:', err);
+        return res.status(500).json({ success: false, message: 'Server error occurred' });
+    }
+});
+
+// --------------------------------------------------
+// TW သီးသန့် သိမ်းဆည်းရန် Route
+// --------------------------------------------------
+app.post('/api/admin/save-tw', async (req, res) => {
+    try {
+        const { password, session, tw } = req.body;
+
+        if (!ADMIN_PASSWORD || password !== ADMIN_PASSWORD) {
+            return res.status(401).json({ success: false, message: 'ခွင့်ပြုချက်မရှိပါ (Unauthorized)' });
+        }
+
+        let record = await getTodayAdminResults();
+        if (!record) {
+            const AdminModel = mongoose.models.AdminResult || mongoose.model('AdminResult', new mongoose.Schema({
+                date: String, schedule: Object, hotNumbers: Object, holidayNotice: String
+            }));
+            record = new AdminModel({
+                date: new Date().toISOString().split('T')[0],
+                schedule: {
+                    "09:30 AM": { modern: '--', internet: '--', tw: '--', isLocked: false, isTwLocked: false },
+                    "02:00 PM": { modern: '--', internet: '--', tw: '--', isLocked: false, isTwLocked: false }
+                },
+                hotNumbers: { morning: '--', evening: '--' }
+            });
+        }
+
+        if (!record.schedule) record.schedule = {};
+        if (!record.schedule[session]) {
+            record.schedule[session] = { modern: '--', internet: '--', tw: '--', isLocked: false, isTwLocked: false };
+        }
+
+        if (tw !== undefined && tw !== '') {
+            record.schedule[session].tw = tw;
+        }
+
+        if (record.schedule[session].tw !== '--') {
+            record.schedule[session].isTwLocked = true;
+        }
+
+        record.markModified('schedule');
+        await record.save();
+
+        return res.json({
+            success: true,
+            message: `${session} TW အချက်အလက်များ သိမ်းဆည်းပြီးပါပြီ။`,
+            adminResults: record.schedule
+        });
+    } catch (err) {
+        console.error('Save TW error:', err);
+        return res.status(500).json({ success: false, message: 'Server error occurred' });
+    }
+});
 
 // --------------------------------------------------
 // Admin login and manual 2D result saving
