@@ -580,15 +580,11 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
     
     <div class="settings-list" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
       
-     <!-- ၁။ Language Toggle Switch (မြန်မာ | ENG) -->
-      <div class="settings-item">
-        <span data-i18n="langLabel">🌐 ဘာသာစကား (Language)</span>
-        <div class="lang-toggle-container" id="langToggleBtn" onclick="toggleLanguage()">
-          <div class="lang-slider-bg"></div>
-          <div class="lang-opt active" id="optMy">မြန်မာ</div>
-          <div class="lang-opt" id="optEng">ENG</div>
-        </div>
-      </div>
+  <!-- ၁။ ဘာသာစကား ဆက်တင်တန်း (Language Sub-menu Trigger) -->
+     <div class="settings-item" onclick="switchTab('page-language', document.querySelector('.nav-item'))" style="cursor: pointer;">
+       <span data-i18n="langLabel">🌐 ဘာသာစကား (Language)</span>
+       <span>➔</span>
+     </div>
 
       <!-- ၂။ Dark Mode Toggle -->
       <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: #1e3a8a; border: 1.5px solid #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: #ffffff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); width: 100%; box-sizing: border-box;">
@@ -614,6 +610,28 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
     </div>
   </div>
 </div>
+<!-- PAGE: Language Selection -->
+  <div id="page-language" class="tab-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;">
+      <span style="font-size: 20px; font-weight: bold; color: #ffffff; cursor: pointer;" onclick="switchTab('page-more', document.querySelector('.nav-item:last-child'))">←</span>
+      <div class="live-title" style="font-size: 18px; font-weight: bold; color: #ffffff;" data-i18n="langPageTitle">Change Language</div>
+      <span></span>
+    </div>
+
+    <div class="card" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+      <!-- Myanmar Option -->
+      <div class="settings-item" onclick="setAppLanguage('my')" style="cursor: pointer; justify-content: space-between;">
+        <span>မြန်မာ (Myanmar)</span>
+        <input type="radio" name="langRadio" id="radioMy" style="width: 18px; height: 18px; accent-color: #ef4444; cursor: pointer;">
+      </div>
+
+      <!-- English Option -->
+      <div class="settings-item" onclick="setAppLanguage('en')" style="cursor: pointer; justify-content: space-between;">
+        <span>English</span>
+        <input type="radio" name="langRadio" id="radioEng" style="width: 18px; height: 18px; accent-color: #ef4444; cursor: pointer;">
+      </div>
+    </div>
+  </div>
 
   <div class="bottom-nav">
     <button class="nav-item active" onclick="switchTab('page-home', this)"><span class="nav-icon">🏠</span><span>Home</span></button>
@@ -662,7 +680,7 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
         document.documentElement.classList.remove('dark-mode');
         if (toggleEl) toggleEl.checked = false;
       }
-      initLanguageUI();
+      updateLanguageUIState();
       updateLanguageTexts();
     });
 
@@ -694,10 +712,28 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
       }
     };
 
-    function toggleLanguage() {
-      currentLang = currentLang === 'my' ? 'en' : 'my';
+    // ဘာသာစကားအသစ် သတ်မှတ်ခြင်းနှင့် Radio Button များကို ထိန်းချုပ်ခြင်း
+    function setAppLanguage(lang) {
+      currentLang = lang;
       localStorage.setItem('app_lang', currentLang);
+      updateLanguageUIState();
       updateLanguageTexts();
+      // ရွေးချယ်ပြီးပါက Settings စာမျက်နှာ (More) သို့ ပြန်သွားရန်
+      switchTab('page-more', document.querySelectorAll('.nav-item')[4]);
+    }
+
+    function updateLanguageUIState() {
+      const radioMy = document.getElementById('radioMy');
+      const radioEng = document.getElementById('radioEng');
+      if (!radioMy || !radioEng) return;
+
+      if (currentLang === 'en') {
+        radioEng.checked = true;
+        radioMy.checked = false;
+      } else {
+        radioMy.checked = true;
+        radioEng.checked = false;
+      }
     }
 
     function updateLanguageTexts() {
