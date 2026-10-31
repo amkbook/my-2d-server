@@ -267,22 +267,22 @@
 }
 /* 🟢 Settings Card & Toggle Switch Fixes (Fixed Size & Stable Layout) */
     .settings-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #1e3a8a;
-      border: 1.5px solid #ef4444;
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 500;
-      color: #ffffff;
-      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
-      width: 100%;
-      min-width: 100%; /* ဇယားကွက်/ကတ်ပြား အရွယ်အစား အပြောင်းအလဲမရှိစေရန် တားဆီးသည် */
-      min-height: 54px;
-      box-sizing: border-box;
-    }
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1e3a8a;
+    border: 1.5px solid #ef4444;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+    width: 100%;
+    min-width: 100%;
+    height: 54px; /* min-height အစား height ကို တိကျစွာ ပုံသေ သတ်မှတ်ခြင်း */
+    box-sizing: border-box;
+  }
 
     /* Language Slider Toggle Switch Container */
     .lang-toggle-container {
@@ -696,21 +696,23 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
 
     // 🌐 Multi-language Support (Myanmar & English)
     const translations = {
-      my: {
-        settingsTitle: "⚙ Settings",
-        langLabel: "🌐 ဘာသာစကား (Language: မြန်မာ)",
-        darkModeLabel: "🌙 ညကြည့်စတိုင် (Dark Mode)",
-        aboutLabel: "ℹ အပ်ပလီကေးရှင်းအကြောင်း (Draft)",
-        privacyLabel: "🔒 ကိုယ်ရေးလုံခြုံမှု မူဝါဒ (Draft)"
-      },
-      en: {
-        settingsTitle: "⚙ Settings",
-        langLabel: "🌐 Language (English)",
-        darkModeLabel: "🌙 Dark Mode",
-        aboutLabel: "ℹ About App (Draft)",
-        privacyLabel: "🔒 Privacy Policy (Draft)"
-      }
-    };
+    my: {
+      settingsTitle: "⚙ Settings",
+      langLabel: "🌐 ဘာသာစကား (Language)",
+      darkModeLabel: "🌙 ညကြည့်စတိုင် (Dark Mode)",
+      aboutLabel: "ℹ အပ်ပလီကေးရှင်းအကြောင်း (Draft)",
+      privacyLabel: "🔒 ကိုယ်ရေးလုံခြုံမှု မူဝါဒ (Draft)",
+      langPageTitle: "ဘာသာစကားပြောင်းရန်"
+    },
+    en: {
+      settingsTitle: "⚙ Settings",
+      langLabel: "🌐 Language",
+      darkModeLabel: "🌙 Dark Mode",
+      aboutLabel: "ℹ About App (Draft)",
+      privacyLabel: "🔒 Privacy Policy (Draft)",
+      langPageTitle: "Change Language"
+    }
+  };
 
     // ဘာသာစကားအသစ် သတ်မှတ်ခြင်းနှင့် Radio Button များကို ထိန်းချုပ်ခြင်း
     function setAppLanguage(lang) {
