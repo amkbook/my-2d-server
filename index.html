@@ -355,12 +355,20 @@
       display: inline-block;
       transform-origin: top center;
     }
-    /* 🟢 ပင်မစာမျက်နှာရှိ ကတ်ပြားများ ဘေးဘောင်အပြည့် ဆန့်ထွက်စေရန် */
+    /* 🟢 မိခင်ကွန်တိန်နာနှင့် ပင်မစာမျက်နှာကို ဘေးဘောင်အပြည့် ညီညာစေရန် */
+.container,
+.tab-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
 #page-home {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-  padding: 0 !important; /* ကွန်တိန်နာ၏ ဘေးဘယ်ညာ padding ကို ဖြုတ်ခြင်း */
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 #page-home .card,
