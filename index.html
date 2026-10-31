@@ -14,13 +14,13 @@
   .row-time-label.green-label {
     color: #10b981 !important;
   }
-    body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; padding-bottom: 90px; overflow-x: hidden; }
-    .container { width: 100%; max-width: 100%; box-sizing: border-box; padding: 0 16px; display: flex; flex-direction: column; gap: 15px; }
+    body { background-color: var(--bg-color) !important; color: var(--text-color) !important; display: block; min-height: 100vh; padding: 10px 0; padding-bottom: 90px; overflow-x: hidden; }
+.container { width: 100% !important; max-width: 100% !important; box-sizing: border-box; padding: 0 16px !important; display: flex; flex-direction: column; gap: 15px; margin: 0; }
     
     .tab-content { display: none; }
     .tab-content.active { display: flex; flex-direction: column; gap: 15px; }
 
-    .card { width: 100%; max-width: 100%; background: #1e293b; border-radius: 16px; padding: 20px; box-sizing: border-box; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #334155; }
+    .card { background: #1e293b; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #334155; }
     .notice { background: #0284c7; color: white; padding: 10px; border-radius: 8px; font-size: 14px; text-align: center; }
     
     .live-title-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px; }
@@ -267,23 +267,24 @@
 }
 /* 🟢 Settings Card & Toggle Switch Fixes (Fixed Size & Stable Layout) */
     .settings-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #1e3a8a;
-    border: 1.5px solid #ef4444;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 500;
-    color: #ffffff;
-    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
-    width: 100%;
-    min-width: 100%;
-    height: 54px !important; /* min-height အစား height ကို တိကျစွာ ပုံသေ သတ်မှတ်ခြင်း */
-    box-sizing: border-box;
-    flex-shrink: 0;
-  }
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e3a8a;
+  border: 1.5px solid #ef4444;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  height: 54px !important;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
 
     /* Language Slider Toggle Switch Container */
     .lang-toggle-container {
@@ -707,7 +708,7 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
     },
     en: {
       settingsTitle: "⚙ Settings",
-      langLabel: "🌐 Language",
+      langLabel: "🌐 Language         ",
       darkModeLabel: "🌙 Dark Mode",
       aboutLabel: "ℹ About App (Draft)",
       privacyLabel: "🔒 Privacy Policy (Draft)",
