@@ -15,12 +15,12 @@
     color: #10b981 !important;
   }
     body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 10px; padding-bottom: 90px; overflow-x: hidden; }
-    .container { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 15px; }
+    .container { width: 100%; max-width: 100%; box-sizing: border-box; padding: 0 16px; display: flex; flex-direction: column; gap: 15px; }
     
     .tab-content { display: none; }
     .tab-content.active { display: flex; flex-direction: column; gap: 15px; }
 
-    .card { background: #1e293b; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #334155; }
+    .card { width: 100%; max-width: 100%; background: #1e293b; border-radius: 16px; padding: 20px; box-sizing: border-box; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #334155; }
     .notice { background: #0284c7; color: white; padding: 10px; border-radius: 8px; font-size: 14px; text-align: center; }
     
     .live-title-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px; }
