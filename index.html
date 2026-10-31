@@ -355,18 +355,22 @@
       display: inline-block;
       transform-origin: top center;
     }
-    /* 🟢 ပင်မစာမျက်နှာ ဇယားကွက်များ ဘေးဘောင်အပြည့် ညီညာစေရန် */
+    /* 🟢 ပင်မစာမျက်နှာရှိ ကတ်ပြားများ ဘေးဘောင်အပြည့် ဆန့်ထွက်စေရန် */
 #page-home {
   width: 100% !important;
   max-width: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
   box-sizing: border-box !important;
+  padding: 0 !important; /* ကွန်တိန်နာ၏ ဘေးဘယ်ညာ padding ကို ဖြုတ်ခြင်း */
 }
 
-#page-home > div {
+#page-home .card,
+#page-home .chat-box,
+#page-home .schedule-table-container,
+#page-home .holiday-ticker-card {
   width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
   box-sizing: border-box !important;
 }
     
