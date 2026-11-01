@@ -1248,8 +1248,17 @@ async function applyFrozenSnapshot(record, phase) {
     const nowTime = getMyanmarTime();
     
     
-    if (!activeRecord || (activeRecord.t430 === '--' && activeRecord.t1201 === '--')) {
-        const latestRecord = await DayData.findOne({ dateStr: { $ne: getMyanmarDateKey(nowTime) } }).sort({ _id: -1 }).lean();
+    // 💡 တနင်္ဂနွေ (သို့) စနေ ပိတ်ရက်များတွင် နောက်ဆုံးထွက်ထားသော တရားဝင်ရလဒ် (သောကြာနေ့) ကို အမြဲတမ်း ယူသုံးရန်
+    const isWeekend = isMyanmarWeekend ? isMyanmarWeekend() : (getMyanmarTime().getDay() === 0 || getMyanmarTime().getDay() === 6);
+    
+    if (!activeRecord || (activeRecord.t430 === '--' && activeRecord.t1201 === '--') || isWeekend) {
+        const latestRecord = await DayData.findOne({ 
+            $or: [
+                { t430: { $ne: '--' } },
+                { t1201: { $ne: '--' } }
+            ]
+        }).sort({ _id: -1 }).lean();
+        
         if (latestRecord) {
             activeRecord = latestRecord;
         }
@@ -1538,10 +1547,14 @@ async function fetchAndUpdateLiveCache() {
     try {
         const nowTime = getMyanmarTime();
         
-        // 💡 1. စနေ သို့မဟုတ် တနင်္ဂနွေ ပိတ်ရက်ဖြစ်ပါက SET ဝဘ်ဆိုဒ်သို့ လုံးဝ မသွားတော့ဘဲ ငြိမ်သက်စွာ ဆက်ပြမည်
+        // 💡 1. စနေ သို့မဟုတ် တနင်္ဂနွေ ပိတ်ရက်ဖြစ်ပါက နောက်ဆုံးရလဒ်အဟောင်းကို ဆက်လက်ပြသမည်
         if (isWeekendMyanmar(nowTime)) {
-            const record = await getTodayAdminResults();
-            await applyFrozenSnapshot(record, 'closed');
+            // ယနေ့ရက်စွဲအတွက် အလွတ်အသစ်ဆောက်မည့်အစား နောက်ဆုံးဒေတာရှိသော ရက်စွဲကို ဝင်ရောက်ရှာဖွေစေမည်
+            const latestValidRecord = await DayData.findOne({ 
+                $or: [{ t430: { $ne: '--' } }, { t1201: { $ne: '--' } }] 
+            }).sort({ _id: -1 });
+            
+            await applyFrozenSnapshot(latestValidRecord, 'closed');
             return;
         }
 
