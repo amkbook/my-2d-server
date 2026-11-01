@@ -355,7 +355,59 @@
       display: inline-block;
       transform-origin: top center;
     }
-    
+    /* 🟢 ခေတ်မီ 3D ဖောင်းကြွအဝိုင်းပုံစံ ဇယားကွက်များအတွက် စတိုင်လ် */
+.circular-grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 15px 5px;
+  justify-items: center;
+}
+
+@media (min-width: 400px) {
+  .circular-grid-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.circle-3d-btn {
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.4), 
+    inset 0 2px 4px rgba(255, 255, 255, 0.4), 
+    inset 0 -4px 6px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 2px solid #60a5fa;
+  user-select: none;
+  padding: 8px;
+  line-height: 1.3;
+}
+
+.circle-3d-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 12px 25px rgba(59, 130, 246, 0.5), 
+    inset 0 2px 5px rgba(255, 255, 255, 0.5), 
+    inset 0 -4px 6px rgba(0, 0, 0, 0.4);
+}
+
+.circle-3d-btn:active {
+  transform: scale(0.95) translateY(0);
+  box-shadow: 
+    0 4px 10px rgba(0, 0, 0, 0.4), 
+    inset 0 2px 2px rgba(0, 0, 0, 0.4);
+}
     
   </style>
 </head>
@@ -569,13 +621,24 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
       <div id="historyListContainer" class="history-list-container"></div>
     </div>
 
-    <!-- PAGE 4: 3D History -->
-    <div id="page-3d-history" class="tab-content">
-      <div class="card">
-        <h2>🎯 3D နေ့စဉ်မှတ်တမ်း</h2>
-        <p style="color: #94a3b8; font-size: 14px; margin-top: 10px;">လစဉ် 3D ထွက်ဂဏန်း မှတ်တမ်းအဟောင်းများ</p>
-      </div>
+    <!-- PAGE 4: 3D & Gift (Circular 3D Grid) -->
+<div id="page-3d-history" class="tab-content">
+  <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+    <h2 style="color: var(--text-color); margin-bottom: 5px;">🎯 3D နှင့် လက်ဆောင်</h2>
+    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">အောက်ပါ ကဏ္ဍများကို ရွေးချယ်ကြည့်ရှုနိုင်ပါသည်</p>
+    
+    <div class="circular-grid-container">
+      <div class="circle-3d-btn" onclick="alert('3D ကဏ္ဍ')">3D</div>
+      <div class="circle-3d-btn" onclick="alert('မြန်မာထီ ကဏ္ဍ')">မြန်မာထီ</div>
+      <div class="circle-3d-btn" onclick="alert('ထိုင်းထီ ကဏ္ဍ')">ထိုင်းထီ</div>
+      <div class="circle-3d-btn" onclick="alert('တွက်နည်း ကဏ္ဍ')">တွက်နည်း</div>
+      <div class="circle-3d-btn" onclick="alert('တွက်ရန် ကဏ္ဍ')">တွက်ရန်</div>
+      <div class="circle-3d-btn" onclick="alert('ပိတ်ရက်များ ကဏ္ဍ')">ပိတ်ရက်များ</div>
+      <div class="circle-3d-btn" onclick="alert('အခေါ်အဝေါ်များ ကဏ္ဍ')">အခေါ်အဝေါ်များ</div>
+      <div class="circle-3d-btn" onclick="alert('တွက်နည်းမူများ ကဏ္ဍ')">တွက်နည်းမူများ</div>
     </div>
+  </div>
+</div>
 
     <!-- PAGE 5: Settings / More -->
 <div id="page-more" class="tab-content">
@@ -641,7 +704,7 @@ document.addEventListener('DOMContentLoaded', loadGoldData);
     <button class="nav-item active" onclick="switchTab('page-home', this)"><span class="nav-icon">🏠</span><span>Home</span></button>
     <button class="nav-item" onclick="switchTab('page-gold', this)"><span class="nav-icon">🪙</span><span>ရွှေဈေး</span></button>
     <button class="nav-item" onclick="switchTab('page-2d-history', this)"><span class="nav-icon">📅</span><span>2D မှတ်တမ်း</span></button>
-    <button class="nav-item" onclick="switchTab('page-3d-history', this)"><span class="nav-icon">🎯</span><span>3D မှတ်တမ်း</span></button>
+<button class="nav-item" onclick="switchTab('page-3d-history', this)"><span class="nav-icon">🎯</span><span>3D နှင့် လက်ဆောင်</span></button>
     <button class="nav-item" onclick="switchTab('page-more', this)"><span class="nav-icon">⚙</span><span>More</span></button>
   </div>
 
