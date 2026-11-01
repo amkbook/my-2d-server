@@ -1249,7 +1249,7 @@ async function applyFrozenSnapshot(record, phase) {
     
     
     // 💡 တနင်္ဂနွေ (သို့) စနေ ပိတ်ရက်များတွင် နောက်ဆုံးထွက်ထားသော တရားဝင်ရလဒ် (သောကြာနေ့) ကို အမြဲတမ်း ယူသုံးရန်
-    const isWeekend = isMyanmarWeekend ? isMyanmarWeekend() : (getMyanmarTime().getDay() === 0 || getMyanmarTime().getDay() === 6);
+const isWeekend = typeof isWeekendMyanmar === 'function' ? isWeekendMyanmar() : (getMyanmarTime().getDay() === 0 || getMyanmarTime().getDay() === 6);
     
     if (!activeRecord || (activeRecord.t430 === '--' && activeRecord.t1201 === '--') || isWeekend) {
         const latestRecord = await DayData.findOne({ 
