@@ -1365,6 +1365,16 @@ async function captureBoundaryResult(session) {
 
         record.markModified('schedule');
         await record.save();
+        // 📌 [Auto-Clean Logic Added]: DayData (2D) မှတ်တမ်း ၁၂၀ ထက်ကျော်လွန်ပါက အဟောင်းဆုံးများကို အလိုအလျောက်ဖျက်မည်
+        const dayCount = await DayData.countDocuments();
+        if (dayCount > 120) {
+            const excessDays = dayCount - 120;
+            const oldestDayRecords = await DayData.find().sort({ _id: 1 }).limit(excessDays).select('_id').lean();
+            if (oldestDayRecords.length > 0) {
+                await DayData.deleteMany({ _id: { $in: oldestDayRecords.map(d => d._id) } });
+                console.log(`[Auto-Clean DayData] Successfully deleted ${oldestDayRecords.length} old 2D records. Keeping latest 120.`);
+            }
+        }
 
         liveCache.setIndex = result.setIndex;
         liveCache.value = result.marketValue;
