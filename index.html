@@ -647,6 +647,38 @@ async function loadGoldData() {
   </div>
 </div>
 
+<!-- 📌 တတိယစာမျက်နှာ: 3D တွက်ရန် ဇယားကွက်နှင့် ခဲတံစနစ် -->
+<div id="page-threed-calculator" class="tab-content" style="display: none; padding: 15px; color: #fff; position: relative;">
+    
+    <!-- Header & Pencil Tool with Color Palette Row -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="color: #f1c40f; font-size: 16px; margin: 0;">🧮 3D တွက်ရန် ဇယားကွက်</h3>
+        
+        <!-- ခဲတံနှင့် အရောင်ရွေးချယ်သည့် အတန်းလေး -->
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+            <button id="calcPencilBtn" style="background: #2563eb; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; color: #fff; font-size: 14px;">✏️ ခဲတံ</button>
+            <div id="calcColorRow" style="display: flex; gap: 5px; background: #1e293b; padding: 4px; border-radius: 4px; border: 1px solid #334155; margin-top: 4px;">
+                <div class="calc-color" data-color="#f1c40f" style="width: 14px; height: 14px; background: #f1c40f; border-radius: 50%; cursor: pointer; border: 2px solid #fff;"></div>
+                <div class="calc-color" data-color="#ef4444" style="width: 14px; height: 14px; background: #ef4444; border-radius: 50%; cursor: pointer;"></div>
+                <div class="calc-color" data-color="#22c55e" style="width: 14px; height: 14px; background: #22c55e; border-radius: 50%; cursor: pointer;"></div>
+                <div class="calc-color" data-color="#3b82f6" style="width: 14px; height: 14px; background: #3b82f6; border-radius: 50%; cursor: pointer;"></div>
+                <div class="calc-color" data-color="#ffffff" style="width: 14px; height: 14px; background: #ffffff; border-radius: 50%; cursor: pointer;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ဇယားကွက်များနှင့် ကင်းဗတ်စ် ခြယ်မှုန်းရန် အပိုင်း -->
+    <div style="position: relative;">
+        <!-- ၇ ရက်စာ ဇယားကွက် Container (ရက်စွဲများ လုံးဝမပါပါ) -->
+        <div id="calcGridContainer" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- ဇယားကွက်များကို JavaScript ဖြင့် ဖြည့်သွင်းမည် -->
+        </div>
+
+        <!-- လွတ်လပ်စွာ ရေးခြစ်နိုင်သော Canvas Layer -->
+        <canvas id="drawingCanvas" style="position: absolute; top: 0; left: 0; pointer-events: none; width: 100%; height: 100%;"></canvas>
+    </div>
+</div>
+
     <!-- PAGE 5: Settings / More -->
 <div id="page-more" class="tab-content">
   <div class="card" style="background: transparent !important; box-shadow: none !important; border: none !important; padding: 0;">
@@ -837,6 +869,10 @@ async function loadGoldData() {
         fetchHistoryList();
       }
     }
+    if (pageId === 'page-threed-calculator') {
+        loadThreeDCalculatorGrid();
+      }
+    
 
     function extractBoundary2D(value) {
       if (value === undefined || value === null) return '--';
@@ -1367,6 +1403,121 @@ async function fetchLiveData() {
     setInterval(fetchLiveData, 3000);
     setInterval(fetchChat, 2000);
     setInterval(fetchScheduleData, 5000);
+
+    // --------------------------------------------------
+// 📌 တတိယစာမျက်နှာ ဇယားကွက်နှင့် ခဲတံစနစ် လော့ဂျစ်
+// --------------------------------------------------
+async function loadThreeDCalculatorGrid() {
+    try {
+        const response = await fetch('/api/threed-calculator');
+        const data = await response.json();
+
+        if (data.success) {
+            const container = document.getElementById('calcGridContainer');
+            if (!container) return;
+
+            let html = '';
+            // ၇ ရက်စာ ဇယားကွက်များ တည်ဆောက်ခြင်း (ဘယ်/ညာ ကွက်လပ်များ၊ ရက်စွဲမပါ)
+            const records = data.records || [];
+            
+            // အနည်းဆုံး ၇ စုံပြည့်အောင် အလွတ်ကွက်များဖြင့် ဖြည့်ခြင်း
+            for (let i = 0; i < 7; i++) {
+                const rec = records[i] || { sessions: { morning: {}, evening: {} } };
+                const morning = rec.sessions.morning || {};
+                const evening = rec.sessions.evening || {};
+
+                html += `
+                    <div style="display: flex; gap: 10px; background: #111a2e; border: 1px solid #334155; padding: 10px; border-radius: 8px;">
+                        <!-- ဘယ်ဘက်ကွက် (မနက်ပိုင်း: 9.30, 12.01) -->
+                        <div style="flex: 1; border: 1px dashed #f39c12; border-radius: 6px; padding: 8px; text-align: center;">
+                            <div style="font-size: 11px; color: #f39c12; margin-bottom: 4px;">12.01 PM / 9.30</div>
+                            <div style="font-size: 13px; color: #fff; font-weight: bold;">${morning.modern || '--'} | ${morning.internet || '--'}</div>
+                            <div style="font-size: 14px; color: #f1c40f; margin-top: 4px; font-weight: bold;">${morning.result || '--'}</div>
+                        </div>
+                        <!-- ညာဘက်ကွက် (ညနေပိုင်း: 2.00, 4.30) -->
+                        <div style="flex: 1; border: 1px dashed #3498db; border-radius: 6px; padding: 8px; text-align: center;">
+                            <div style="font-size: 11px; color: #3498db; margin-bottom: 4px;">4.30 PM / 2.00</div>
+                            <div style="font-size: 13px; color: #fff; font-weight: bold;">${evening.modern || '--'} | ${evening.internet || '--'}</div>
+                            <div style="font-size: 14px; color: #f1c40f; margin-top: 4px; font-weight: bold;">${evening.result || '--'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+    } catch (err) {
+        console.error('Failed to load 3D calculator grid:', err);
+    }
+}
+
+// ခဲတံနှင့် ကင်းဗတ်စ် Drawing Logic
+let isDrawingActive = false;
+let currentDrawingColor = '#f1c40f';
+
+document.getElementById('calcPencilBtn')?.addEventListener('click', () => {
+    isDrawingActive = !isDrawingActive;
+    const canvas = document.getElementById('drawingCanvas');
+    if (isDrawingActive) {
+        canvas.style.pointerEvents = 'auto';
+        document.getElementById('calcPencilBtn').style.background = '#16a34a';
+        document.getElementById('calcPencilBtn').innerText = '✍️ ရေးခြစ်နေသည်';
+    } else {
+        canvas.style.pointerEvents = 'none';
+        document.getElementById('calcPencilBtn').style.background = '#2563eb';
+        document.getElementById('calcPencilBtn').innerText = '✏️ ခဲတံ';
+    }
+});
+
+// အရောင်ရွေးချယ်မှု စီမံခြင်း
+document.querySelectorAll('.calc-color').forEach(item => {
+    item.addEventListener('click', (e) => {
+        currentDrawingColor = e.target.getAttribute('data-color');
+        document.querySelectorAll('.calc-color').forEach(opt => opt.style.border = 'none');
+        e.target.style.border = '2px solid #fff';
+    });
+});
+
+// Canvas Freehand Drawing Events
+const canvas = document.getElementById('drawingCanvas');
+if (canvas) {
+    const ctx = canvas.getContext('2d');
+    let painting = false;
+
+    function startPosition(e) {
+        if (!isDrawingActive) return;
+        painting = true;
+        draw(e);
+    }
+
+    function endPosition() {
+        painting = false;
+        ctx.beginPath();
+    }
+
+    function draw(e) {
+        if (!painting || !isDrawingActive) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || e.touches?.[0].clientX) - rect.left;
+        const y = (e.clientY || e.touches?.[0].clientY) - rect.top;
+
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = currentDrawingColor;
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.addEventListener('mouseup', endPosition);
+    canvas.addEventListener('mousemove', draw);
+    
+    canvas.addEventListener('touchstart', startPosition);
+    canvas.addEventListener('touchend', endPosition);
+    canvas.addEventListener('touchmove', draw);
+}
 
     function toggleSound() {
       soundEnabled = !soundEnabled;
