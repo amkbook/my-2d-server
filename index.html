@@ -1473,34 +1473,48 @@ async function fetchLiveData() {
     setInterval(fetchChat, 2000);
     setInterval(fetchScheduleData, 5000);
 
-   async function loadThreeDCalculatorGrid() {
+  async function loadThreeDCalculatorGrid() {
     try {
-        const response = await fetch('/api/threed-calculator');
+        // 2D နေ့စဉ်မှတ်တမ်းများ ရှိရာ /api/history သို့ တိုက်ရိုက်ချိတ်ဆက်ခြင်း
+        const response = await fetch('/api/history');
         const data = await response.json();
 
         const container = document.getElementById('calcGridContainer');
         if (!container) return;
 
         let html = '';
-        const records = (data && data.success && data.records) ? data.records : [];
+        // /api/history မှ ရလာသော history array ကို အသုံးပြုခြင်း
+        const records = (data && data.success && data.history) ? data.history : [];
         
-        // ၇ ရက်စာ ဇယားကွက်များ (ဘယ်ဘက်ခြမ်းတွင်သာ မနက်/ညနေ ကွက်လပ် ၂ ခုပါရှိ)
+        // ၇ ရက်စာ ဇယားကွက်များ တည်ဆောက်ခြင်း
         for (let i = 0; i < 7; i++) {
-            const rec = records[i] || { sessions: { morning: {}, evening: {} } };
-            const morning = rec.sessions.morning || {};
-            const evening = rec.sessions.evening || {};
+            const rec = records[i] || {};
+            const sched = rec.schedule || {};
+            
+            const t0930 = sched.t0930 || {}; // 09:30 AM (Modern, Internet)
+            const t1201 = sched.t1201 || {}; // 12:01 PM (Result)
+            const t1400 = sched.t1400 || {}; // 02:00 PM (Modern, Internet)
+            const t1630 = sched.t1630 || {}; // 04:30 PM (Result)
 
-            // ဒေတာ ရှိပါက ဂဏန်းပြမည်၊ မရှိပါက ကွက်လပ်အလွတ်ထားမည်
-            const mText = (morning.modern || morning.result) ? `${morning.modern || ''} ${morning.result || ''}` : '';
-            const eText = (evening.modern || evening.result) ? `${evening.modern || ''} ${evening.result || ''}` : '';
+            // မနက်ပိုင်း (12.01 PM) - အပေါ်တွင် 09:30 ၏ Modern & Internet၊ အောက်တွင် 12.01 ၏ Result
+            const mTop = `${t0930.modern || '--'} ${t0930.internet || '--'}`;
+            const mRes = rec.t1201 && rec.t1201 !== '--' ? rec.t1201 : (t1201.modern || '--');
+
+            // ညနေပိုင်း (4.30 PM) - အပေါ်တွင် 02:00 ၏ Modern & Internet၊ အောက်တွင် 04:30 ၏ Result
+            const eTop = `${t1400.modern || '--'} ${t1400.internet || '--'}`;
+            const eRes = rec.t430 && rec.t430 !== '--' ? rec.t430 : (t1630.modern || '--');
 
             html += `
                 <div class="calc-row-item">
+                    <!-- မနက်ပိုင်း ကွက်လပ် (12.01 PM) -->
                     <div class="calc-sub-box">
-                        <span style="font-size: 11px; font-weight: bold; color: #000;">${mText}</span>
+                        <div style="font-size: 10px; font-weight: bold; color: #000000; letter-spacing: 0.5px; line-height: 1.2;">${mTop}</div>
+                        <div style="font-size: 16px; font-weight: 900; color: #eab308; line-height: 1.2;">${mRes}</div>
                     </div>
+                    <!-- ညနေပိုင်း ကွက်လပ် (4.30 PM) -->
                     <div class="calc-sub-box">
-                        <span style="font-size: 11px; font-weight: bold; color: #000;">${eText}</span>
+                        <div style="font-size: 10px; font-weight: bold; color: #000000; letter-spacing: 0.5px; line-height: 1.2;">${eTop}</div>
+                        <div style="font-size: 16px; font-weight: 900; color: #eab308; line-height: 1.2;">${eRes}</div>
                     </div>
                 </div>
             `;
@@ -1510,7 +1524,7 @@ async function fetchLiveData() {
         // Canvas ရဲ့ အကျယ်/အမြင့်ကို Container နှင့် အတိအကျညှိခြင်း
         setTimeout(resizeCanvas, 100);
     } catch (err) {
-        console.error('Failed to load 3D calculator grid:', err);
+        console.error('Failed to load 3D calculator grid from history:', err);
     }
 }
 
