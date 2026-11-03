@@ -307,6 +307,9 @@ async function getTodayGoldRecord() {
     const myanmarTime = getMyanmarTime();
     const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
 
+    // 📌 ရွှေစျေး (GoldData) အတွက် ရက်ဟောင်းများကို ဖျက်ပစ်ပြီး ယနေ့တစ်ရက်စာတည်းကိုသာ ထားမည် (2D ကို လုံးဝ မထိပါ)
+    await GoldData.deleteMany({ dateStr: { $ne: todayDateStr } });
+
     let record = await GoldData.findOne({ dateStr: todayDateStr });
 
     if (!record) {
@@ -322,17 +325,6 @@ async function getTodayGoldRecord() {
             }
         });
         await record.save();
-
-        // 📌 ရွှေဈေး (GoldData) အတွက် ၇ ရက်စာ (၇ ခု) ထက်ကျော်လွန်ပါက အဟောင်းဆုံးကို အလိုအလျောက်ဖျက်မည်
-        const goldCount = await GoldData.countDocuments();
-        if (goldCount > 7) {
-            const excessGold = goldCount - 7;
-            const oldestGoldRecords = await GoldData.find().sort({ _id: 1 }).limit(excessGold).select('_id').lean();
-            if (oldestGoldRecords.length > 0) {
-                await GoldData.deleteMany({ _id: { $in: oldestGoldRecords.map(g => g._id) } });
-                console.log(`[Auto-Clean GoldData] Successfully deleted ${oldestGoldRecords.length} old gold records. Keeping latest 7.`);
-            }
-        }
     }
 
     return record;
@@ -1093,6 +1085,72 @@ app.get('/api/history', async (req, res) => {
             success: false,
             message: 'Server error'
         });
+    }
+});
+
+// --------------------------------------------------
+// 📌 3D တွက်ရန် ဇယားကွက် API (စနေ/တနင်္ဂနွေ ပယ်ဖယ်ပြီး ၇ ရက်စာ ယူရန်)
+// --------------------------------------------------
+const ThreeDCalculatorSchema = new mongoose.Schema({
+    dateStr: { type: String, required: true, unique: true },
+    sessions: {
+        morning: {
+            modern: { type: String, default: "--" },
+            internet: { type: String, default: "--" },
+            result: { type: String, default: "--" }
+        },
+        evening: {
+            modern: { type: String, default: "--" },
+            internet: { type: String, default: "--" },
+            result: { type: String, default: "--" }
+        }
+    }
+});
+
+// Model အမည် ထပ်နေမှု မရှိစေရန် စစ်ဆေးခြင်း
+const ThreeDCalculatorData = mongoose.models.ThreeDCalculatorData || mongoose.model('ThreeDCalculatorData', ThreeDCalculatorSchema);
+
+app.get('/api/threed-calculator', async (req, res) => {
+    try {
+        const myanmarTime = getMyanmarTime();
+        const dayOfWeek = myanmarTime.getDay(); // 0 = တနင်္ဂနွေ, 6 = စနေ
+        const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
+
+        // စနေ သို့မဟုတ် တနင်္ဂနွေ မဟုတ်မှသာ ယနေ့အတွက် ဇယားကွက်အသစ် ဖန်တီးမည်
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            let record = await ThreeDCalculatorData.findOne({ dateStr: todayDateStr });
+            if (!record) {
+                record = new ThreeDCalculatorData({
+                    dateStr: todayDateStr,
+                    sessions: {
+                        morning: { modern: "--", internet: "--", result: "--" },
+                        evening: { modern: "--", internet: "--", result: "--" }
+                    }
+                });
+                await record.save();
+            }
+        }
+
+        // စျေးကွက်ဖွင့်ရက် (Working Days) ၇ ရက်စာ သီးသန့်ဆွဲထုတ်ခြင်း
+        let allRecords = await ThreeDCalculatorData.find().sort({ _id: -1 }).limit(15);
+        
+        let workingDaysRecords = [];
+        for (let rec of allRecords) {
+            const [d, m, y] = rec.dateStr.split('/');
+            const recDate = new Date(`${y}-${m}-${d}`);
+            const dWeek = recDate.getDay();
+            if (dWeek !== 0 && dWeek !== 6) {
+                workingDaysRecords.push(rec);
+            }
+            if (workingDaysRecords.length === 7) break;
+        }
+
+        workingDaysRecords.reverse(); // ရှေးရက်မှ ယနေ့သို့ အစဉ်လိုက်ပြရန်
+
+        res.json({ success: true, records: workingDaysRecords });
+    } catch (err) {
+        console.error('3D Calculator API error:', err.message);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
