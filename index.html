@@ -611,106 +611,7 @@
       </div>
     </div>
   </div>
-
-<script>
-async function loadGoldData() {
-    try {
-        const response = await fetch('/api/gold');
-        const data = await response.json();
-
-        if (data && data.success) {
-            const goldPage = document.getElementById('page-gold');
-            if (goldPage) {
-                // Session အချက်အလက်များကို လုံခြုံစွာ ဆွဲထုတ်ခြင်း
-                const sessions = data.sessions || {};
-                const s09 = sessions["09:00 AM"] || sessions["မနက် 09:00 AM"] || {};
-                const s12 = sessions["12:00 PM"] || sessions["နေ့လည် 12:00 PM"] || {};
-                const s04 = sessions["04:00 PM"] || sessions["ညနေ 04:00 PM"] || {};
-
-                const dateFormatted = data.dateFormatted || '--';
-                const globalGold = data.globalGold || '--';
-
-                // ဇယားကွက် HTML အပြည့်အစုံကို တည်ဆောက်ခြင်း
-                goldPage.innerHTML = `
-                    <div class="card" style="padding: 15px; color: #fff;">
-                        <h2 style="text-align: center; color: #f1c40f; margin-bottom: 15px;">🏛️ ရွှေဈေးနှုန်းများ (${dateFormatted})</h2>
-                        
-                        <!-- Global Gold Card -->
-                        <div style="background: #111a2e; border: 1px solid #f39c12; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 20px;">
-                            <div style="color: #3498db; font-size: 14px; margin-bottom: 5px;">🌍 ကမ္ဘာ့ရွှေဈေး (Global Gold)</div>
-                            <div style="font-size: 18px; font-weight: bold; color: #fff;">${globalGold}</div>
-                        </div>
-
-                        <!-- 09:00 AM Session -->
-                        <div style="margin-bottom: 20px;">
-                            <div style="font-size: 15px; color: #f39c12; margin-bottom: 8px;">09:00 AM ရွှေဈေးနှုန်းများ</div>
-                            <div style="display: flex; gap: 10px;">
-                                <div style="flex: 1; background: #111a2e; border: 1px solid #2c3e50; border-radius: 8px; padding: 10px; text-align: center;">
-                                    <div style="color: #bdc3c7; font-size: 13px; margin-bottom: 5px;">၁၅ ပဲရည်</div>
-                                    <div style="color: #f1c40f; font-size: 14px; font-weight: bold;">${s09.p15?.price || '--'}</div>
-                                    <div style="color: #e74c3c; font-size: 12px; margin-top: 3px;">${s09.p15?.change || '--'}</div>
-                                </div>
-                                <div style="flex: 1; background: #111a2e; border: 1px solid #2c3e50; border-radius: 8px; padding: 10px; text-align: center;">
-                                    <div style="color: #bdc3c7; font-size: 13px; margin-bottom: 5px;">အခေါက်ရွှေ</div>
-                                    <div style="color: #f1c40f; font-size: 14px; font-weight: bold;">${s09.akhot?.price || '--'}</div>
-                                    <div style="color: #e74c3c; font-size: 12px; margin-top: 3px;">${s09.akhot?.change || '--'}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 12:00 PM Session -->
-                        <div style="margin-bottom: 20px;">
-                            <div style="font-size: 15px; color: #f39c12; margin-bottom: 8px;">12:00 PM ရွှေဈေးနှုန်းများ</div>
-                            <div style="display: flex; gap: 10px;">
-                                <div style="flex: 1; background: #111a2e; border: 1px solid #2c3e50; border-radius: 8px; padding: 10px; text-align: center;">
-                                    <div style="color: #bdc3c7; font-size: 13px; margin-bottom: 5px;">၁၅ ပဲရည်</div>
-                                    <div style="color: #f1c40f; font-size: 14px; font-weight: bold;">${s12.p15?.price || '--'}</div>
-                                    <div style="color: #e74c3c; font-size: 12px; margin-top: 3px;">${s12.p15?.change || '--'}</div>
-                                </div>
-                                <div style="flex: 1; background: #111a2e; border: 1px solid #2c3e50; border-radius: 8px; padding: 10px; text-align: center;">
-                                    <div style="color: #bdc3c7; font-size: 13px; margin-bottom: 5px;">အခေါက်ရွှေ</div>
-                                    <div style="color: #f1c40f; font-size: 14px; font-weight: bold;">${s12.akhot?.price || '--'}</div>
-                                    <div style="color: #e74c3c; font-size: 12px; margin-top: 3px;">${s12.akhot?.change || '--'}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 04:00 PM Session -->
-                        <div style="margin-bottom: 10px;">
-                            <div style="font-size: 15px; color: #f39c12; margin-bottom: 8px;">04:00 PM ရွှေဈေးနှုန်းများ</div>
-                            <div style="display: flex: 1; display: flex; gap: 10px;">
-                                <div style="flex: 1; background: #111a2e; border: 1px solid #2c3e50; border-radius: 8px; padding: 10px; text-align: center;">
-                                    <div style="color: #bdc3c7; font-size: 13px; margin-bottom: 5px;">၁၅ ပဲရည်</div>
-                                    <div style="color: #f1c40f; font-size: 14px; font-weight: bold;">${s04.p15?.price || '--'}</div>
-                                    <div style="color: #e74c3c; font-size: 12px; margin-top: 3px;">${s04.p15?.change || '--'}</div>
-                                </div>
-                                <div style="flex: 1; background: #111a2e; border: 1px solid #2c3e50; border-radius: 8px; padding: 10px; text-align: center;">
-                                    <div style="color: #bdc3c7; font-size: 13px; margin-bottom: 5px;">အခေါက်ရွှေ</div>
-                                    <div style="color: #f1c40f; font-size: 14px; font-weight: bold;">${s04.akhot?.price || '--'}</div>
-                                    <div style="color: #e74c3c; font-size: 12px; margin-top: 3px;">${s04.akhot?.change || '--'}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-    } catch (err) {
-        console.error('Failed to load gold data:', err);
-    }
-}
-
-
-</script>
-    <!-- PAGE 2: Gold Price -->
-    <div id="page-gold" class="tab-content">
-      <div class="card">
-        <h2>🪙 ရွှေဈေးနှုန်းများ</h2>
-        <p style="color: #94a3b8; font-size: 14px; margin-top: 10px;">အခေါက်ရွှေနှင့် ၁၅ ပဲရည် ရွှေဈေးနှုန်း အချက်အလက်များ</p>
-      </div>
-    </div>
-
-    <!-- PAGE 3: 2D History -->
+ <!-- PAGE 3: 2D History -->
     <div id="page-2d-history" class="tab-content">
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;">
         <span style="font-size: 20px; font-weight: bold; color: #ffffff; cursor: pointer;" onclick="switchTab('page-home', document.querySelector('.nav-item'))">←</span>
@@ -835,7 +736,6 @@ async function loadGoldData() {
 
   <div class="bottom-nav">
     <button class="nav-item active" onclick="switchTab('page-home', this)"><span class="nav-icon">🏠</span><span>Home</span></button>
-    <button class="nav-item" onclick="switchTab('page-gold', this)"><span class="nav-icon">🪙</span><span>ရွှေဈေး</span></button>
     <button class="nav-item" onclick="switchTab('page-2d-history', this)"><span class="nav-icon">📅</span><span>2D မှတ်တမ်း</span></button>
 <button class="nav-item" onclick="switchTab('page-3d-history', this)"><span class="nav-icon">🎯</span><span>3D နှင့် လက်ဆောင်</span></button>
     <button class="nav-item" onclick="switchTab('page-more', this)"><span class="nav-icon">⚙</span><span>More</span></button>
