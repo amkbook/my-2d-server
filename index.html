@@ -445,7 +445,7 @@
 /* 3D ဖောင်းကြွ ခရမ်းရောင်ဘောင်နှင့် အရွယ်အစား 30% ပိုကြီးသော Box */
 .calc-sub-box {
     flex: 1;
-    height: 62px; /* မူလ 48px မှ 30% အတိအကျ တိုးထားသည် */
+    height: 76px; /* 👈 စာသား ၃ လိုင်းစာ အဆင်ပြေစေရန် 76px သို့ တိုးမြှင့်ထားသည် */
     border: 1px solid #d8b4fe;
     border-radius: 10px;
     background: linear-gradient(145deg, #ffffff, #f3e8ff); /* 3D နောက်ခံ */
@@ -458,6 +458,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 4px 2px; /* 👈 ပတ်လည် နေရာလွတ် အချိုးကျ ထည့်သွင်းခြင်း */
     box-sizing: border-box;
 }
 
@@ -746,7 +747,7 @@ async function loadGoldData() {
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <h3 style="color: #d97706; font-size: 16px; margin: 0; font-weight: bold;">🧮 2D တွက်ရန် ဇယားကွက်</h3>
 
-        
+
         <div style="display: flex; flex-direction: column; align-items: flex-end;">
             <button id="calcPencilBtn" style="background: #2563eb; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #fff; font-size: 13px; font-weight: bold;">✏️ ခဲတံ</button>
             <div id="calcColorRow" style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; margin-top: 4px;">
@@ -759,17 +760,13 @@ async function loadGoldData() {
         </div>
     </div>
 
-    <!-- ဇယားကွက်နှင့် Canvas Wrapper (ဆွဲရမနေစေရန် တည်ငြိမ်အောင် ထိန်းထားသည်) -->
+    <!-- ဇယားကွက်နှင့် Canvas Wrapper -->
     <div id="calcWrapper">
-        <!-- အချိန် ခေါင်းစဉ်အတန်း -->
-        <div style="display: flex; width: 140px; justify-content: space-between; margin-bottom: 4px; padding-left: 2px;">
-            <span style="font-size: 11px; color: #ef4444; font-weight: bold;">12.01.PM</span>
-            <span style="font-size: 11px; color: #ef4444; font-weight: bold;">4.30 PM</span>
-        </div>
+        <!-- ⚠️ အပြင်ဘက်မှ ထပ်နေသော အချိန်ခေါင်းစဉ် အတန်းကို ဖြုတ်ထုတ်လိုက်ပါပြီ (ဇယားကွက်အတွင်းတွင် 3D ဖြင့် ပါပြီးသားဖြစ်၍) -->
 
-        <!-- ၇ ရက်စာ ဇယားကွက် Container -->
+        <!-- ၁၀ ရက်စာ ဇယားကွက် Container -->
         <div id="calcGridContainer">
-            <!-- JavaScript မှ ဘယ်ဘက် ဇယားကွက်တန်းများကို ဖြည့်ပေးမည် -->
+            <!-- JavaScript မှ ဇယားကွက်တန်းများကို ဖြည့်ပေးမည် -->
         </div>
 
         <!-- လွတ်လပ်စွာ ရေးခြစ်နိုင်သော တည်ငြိမ် Canvas Layer -->
@@ -1510,7 +1507,7 @@ async function fetchLiveData() {
     setInterval(fetchChat, 2000);
     setInterval(fetchScheduleData, 5000);
 
-  async function loadThreeDCalculatorGrid() {
+ async function loadThreeDCalculatorGrid() {
     try {
         // 2D နေ့စဉ်မှတ်တမ်းများ ရှိရာ /api/history သို့ တိုက်ရိုက်ချိတ်ဆက်ခြင်း
         const response = await fetch('/api/history');
@@ -1541,7 +1538,7 @@ async function fetchLiveData() {
             const eTop = `${t1400.modern || '--'} / ${t1400.internet || '--'}`;
             const eRes = rec.t430 && rec.t430 !== '--' ? rec.t430 : (t1630.modern || '--');
 
-           html += `
+            html += `
                 <div class="calc-row-item">
                     <!-- မနက်ပိုင်း ကွက်လပ် (12.01 PM - အနီရောင် 3D ခေါင်းစဉ်ပါ) -->
                     <div class="calc-sub-box">
@@ -1559,9 +1556,11 @@ async function fetchLiveData() {
             `;
         }
 
+        // ⚠️ ဤနေရာတွင် container ထဲသို့ HTML များ ထည့်သွင်းရန် မူလက လျော့နေခဲ့ခြင်း ဖြစ်သည်
+        container.innerHTML = html;
 
         // Canvas ရဲ့ အကျယ်/အမြင့်ကို Container နှင့် အတိအကျညှိခြင်း
-       setTimeout(resizeCanvas, 100);
+        setTimeout(resizeCanvas, 100);
     } catch (err) {
         console.error('Failed to load 3D calculator grid from history:', err);
     }
