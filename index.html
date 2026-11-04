@@ -1487,7 +1487,7 @@ async function fetchLiveData() {
         const records = (data && data.success && data.history) ? data.history : [];
         
         // ၇ ရက်စာ ဇယားကွက်များ တည်ဆောက်ခြင်း
-        for (let i = 0; i < 7; i++) {
+       for (let i = 0; i < 10; i++) {
             const rec = records[i] || {};
             const sched = rec.schedule || {};
             
