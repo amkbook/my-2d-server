@@ -1519,9 +1519,11 @@ async function fetchLiveData() {
         // /api/history မှ ရလာသော history array ကို အသုံးပြုခြင်း
         const records = (data && data.success && data.history) ? data.history : [];
         
-        // ၁၀ ရက်စာ ဇယားကွက်များ တည်ဆောက်ခြင်း
-        for (let i = 0; i < 10; i++) {
-            const rec = records[i] || {};
+        // ၁၀ ရက်စာ ဇယားကွက်များ တည်ဆောက်ခြင်း (အဟောင်းဆုံးကို အပေါ်၊ အသစ်ဆုံးကို အောက်သို့ ရောက်စေရန် ပြောင်းပြန်လှန်ခြင်း)
+        const reversedRecords = [...records].slice(0, 10).reverse();
+
+        for (let i = 0; i < reversedRecords.length; i++) {
+            const rec = reversedRecords[i] || {};
             const sched = rec.schedule || {};
             
             const t0930 = sched.t0930 || {}; // 09:30 AM (Modern, Internet)
