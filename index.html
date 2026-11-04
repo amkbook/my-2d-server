@@ -412,7 +412,7 @@
     0 4px 10px rgba(0, 0, 0, 0.4), 
     inset 0 2px 2px rgba(0, 0, 0, 0.4);
 }
-    /* 📌 တတိယစာမျက်နှာ - နောက်ခံအဖြူရောင်နှင့် တည်ငြိမ်သော ဇယားကွက်ဒီဇိုင်းအသစ် */
+   /* 📌 တတိယစာမျက်နှာ - နောက်ခံအဖြူရောင်နှင့် တည်ငြိမ်သော ဇယားကွက်ဒီဇိုင်းအသစ် */
 #page-threed-calculator {
     background: #ffffff !important;
     color: #000000 !important;
@@ -421,32 +421,39 @@
     box-sizing: border-box;
 }
 
+/* ⚠️ ခဲတံဆွဲပါက စာမျက်နှာ အပေါ်အောက် ရွေ့မသွားစေရန် (လုံးဝ မပြောင်းလဲထားပါ) */
 #calcWrapper {
     position: relative;
     width: 100%;
-    touch-action: none; /* ဖုန်းပေါ်တွင် ခဲတံဆွဲပါက စာမျက်နှာ အပေါ်အောက် ရွေ့မသွားစေရန် */
+    touch-action: none; 
 }
 
 #calcGridContainer {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 10px; /* ဇယားကွက်တွေ ကြီးလာတဲ့အတွက် အနည်းငယ် ချဲပေးထားသည် */
     width: 100%;
 }
 
-/* ဇယားကွက်တန်း အလှပုံစံ (ဘယ်ဘက်တွင်သာ ကွက်လပ် ၂ ခု) */
+/* ဇယားကွက်တန်း အလှပုံစံ (အရွယ်အစား 30% ပိုကြီးလာစေရန် အချိုးကျ တွက်ချက်ထားသည်) */
 .calc-row-item {
     display: flex;
-    gap: 6px;
-    width: 140px; 
+    gap: 8px;
+    width: 182px; /* မူလ 140px မှ 30% အတိအကျ တိုးထားသည် */
 }
 
+/* 3D ဖောင်းကြွ ခရမ်းရောင်ဘောင်နှင့် အရွယ်အစား 30% ပိုကြီးသော Box */
 .calc-sub-box {
     flex: 1;
-    height: 48px;
-    border: 2px solid #c084fc;
+    height: 62px; /* မူလ 48px မှ 30% အတိအကျ တိုးထားသည် */
+    border: 1px solid #d8b4fe;
     border-radius: 10px;
-    background: #ffffff;
+    background: linear-gradient(145deg, #ffffff, #f3e8ff); /* 3D နောက်ခံ */
+    /* Neumorphism (3D ဖောင်းကြွအရိပ်စနစ်) */
+    box-shadow: 4px 4px 8px rgba(168, 85, 247, 0.3), 
+               -4px -4px 8px rgba(255, 255, 255, 1),
+               inset 1px 1px 2px rgba(255, 255, 255, 1),
+               inset -1px -1px 2px rgba(168, 85, 247, 0.15);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -454,7 +461,40 @@
     box-sizing: border-box;
 }
 
-/* Canvas ကို မျက်နှာပြင်ပေါ်တွင် တည်ငြိမ်စွာ ငြိမ်နေစေခြင်း */
+/* Modern နှင့် Internet ဂဏန်းများ (အရွယ်အစား 25% တိုးပြီး 3D ဖောင်းကြွ) */
+.calc-top-text {
+    font-size: 13px !important; /* မူလ 10px မှ 25% ကျော် တိုးထားသည် */
+    font-weight: 800;
+    color: #1f2937;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 1), -1px -1px 1px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2px;
+}
+
+/* Result အဝါရောင် ဂဏန်းကြီးများ (အရွယ်အစား 25% တိုးပြီး 3D ဖောင်းကြွ) */
+.calc-result-text {
+    font-size: 20px !important; /* မူလ 16px မှ 25% တိုးထားသည် */
+    font-weight: 900;
+    color: #eab308;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.4), -1px -1px 1px rgba(255, 255, 255, 0.8);
+    letter-spacing: 1px;
+}
+
+/* အပေါ်ခေါင်းစဉ် (12.01 PM / 4.30 PM) အနက်ရောင် 3D ဒီဇိုင်းအသစ် */
+.calc-header-title {
+    background: linear-gradient(145deg, #1f2937, #111827);
+    color: #f3f4f6;
+    padding: 6px 12px;
+    border-radius: 8px;
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5), inset 1px 1px 2px rgba(255, 255, 255, 0.2);
+    font-weight: bold;
+    text-align: center;
+    font-size: 12px;
+    border: 1px solid #374151;
+    display: inline-block;
+}
+
+/* ⚠️ Canvas ကို မျက်နှာပြင်ပေါ်တွင် တည်ငြိမ်စွာ ငြိမ်နေစေခြင်း (လုံးဝ မပြောင်းလဲထားပါ) */
 #drawingCanvas {
     position: absolute;
     top: 0;
@@ -1486,8 +1526,8 @@ async function fetchLiveData() {
         // /api/history မှ ရလာသော history array ကို အသုံးပြုခြင်း
         const records = (data && data.success && data.history) ? data.history : [];
         
-        // ၇ ရက်စာ ဇယားကွက်များ တည်ဆောက်ခြင်း
-       for (let i = 0; i < 10; i++) {
+        // ၁၀ ရက်စာ ဇယားကွက်များ တည်ဆောက်ခြင်း
+        for (let i = 0; i < 10; i++) {
             const rec = records[i] || {};
             const sched = rec.schedule || {};
             
@@ -1496,25 +1536,25 @@ async function fetchLiveData() {
             const t1400 = sched.t1400 || {}; // 02:00 PM (Modern, Internet)
             const t1630 = sched.t1630 || {}; // 04:30 PM (Result)
 
-            // မနက်ပိုင်း (12.01 PM) - အပေါ်တွင် 09:30 ၏ Modern & Internet၊ အောက်တွင် 12.01 ၏ Result
-            const mTop = `${t0930.modern || '--'} ${t0930.internet || '--'}`;
+            // မနက်ပိုင်း (12.01 PM) - Modern နှင့် Internet ကြားတွင် '/' ထည့်သွင်းခြင်း
+            const mTop = `${t0930.modern || '--'} / ${t0930.internet || '--'}`;
             const mRes = rec.t1201 && rec.t1201 !== '--' ? rec.t1201 : (t1201.modern || '--');
 
-            // ညနေပိုင်း (4.30 PM) - အပေါ်တွင် 02:00 ၏ Modern & Internet၊ အောက်တွင် 04:30 ၏ Result
-            const eTop = `${t1400.modern || '--'} ${t1400.internet || '--'}`;
+            // ညနေပိုင်း (4.30 PM) - Modern နှင့် Internet ကြားတွင် '/' ထည့်သွင်းခြင်း
+            const eTop = `${t1400.modern || '--'} / ${t1400.internet || '--'}`;
             const eRes = rec.t430 && rec.t430 !== '--' ? rec.t430 : (t1630.modern || '--');
 
             html += `
                 <div class="calc-row-item">
                     <!-- မနက်ပိုင်း ကွက်လပ် (12.01 PM) -->
                     <div class="calc-sub-box">
-                        <div style="font-size: 10px; font-weight: bold; color: #000000; letter-spacing: 0.5px; line-height: 1.2;">${mTop}</div>
-                        <div style="font-size: 16px; font-weight: 900; color: #eab308; line-height: 1.2;">${mRes}</div>
+                        <div class="calc-top-text">${mTop}</div>
+                        <div class="calc-result-text">${mRes}</div>
                     </div>
                     <!-- ညနေပိုင်း ကွက်လပ် (4.30 PM) -->
                     <div class="calc-sub-box">
-                        <div style="font-size: 10px; font-weight: bold; color: #000000; letter-spacing: 0.5px; line-height: 1.2;">${eTop}</div>
-                        <div style="font-size: 16px; font-weight: 900; color: #eab308; line-height: 1.2;">${eRes}</div>
+                        <div class="calc-top-text">${eTop}</div>
+                        <div class="calc-result-text">${eRes}</div>
                     </div>
                 </div>
             `;
@@ -1528,7 +1568,7 @@ async function fetchLiveData() {
     }
 }
 
-// Canvas Resize Function
+// Canvas Resize Function (မူလအတိုင်း လုံးဝမပြောင်းပါ)
 function resizeCanvas() {
     const canvas = document.getElementById('drawingCanvas');
     const wrapper = document.getElementById('calcWrapper');
@@ -1538,7 +1578,7 @@ function resizeCanvas() {
     }
 }
 
-// ခဲတံ/ကင်းဗတ်စ် Drawing Logic
+// ခဲတံ/ကင်းဗတ်စ် Drawing Logic (မူလအတိုင်း လုံးဝမပြောင်းပါ)
 let isDrawingActive = false;
 let currentDrawingColor = '#000000';
 
@@ -1565,7 +1605,7 @@ document.querySelectorAll('.calc-color').forEach(item => {
     });
 });
 
-// Canvas Freehand Drawing Events (Touch Support)
+// Canvas Freehand Drawing Events (Touch Support - မူလအတိုင်း လုံးဝမပြောင်းပါ)
 const canvas = document.getElementById('drawingCanvas');
 if (canvas) {
     const ctx = canvas.getContext('2d');
