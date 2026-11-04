@@ -441,24 +441,23 @@
     gap: 8px;
     width: 182px; /* မူလ 140px မှ 30% အတိအကျ တိုးထားသည် */
 }
-
-/* 3D ဖောင်းကြွ ခရမ်းရောင်ဘောင်နှင့် အရွယ်အစား 30% ပိုကြီးသော Box */
+/* 3D ဖောင်းကြွ ခရမ်းရောင်ဘောင်နှင့် ကျစ်လစ်သော Box အရွယ်အစား */
 .calc-sub-box {
     flex: 1;
-    height: 76px; /* 👈 စာသား ၃ လိုင်းစာ အဆင်ပြေစေရန် 76px သို့ တိုးမြှင့်ထားသည် */
+    height: 48px; /* 👈 စာသား ၂ လိုင်းစာအတွက် အမြင့်ကို သေသပ်စွာ ပြန်ညှိထားသည် (၁၀ စုံလုံး ဖုန်းမျက်နှာပြင်တွင် အပြည့်အစုံပေါ်စေရန်) */
     border: 1px solid #d8b4fe;
-    border-radius: 10px;
+    border-radius: 8px;
     background: linear-gradient(145deg, #ffffff, #f3e8ff); /* 3D နောက်ခံ */
     /* Neumorphism (3D ဖောင်းကြွအရိပ်စနစ်) */
-    box-shadow: 4px 4px 8px rgba(168, 85, 247, 0.3), 
-               -4px -4px 8px rgba(255, 255, 255, 1),
+    box-shadow: 3px 3px 6px rgba(168, 85, 247, 0.25), 
+               -3px -3px 6px rgba(255, 255, 255, 1),
                inset 1px 1px 2px rgba(255, 255, 255, 1),
-               inset -1px -1px 2px rgba(168, 85, 247, 0.15);
+               inset -1px -1px 2px rgba(168, 85, 247, 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4px 2px; /* 👈 ပတ်လည် နေရာလွတ် အချိုးကျ ထည့်သွင်းခြင်း */
+    padding: 2px;
     box-sizing: border-box;
 }
 
@@ -1538,17 +1537,17 @@ async function fetchLiveData() {
             const eTop = `${t1400.modern || '--'} / ${t1400.internet || '--'}`;
             const eRes = rec.t430 && rec.t430 !== '--' ? rec.t430 : (t1630.modern || '--');
 
-            html += `
+          html += `
                 <div class="calc-row-item">
-                    <!-- မနက်ပိုင်း ကွက်လပ် (12.01 PM - အနီရောင် 3D ခေါင်းစဉ်ပါ) -->
+                    <!-- မနက်ပိုင်း ကွက်လပ် (ခေါင်းစဉ်မပါတော့ပါ) -->
                     <div class="calc-sub-box">
-                        <div class="calc-header-red-3d">12.01 PM</div>
+
                         <div class="calc-top-text">${mTop}</div>
                         <div class="calc-result-text">${mRes}</div>
                     </div>
-                    <!-- ညနေပိုင်း ကွက်လပ် (4.30 PM - အနီရောင် 3D ခေါင်းစဉ်ပါ) -->
+                    <!-- ညနေပိုင်း ကွက်လပ် (ခေါင်းစဉ်မပါတော့ပါ) -->
                     <div class="calc-sub-box">
-                        <div class="calc-header-red-3d">4.30 PM</div>
+
                         <div class="calc-top-text">${eTop}</div>
                         <div class="calc-result-text">${eRes}</div>
                     </div>
@@ -1556,7 +1555,6 @@ async function fetchLiveData() {
             `;
         }
 
-        // ⚠️ ဤနေရာတွင် container ထဲသို့ HTML များ ထည့်သွင်းရန် မူလက လျော့နေခဲ့ခြင်း ဖြစ်သည်
         container.innerHTML = html;
 
         // Canvas ရဲ့ အကျယ်/အမြင့်ကို Container နှင့် အတိအကျညှိခြင်း
