@@ -1120,14 +1120,15 @@ const isWeekend = typeof isWeekendMyanmar === 'function' ? isWeekendMyanmar() : 
         }
     }
 
-    if (activeRecord) {
+   if (activeRecord) {
         if (phase === 'midday-freeze' || phase === 'morning-live') {
             if (activeRecord.t1201 && activeRecord.t1201 !== '--') {
                 result2D = activeRecord.t1201;
                 resultIndex = activeRecord.setIndex1201 || '--';
                 resultValue = activeRecord.value1201 || '--';
             } else {
-                result2D = liveCache.live2D !== '--' ? liveCache.live2D : (activeRecord.schedule?.['12:01 PM']?.modern || '--');
+                // 💡 12:01 တရားဝင်ရလဒ် မထွက်လာသေးသမျှ ယမန်နေ့က တန်ဖိုးဟောင်း (`activeRecord.schedule`) ကို လုံးဝမသုံးတော့ဘဲ Live Cache တန်ဖိုးကိုသာ သန့်စင်စွာ ဆက်ပြမည်
+                result2D = liveCache.live2D !== '--' ? liveCache.live2D : '--';
                 resultIndex = liveCache.setIndex;
                 resultValue = liveCache.setValue;
             }
@@ -1137,7 +1138,7 @@ const isWeekend = typeof isWeekendMyanmar === 'function' ? isWeekendMyanmar() : 
                 resultIndex = activeRecord.setIndex430 || '--';
                 resultValue = activeRecord.value430 || '--';
             } else {
-                result2D = liveCache.live2D !== '--' ? liveCache.live2D : (activeRecord.schedule?.['04:30 PM']?.modern || '--');
+                result2D = liveCache.live2D !== '--' ? liveCache.live2D : '--';
                 resultIndex = liveCache.setIndex;
                 resultValue = liveCache.setValue;
             }
