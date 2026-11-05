@@ -941,36 +941,29 @@ const ThreeDCalculatorData = mongoose.models.ThreeDCalculatorData || mongoose.mo
 app.get('/api/history', async (req, res) => {
     try {
         const offset = parseInt(req.query.offset) || 0;
-        const limit = parseInt(req.query.limit) || 10; // ၁၀ ရက်စာ
+        const limit = parseInt(req.query.limit) || 10;
 
-        // စနေ၊ တနင်္ဂနွေ ပါဝင်နိုင်ခြေရှိ므로 လုံလောက်သော အရေအတွက်ကို အစဥ်လိုက်ဆွဲထုတ်မည်
-        const fetchLimit = (limit + offset) * 2.5; 
-        const allRecords = await ThreeDCalculatorData.find().sort({ _id: -1 }).limit(fetchLimit);
+        // ဒေတာဘေ့စ်မှ အသစ်ဆုံးကို အရင်စဥ်၍ လုံလောက်သော အရေအတွက်ကို ဆွဲထုတ်မည်
+        const rawRecords = await ThreeDCalculatorData.find().sort({ _id: -1 }).limit(100);
 
         let workingDaysRecords = [];
-        let skippedWorkingDays = 0;
-
-        for (let rec of allRecords) {
+        
+        for (let rec of rawRecords) {
+            if (!rec.dateStr) continue;
             const [d, m, y] = rec.dateStr.split('/');
             const recDate = new Date(`${y}-${m}-${d}`);
             const dWeek = recDate.getDay(); // 0 = တနင်္ဂနွေ, 6 = စနေ
 
-            // စနေ သို့မဟုတ် တနင်္ဂနွေ မဟုတ်မှသာ Working Day အဖြစ် သတ်မှတ်မည်
+            // စနေ၊ တနင်္ဂနွေ မဟုတ်သော လုပ်ငန်းရက်များကိုသာ စုဆောင်းမည်
             if (dWeek !== 0 && dWeek !== 6) {
-                if (skippedWorkingDays >= offset) {
-                    workingDaysRecords.push(rec);
-                } else {
-                    skippedWorkingDays++;
-                }
+                workingDaysRecords.push(rec);
             }
-
-            // လိုချင်သော limit (၁၀ ရက်စာ) ပြည့်သည်နှင့် ရပ်မည်
-            if (workingDaysRecords.length === limit) break;
         }
 
-        workingDaysRecords.reverse(); // ရှေးရက်မှ ယနေ့သို့ အစဉ်လိုက်ပြရန်
+        // 💡 အသစ်ဆုံးရက်များကို အစဥ်လိုက်အတိုင်း offset နှင့် limit ဖြင့် ဖြတ်ယူခြင်း
+        const paginatedRecords = workingDaysRecords.slice(offset, offset + limit);
 
-        res.json({ success: true, history: workingDaysRecords });
+        res.json({ success: true, history: paginatedRecords });
     } catch (err) {
         console.error("API error:", err.message);
         res.status(500).json({ success: false, error: err.message });

@@ -744,22 +744,22 @@ document.getElementById('calcResetBtn')?.addEventListener('click', () => {
     }
 });
 // 💡 ရက်ပေါင်း ၂၀ စာ (၁၀ ရက်စီ အထက်/အောက် ရွှေ့ရန်) Pagination Logic
-let currentCalcOffset = 0; // မူလ အစ လက်ရှိ ၁၀ ရက်စာ
+let currentCalcOffset = 0; // 0 = နောက်ဆုံးပေါ် ၁၀ ရက်စာ (အသစ်ဆုံး), 10 = ပြီးခဲ့သော ၁၀ ရက်စာ (အဟောင်း)
 const calcLimit = 10;      // တစ်ခါပြလျှင် ၁၀ ရက်စာ
 
-// 🔼 အပေါ်ခလုတ်နှိပ်လျှင် (အဟောင်းဘက်သို့ ၁၀ ရက်စာ တိုးမည်)
+// 🔼 အပေါ်ခလုတ်နှိပ်လျှင် (အဟောင်းဘက်သို့ ၁၀ ရက်စာ သွားမည် - offset ကို 10 သို့ တိုးမည်)
 document.getElementById('calcPrevDaysBtn')?.addEventListener('click', () => {
-    if (currentCalcOffset < 10) { 
-        currentCalcOffset += 10;
-        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit); // 👈 loadThreeDCalculatorGrid သို့ ချိတ်ဆက်ပေးခြင်း
+    if (currentCalcOffset === 0) {
+        currentCalcOffset = 10; 
+        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
     }
 });
 
-// 🔽 အောက်ခလုတ်နှိပ်လျှင် (ယခုနောက်ဆုံး ၁၀ ရက်စာသို့ ပြန်လာမည်)
+// 🔽 အောက်ခလုတ်နှိပ်လျှင် (ယခုနောက်ဆုံး ၁၀ ရက်စာသို့ ပြန်လာမည် - offset ကို 0 သို့ ပြန်ချမည်)
 document.getElementById('calcNextDaysBtn')?.addEventListener('click', () => {
     if (currentCalcOffset > 0) {
-        currentCalcOffset = 0;
-        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit); // 👈 loadThreeDCalculatorGrid သို့ ချိတ်ဆက်ပေးခြင်း
+        currentCalcOffset = 0; 
+        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
     }
 });
     function initLanguageUI() {
@@ -1426,9 +1426,10 @@ async function fetchLiveData() {
     setInterval(fetchChat, 2000);
     setInterval(fetchScheduleData, 5000);
 
- async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
+// 💡 ဇယားကွက်ဒေတာကို API မှ ဆွဲထုတ်ပြီး မျက်နှာပြင်ပေါ်တင်ပေးသော Function
+async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
     try {
-        // 💡 offset နှင့် limit ကို query parameters အဖြစ် ပို့ဆောင်ခြင်း
+
         const response = await fetch(`/api/history?offset=${offset}&limit=${limit}`);
         const data = await response.json();
 
@@ -1436,14 +1437,13 @@ async function fetchLiveData() {
         if (!container) return;
 
         let html = '';
-
         const records = (data && data.success && data.history) ? data.history : [];
         
-        // 💡 ဆာဗာမှ offset အလိုက် ရလာသော records များကို ဇယားကွက်တည်ဆောက်ခြင်း
-        const reversedRecords = [...records].reverse();
+        // အစဉ်လိုက် မှန်ကန်စေရန် (လိုအပ်ပါက ပြန်လှန်ခြင်း)
+        const displayRecords = [...records].reverse();
 
-        for (let i = 0; i < reversedRecords.length; i++) {
-            const rec = reversedRecords[i] || {};
+        for (let i = 0; i < displayRecords.length; i++) {
+            const rec = displayRecords[i] || {};
             const sched = rec.schedule || {};
             
             const t0930 = sched.t0930 || {}; 
@@ -1454,18 +1454,15 @@ async function fetchLiveData() {
             const mTop = `${t0930.modern || '--'} / ${t0930.internet || '--'}`;
             const mRes = rec.t1201 && rec.t1201 !== '--' ? rec.t1201 : (t1201.modern || '--');
 
-
             const eTop = `${t1400.modern || '--'} / ${t1400.internet || '--'}`;
             const eRes = rec.t430 && rec.t430 !== '--' ? rec.t430 : (t1630.modern || '--');
 
             html += `
                 <div class="calc-row-item">
-
                     <div class="calc-sub-box">
                         <div class="calc-top-text">${mTop}</div>
                         <div class="calc-result-text">${mRes}</div>
                     </div>
-                  
                     <div class="calc-sub-box">
                         <div class="calc-top-text">${eTop}</div>
                         <div class="calc-result-text">${eRes}</div>
@@ -1474,14 +1471,17 @@ async function fetchLiveData() {
             `;
         }
 
+        // ဇယားကွက်ကိုသာ innerHTML ဖြင့် အသစ်တင်မည် (ညာဘက်ခြမ်း Canvas မပျက်ပါ)
         container.innerHTML = html;
-
-        // Canvas ရဲ့ အကျယ်/အမြင့်ကို Container နှင့် အတိအကျညှိခြင်း
+        
         setTimeout(resizeCanvas, 100);
     } catch (err) {
-        console.error('Failed to load 3D calculator grid from history:', err);
+        console.error("Error loading calculator grid:", err);
     }
 }
+
+// 🚀 စာမျက်နှာ စတင်ဝင်ရောက်လာသည်နှင့် နောက်ဆုံးပေါ် ၁၀ ရက်စာ (`offset = 0`) ကို အလိုအလျောက် တင်ပြပေးမည်
+loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
 
 // Canvas Resize Function (မူလအတိုင်း လုံးဝမပြောင်းပါ)
 function resizeCanvas() {
