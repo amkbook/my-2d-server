@@ -751,7 +751,7 @@ const calcLimit = 10;      // တစ်ခါပြလျှင် ၁၀ ရက
 document.getElementById('calcPrevDaysBtn')?.addEventListener('click', () => {
     if (currentCalcOffset < 10) { 
         currentCalcOffset += 10;
-        fetchAndRenderCalcData(currentCalcOffset, calcLimit);
+        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit); // 👈 loadThreeDCalculatorGrid သို့ ချိတ်ဆက်ပေးခြင်း
     }
 });
 
@@ -759,7 +759,7 @@ document.getElementById('calcPrevDaysBtn')?.addEventListener('click', () => {
 document.getElementById('calcNextDaysBtn')?.addEventListener('click', () => {
     if (currentCalcOffset > 0) {
         currentCalcOffset = 0;
-        fetchAndRenderCalcData(currentCalcOffset, calcLimit);
+        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit); // 👈 loadThreeDCalculatorGrid သို့ ချိတ်ဆက်ပေးခြင်း
     }
 });
     function initLanguageUI() {
@@ -1436,7 +1436,7 @@ async function fetchLiveData() {
         if (!container) return;
 
         let html = '';
-        
+
         const records = (data && data.success && data.history) ? data.history : [];
         
         // 💡 ဆာဗာမှ offset အလိုက် ရလာသော records များကို ဇယားကွက်တည်ဆောက်ခြင်း

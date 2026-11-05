@@ -937,50 +937,42 @@ const ThreeDCalculatorSchema = new mongoose.Schema({
 // Model အမည် ထပ်နေမှု မရှိစေရန် စစ်ဆေးခြင်း
 const ThreeDCalculatorData = mongoose.models.ThreeDCalculatorData || mongoose.model('ThreeDCalculatorData', ThreeDCalculatorSchema);
 
-app.get('/api/threed-calculator', async (req, res) => {
+// 💡 အလုပ်လုပ်ရက် (Working Days) များကို offset နှင့် limit ဖြင့် တိကျစွာ pagination လုပ်ပေးမည့် API
+app.get('/api/history', async (req, res) => {
     try {
-        const myanmarTime = getMyanmarTime();
-        const dayOfWeek = myanmarTime.getDay(); // 0 = တနင်္ဂနွေ, 6 = စနေ
-        const todayDateStr = myanmarTime.toLocaleDateString('en-GB');
-
-        // စနေ သို့မဟုတ် တနင်္ဂနွေ မဟုတ်မှသာ ယနေ့အတွက် ဇယားကွက်အသစ် ဖန်တီးမည်
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-            let record = await ThreeDCalculatorData.findOne({ dateStr: todayDateStr });
-            if (!record) {
-                record = new ThreeDCalculatorData({
-                    dateStr: todayDateStr,
-                    sessions: {
-                        morning: { modern: "--", internet: "--", result: "--" },
-                        evening: { modern: "--", internet: "--", result: "--" }
-                    }
-                });
-                await record.save();
-            }
-        }
-
-        // 💡 Frontend မှ ပို့လာသော offset နှင့် limit (တစ်ခါပြလျှင် ၁၀ ရက်စာ) ကို လက်ခံခြင်း
         const offset = parseInt(req.query.offset) || 0;
-        const limit = 10; // ၁၀ ရက်စာ သတ်မှတ်ချက်
+        const limit = parseInt(req.query.limit) || 10; // ၁၀ ရက်စာ
 
-        // ဈေးကွက်ဖွင့်ရက်များကို offset နှင့် limit (၁၀ ရက်စာ) အလိုက် ဆွဲထုတ်ခြင်း
-        let allRecords = await ThreeDCalculatorData.find().sort({ _id: -1 }).skip(offset).limit(limit * 2);
-        
+        // စနေ၊ တနင်္ဂနွေ ပါဝင်နိုင်ခြေရှိ므로 လုံလောက်သော အရေအတွက်ကို အစဥ်လိုက်ဆွဲထုတ်မည်
+        const fetchLimit = (limit + offset) * 2.5; 
+        const allRecords = await ThreeDCalculatorData.find().sort({ _id: -1 }).limit(fetchLimit);
+
         let workingDaysRecords = [];
+        let skippedWorkingDays = 0;
+
         for (let rec of allRecords) {
             const [d, m, y] = rec.dateStr.split('/');
             const recDate = new Date(`${y}-${m}-${d}`);
-            const dWeek = recDate.getDay();
+            const dWeek = recDate.getDay(); // 0 = တနင်္ဂနွေ, 6 = စနေ
+
+            // စနေ သို့မဟုတ် တနင်္ဂနွေ မဟုတ်မှသာ Working Day အဖြစ် သတ်မှတ်မည်
             if (dWeek !== 0 && dWeek !== 6) {
-                workingDaysRecords.push(rec);
+                if (skippedWorkingDays >= offset) {
+                    workingDaysRecords.push(rec);
+                } else {
+                    skippedWorkingDays++;
+                }
             }
-            if (workingDaysRecords.length === limit) break; // ၁၀ ရက်စာ ပြည့်သည်နှင့် ရပ်မည်
+
+            // လိုချင်သော limit (၁၀ ရက်စာ) ပြည့်သည်နှင့် ရပ်မည်
+            if (workingDaysRecords.length === limit) break;
         }
 
         workingDaysRecords.reverse(); // ရှေးရက်မှ ယနေ့သို့ အစဉ်လိုက်ပြရန်
 
-        res.json({ success: true, records: workingDaysRecords });
+        res.json({ success: true, history: workingDaysRecords });
     } catch (err) {
-        console.error('3D Calculator API error:', err.message);
+        console.error("API error:", err.message);
         res.status(500).json({ success: false, error: err.message });
     }
 });
