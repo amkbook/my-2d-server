@@ -916,7 +916,7 @@ app.get('/api/history', async (req, res) => {
 });
 
 // --------------------------------------------------
-// 📌 3D တွက်ရန် ဇယားကွက် API (စနေ/တနင်္ဂနွေ ပယ်ဖယ်ပြီး ၇ ရက်စာ ယူရန်)
+// 📌 2D တွက်ရန် ဇယားကွက် API (စနေ/တနင်္ဂနွေ ပယ်ဖယ်ပြီး 20 ရက်စာ ယူရန်)
 // --------------------------------------------------
 const ThreeDCalculatorSchema = new mongoose.Schema({
     dateStr: { type: String, required: true, unique: true },
@@ -958,8 +958,12 @@ app.get('/api/threed-calculator', async (req, res) => {
             }
         }
 
-        // စျေးကွက်ဖွင့်ရက် (Working Days) ၇ ရက်စာ သီးသန့်ဆွဲထုတ်ခြင်း
-        let allRecords = await ThreeDCalculatorData.find().sort({ _id: -1 }).limit(15);
+        // 💡 Frontend မှ ပို့လာသော offset နှင့် limit (တစ်ခါပြလျှင် ၁၀ ရက်စာ) ကို လက်ခံခြင်း
+        const offset = parseInt(req.query.offset) || 0;
+        const limit = 10; // ၁၀ ရက်စာ သတ်မှတ်ချက်
+
+        // ဈေးကွက်ဖွင့်ရက်များကို offset နှင့် limit (၁၀ ရက်စာ) အလိုက် ဆွဲထုတ်ခြင်း
+        let allRecords = await ThreeDCalculatorData.find().sort({ _id: -1 }).skip(offset).limit(limit * 2);
         
         let workingDaysRecords = [];
         for (let rec of allRecords) {
@@ -969,7 +973,7 @@ app.get('/api/threed-calculator', async (req, res) => {
             if (dWeek !== 0 && dWeek !== 6) {
                 workingDaysRecords.push(rec);
             }
-            if (workingDaysRecords.length === 7) break;
+            if (workingDaysRecords.length === limit) break; // ၁၀ ရက်စာ ပြည့်သည်နှင့် ရပ်မည်
         }
 
         workingDaysRecords.reverse(); // ရှေးရက်မှ ယနေ့သို့ အစဉ်လိုက်ပြရန်

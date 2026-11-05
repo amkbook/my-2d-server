@@ -622,7 +622,7 @@
       <div id="historyListContainer" class="history-list-container"></div>
     </div>
 
-    
+
 <!-- 📌 တတိယစာမျက်နှာ: 2D တွက်ရန် ဇယားကွက်နှင့် တည်ငြိမ်သော Canvas စနစ် -->
 <div id="page-threed-calculator" class="tab-content">
     
@@ -635,7 +635,11 @@
             <span>↺</span> အသစ်စရန်
         </button>
     </div>
-
+<!-- 🔼🔽 အပေါ်/အောက် ရက်စွဲပြောင်း ခလုတ်များ -->
+<div style="display: flex; flex-direction: column; gap: 4px; align-items: center; margin: 0 10px;">
+    <button id="calcPrevDaysBtn" style="background: #d97706; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="နောက်ထပ် ၁၀ ရက်စာ (အဟောင်းသို့)">🔼</button>
+    <button id="calcNextDaysBtn" style="background: #d97706; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="ယခုနောက်ဆုံး စာမျက်နှာသို့">🔽</button>
+</div>
     <!-- ညာဘက်ခြမ်းရှိ ခဲတံနှင့် အရောင်အတုံးများ -->
     <div style="display: flex; flex-direction: column; align-items: flex-end;">
         <button id="calcPencilBtn" style="background: #2563eb; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #fff; font-size: 13px; font-weight: bold;">✏️ ခဲတံ</button>
@@ -737,6 +741,25 @@ document.getElementById('calcResetBtn')?.addEventListener('click', () => {
         const ctx = canvas.getContext('2d');
         // ကင်းဗတ်စ်တစ်ခုလုံးရှိ ပုံဆွဲထားသမျှ Pixel များကို ရှင်းလင်းဖျက်ဆီးသည်
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+});
+// 💡 ရက်ပေါင်း ၂၀ စာ (၁၀ ရက်စီ အထက်/အောက် ရွှေ့ရန်) Pagination Logic
+let currentCalcOffset = 0; // မူလ အစ လက်ရှိ ၁၀ ရက်စာ
+const calcLimit = 10;      // တစ်ခါပြလျှင် ၁၀ ရက်စာ
+
+// 🔼 အပေါ်ခလုတ်နှိပ်လျှင် (အဟောင်းဘက်သို့ ၁၀ ရက်စာ တိုးမည်)
+document.getElementById('calcPrevDaysBtn')?.addEventListener('click', () => {
+    if (currentCalcOffset < 10) { 
+        currentCalcOffset += 10;
+        fetchAndRenderCalcData(currentCalcOffset, calcLimit);
+    }
+});
+
+// 🔽 အောက်ခလုတ်နှိပ်လျှင် (ယခုနောက်ဆုံး ၁၀ ရက်စာသို့ ပြန်လာမည်)
+document.getElementById('calcNextDaysBtn')?.addEventListener('click', () => {
+    if (currentCalcOffset > 0) {
+        currentCalcOffset = 0;
+        fetchAndRenderCalcData(currentCalcOffset, calcLimit);
     }
 });
     function initLanguageUI() {
