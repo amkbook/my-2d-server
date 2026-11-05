@@ -941,7 +941,7 @@ const ThreeDCalculatorData = mongoose.models.ThreeDCalculatorData || mongoose.mo
 app.get('/api/history', async (req, res) => {
     try {
         const offset = parseInt(req.query.offset) || 0;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 10; // တစ်ခါပြလျှင် ၁၀ ရက်စာ တိကျစွာ သတ်မှတ်ခြင်း
 
         // ဒေတာဘေ့စ်မှ အသစ်ဆုံးကို အရင်စဥ်၍ လုံလောက်သော အရေအတွက်ကို ဆွဲထုတ်မည်
         const rawRecords = await ThreeDCalculatorData.find().sort({ _id: -1 }).limit(100);
@@ -954,13 +954,13 @@ app.get('/api/history', async (req, res) => {
             const recDate = new Date(`${y}-${m}-${d}`);
             const dWeek = recDate.getDay(); // 0 = တနင်္ဂနွေ, 6 = စနေ
 
-            // စနေ၊ တနင်္ဂနွေ မဟုတ်သော လုပ်ငန်းရက်များကိုသာ စုဆောင်းမည်
+            // စနေ၊ တနင်္ဂနွေ မဟုတ်သော အလုပ်လုပ်ရက်များကိုသာ စုဆောင်းမည်
             if (dWeek !== 0 && dWeek !== 6) {
                 workingDaysRecords.push(rec);
             }
         }
 
-        // 💡 အသစ်ဆုံးရက်များကို အစဥ်လိုက်အတိုင်း offset နှင့် limit ဖြင့် ဖြတ်ယူခြင်း
+        // 💡 စုစုပေါင်း ၂၀ ရက်စာ (သို့မဟုတ် အထက်) ထဲမှ offset နှင့် limit (၁၀ ရက်စာ) ကို အတိအကျ ဖြတ်ယူခြင်း
         const paginatedRecords = workingDaysRecords.slice(offset, offset + limit);
 
         res.json({ success: true, history: paginatedRecords });

@@ -734,34 +734,7 @@
   </div>
 
   <script>
-    // 💡 အသစ်စရန် (Reset) ခလုတ် နှိပ်လိုက်သည့်အခါ ကင်းဗတ်စ်ပေါ်ရှိ ရေးခြစ်ချက်များကို ရှင်းလင်းခြင်း
-document.getElementById('calcResetBtn')?.addEventListener('click', () => {
-    const canvas = document.getElementById('drawingCanvas');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        // ကင်းဗတ်စ်တစ်ခုလုံးရှိ ပုံဆွဲထားသမျှ Pixel များကို ရှင်းလင်းဖျက်ဆီးသည်
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-});
-// 💡 ရက်ပေါင်း ၂၀ စာ (၁၀ ရက်စီ အထက်/အောက် ရွှေ့ရန်) Pagination Logic
-let currentCalcOffset = 0; // 0 = နောက်ဆုံးပေါ် ၁၀ ရက်စာ (အသစ်ဆုံး), 10 = ပြီးခဲ့သော ၁၀ ရက်စာ (အဟောင်း)
-const calcLimit = 10;      // တစ်ခါပြလျှင် ၁၀ ရက်စာ
-
-// 🔼 အပေါ်ခလုတ်နှိပ်လျှင် (အဟောင်းဘက်သို့ ၁၀ ရက်စာ သွားမည် - offset ကို 10 သို့ တိုးမည်)
-document.getElementById('calcPrevDaysBtn')?.addEventListener('click', () => {
-    if (currentCalcOffset === 0) {
-        currentCalcOffset = 10; 
-        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
-    }
-});
-
-// 🔽 အောက်ခလုတ်နှိပ်လျှင် (ယခုနောက်ဆုံး ၁၀ ရက်စာသို့ ပြန်လာမည် - offset ကို 0 သို့ ပြန်ချမည်)
-document.getElementById('calcNextDaysBtn')?.addEventListener('click', () => {
-    if (currentCalcOffset > 0) {
-        currentCalcOffset = 0; 
-        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
-    }
-});
+    
     function initLanguageUI() {
       const toggleBtn = document.getElementById('langToggleBtn');
       const optMy = document.getElementById('optMy');
@@ -1426,10 +1399,44 @@ async function fetchLiveData() {
     setInterval(fetchChat, 2000);
     setInterval(fetchScheduleData, 5000);
 
+    // 💡 အသစ်စရန် (Reset) ခလုတ် နှိပ်လိုက်သည့်အခါ ကင်းဗတ်စ်ပေါ်ရှိ ရေးခြစ်ချက်များကို ရှင်းလင်းခြင်း
+document.getElementById('calcResetBtn')?.addEventListener('click', () => {
+    const canvas = document.getElementById('drawingCanvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        // ကင်းဗတ်စ်တစ်ခုလုံးရှိ ပုံဆွဲထားသမျှ Pixel များကို ရှင်းလင်းဖျက်ဆီးသည်
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+});
+// 💡 စုစုပေါင်း ၂၀ ရက်စာကို ၁၀ ရက်စီ ၂ မျက်နှာခွဲ၍ ပြသရန် Pagination Logic
+let currentCalcOffset = 0; // 0 = နောက်ဆုံးပေါ် ၁၀ ရက်စာ (စာမျက်နှာ ၁), 10 = ပြီးခဲ့သော ၁၀ ရက်စာ (စာမျက်နှာ ၂)
+const calcLimit = 10;      // တစ်ခါပြလျှင် ၁၀ ရက်စာ တိကျစွာ သတ်မှတ်ခြင်း
+
+// 🔼 အပေါ်ခလုတ်နှိပ်လျှင် (အဟောင်း ၁၀ ရက်စာ / စာမျက်နှာ ၂ သို့ သွားမည်)
+const prevBtn = document.getElementById('calcPrevDaysBtn');
+if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+        if (currentCalcOffset === 0) {
+            currentCalcOffset = 10; 
+            loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
+        }
+    });
+}
+
+// 🔽 အောက်ခလုတ်နှိပ်လျှင် (ယခုနောက်ဆုံး ၁၀ ရက်စာ / စာမျက်နှာ ၁ သို့ ပြန်လာမည်)
+const nextBtn = document.getElementById('calcNextDaysBtn');
+if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+        if (currentCalcOffset > 0) {
+            currentCalcOffset = 0; 
+            loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
+        }
+    });
+}
+
 // 💡 ဇယားကွက်ဒေတာကို API မှ ဆွဲထုတ်ပြီး မျက်နှာပြင်ပေါ်တင်ပေးသော Function
 async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
     try {
-
         const response = await fetch(`/api/history?offset=${offset}&limit=${limit}`);
         const data = await response.json();
 
@@ -1439,7 +1446,7 @@ async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
         let html = '';
         const records = (data && data.success && data.history) ? data.history : [];
         
-        // အစဉ်လိုက် မှန်ကန်စေရန် (လိုအပ်ပါက ပြန်လှန်ခြင်း)
+        // အစဉ်လိုက် မှန်ကန်စေရန် ပြန်လှန်ခြင်း
         const displayRecords = [...records].reverse();
 
         for (let i = 0; i < displayRecords.length; i++) {
@@ -1471,16 +1478,15 @@ async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
             `;
         }
 
-        // ဇယားကွက်ကိုသာ innerHTML ဖြင့် အသစ်တင်မည် (ညာဘက်ခြမ်း Canvas မပျက်ပါ)
+        // ဇယားကွက်ကိုသာ innerHTML ဖြင့် အသစ်တင်မည် (ညာဘက်ခြမ်း Canvas ရေးခြစ်ထားသည်များ လုံးဝ မပျက်ပါ)
         container.innerHTML = html;
-        
         setTimeout(resizeCanvas, 100);
     } catch (err) {
         console.error("Error loading calculator grid:", err);
     }
 }
 
-// 🚀 စာမျက်နှာ စတင်ဝင်ရောက်လာသည်နှင့် နောက်ဆုံးပေါ် ၁၀ ရက်စာ (`offset = 0`) ကို အလိုအလျောက် တင်ပြပေးမည်
+// 🚀 စာမျက်နှာ စတင်ဝင်ရောက်လာသည်နှင့် နောက်ဆုံးပေါ် ၁၀ ရက်စာ (စာမျက်နှာ ၁) ကို အလိုအလျောက် တင်ပြပေးမည်
 loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
 
 // Canvas Resize Function (မူလအတိုင်း လုံးဝမပြောင်းပါ)
