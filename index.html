@@ -622,20 +622,15 @@
       <div id="historyListContainer" class="history-list-container"></div>
     </div>
 
-    <!-- PAGE 4: 3D & Gift (Circular 3D Grid) -->
+    <!-- PAGE 4: 2D တွက်ရန် (Circular 3D Grid) -->
 <div id="page-3d-history" class="tab-content">
   <div class="card" style="background: var(--card-bg); border: 1px solid var(--border-color);">
-    <h2 style="color: var(--text-color); margin-bottom: 5px;">🎯 3D နှင့် လက်ဆောင်</h2>
-    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">အောက်ပါ ကဏ္ဍများကို ရွေးချယ်ကြည့်ရှုနိုင်ပါသည်</p>
+    <h2 style="color: var(--text-color); margin-bottom: 5px;">🎯 2D တွက်ရန်</h2>
+    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">အောက်ပါ ခလုတ်ကိုနှိပ်၍ တွက်ချက်ရန် ဇယားကွက်သို့ ဝင်ရောက်နိုင်ပါသည်</p>
     
-    <div class="circular-grid-container">
-      <div class="circle-3d-btn" onclick="alert('3D ကဏ္ဍ')">3D</div>
-      <div class="circle-3d-btn" onclick="alert('မြန်မာထီ ကဏ္ဍ')">မြန်မာထီ</div>
-      <div class="circle-3d-btn" onclick="alert('ထိုင်းထီ ကဏ္ဍ')">ထိုင်းထီ</div>
+    <div class="circular-grid-container" style="display: flex; justify-content: center; padding: 20px 5px;">
       <div class="circle-3d-btn" onclick="switchTab('page-threed-calculator', this)">တွက်ရန်</div>
-      <div class="circle-3d-btn" onclick="alert('ပိတ်ရက်များ ကဏ္ဍ')">ပိတ်ရက်များ</div>
-      <div class="circle-3d-btn" onclick="alert('အခေါ်အဝေါ်များ ကဏ္ဍ')">အခေါ်အဝေါ်များ</div>
-      <div class="circle-3d-btn" onclick="alert('တွက်နည်းမူများ ကဏ္ဍ')">တွက်နည်းမူများ</div>
+
     </div>
   </div>
 </div>
@@ -737,7 +732,7 @@
   <div class="bottom-nav">
     <button class="nav-item active" onclick="switchTab('page-home', this)"><span class="nav-icon">🏠</span><span>Home</span></button>
     <button class="nav-item" onclick="switchTab('page-2d-history', this)"><span class="nav-icon">📅</span><span>2D မှတ်တမ်း</span></button>
-<button class="nav-item" onclick="switchTab('page-3d-history', this)"><span class="nav-icon">🎯</span><span>3D နှင့် လက်ဆောင်</span></button>
+<button class="nav-item" onclick="switchTab('page-3d-history', this)"><span class="nav-icon">🎯</span><span>2D တွက်ရန်</span></button>
     <button class="nav-item" onclick="switchTab('page-more', this)"><span class="nav-icon">⚙</span><span>More</span></button>
   </div>
 
