@@ -1408,6 +1408,15 @@ document.getElementById('calcResetBtn')?.addEventListener('click', () => {
     }
 });
 
+// 💡 အသစ်စရန် (Reset) ခလုတ် နှိပ်လိုက်သည့်အခါ ကင်းဗတ်စ်ပေါ်ရှိ ရေးခြစ်ချက်များကို ရှင်းလင်းခြင်း
+document.getElementById('calcResetBtn')?.addEventListener('click', () => {
+    const canvas = document.getElementById('drawingCanvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+});
+
 // 💡 စုစုပေါင်း ၂၀ ရက်စာကို ၁၀ ရက်စီ ၂ မျက်နှာခွဲ၍ ပြသရန် Pagination Logic
 let currentCalcOffset = 0; // 0 = နောက်ဆုံးပေါ် ၁၀ ရက်စာ (စာမျက်နှာ ၁), 10 = ပြီးခဲ့သော ၁၀ ရက်စာ (စာမျက်နှာ ၂)
 const calcLimit = 10;      // တစ်ခါပြလျှင် ၁၀ ရက်စာ တိကျစွာ သတ်မှတ်ခြင်း
@@ -1434,10 +1443,10 @@ if (nextBtn) {
     });
 }
 
-// 💡 ဇယားကွက်ဒေတာကို API မှ ဆွဲထုတ်ပြီး ခဲတံရေးခြစ်ချက်များ မပျက်စေဘဲ တင်ပြပေးမည့် Function အသစ်
+// 💡 ဇယားကွက်ဒေတာကို API မှ offset နှင့် limit ဖြင့် တိကျစွာ ဆွဲထုတ်ပြသခြင်း
 async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
     try {
-        // 1. ဇယားကွက်အသစ် မပြောင်းမီ လက်ရှိ ကင်းဗတ်စ်ပေါ်ရှိ ရေးခြစ်ချက်များကို Temporary Snapshot အဖြစ် သိမ်းမည်
+        // 1. ဇယားကွက်အသစ် မပြောင်းမီ ကင်းဗတ်စ်ပေါ်ရှိ ခဲတံရေးခြစ်ချက်များကို Temporary Snapshot အဖြစ် သိမ်းမည်
         const canvas = document.getElementById('drawingCanvas');
         let tempCanvasImage = null;
         if (canvas) {
@@ -1485,12 +1494,12 @@ async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
             `;
         }
 
-        // ဇယားကွက်ကို innerHTML ဖြင့် အသစ်တင်မည်
+        // ဇယားကွက်အကွက်တွင် ထို ၁၀ ရက်စာကိုသာ အတိအကျ ဖော်ပြမည်
         container.innerHTML = html;
         
         setTimeout(() => {
             resizeCanvas();
-            // 2. ဇယားကွက်အသစ် ရောက်လာပြီးနောက် သိမ်းထားသော ခဲတံလက်ရာများကို ကင်းဗတ်စ်ပေါ်သို့ ပြန်လည်ဖော်ပြမည်
+            // 2. သိမ်းထားသော ခဲတံရေးခြစ်ချက်များကို ကင်းဗတ်စ်ပေါ်သို့ ပြန်လည်ဖော်ပြမည်
             if (canvas && tempCanvasImage) {
                 const ctx = canvas.getContext('2d');
                 const img = new Image();
