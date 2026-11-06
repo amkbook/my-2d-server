@@ -1417,24 +1417,23 @@ document.getElementById('calcResetBtn')?.addEventListener('click', () => {
 });
 
 // 💡 စုစုပေါင်း ၂၀ ရက်စာကို ၁၀ ရက်စီ ၂ မျက်နှာခွဲ၍ ပြသရန် Pagination Logic
-let currentCalcOffset = 0; // 0 = နောက်ဆုံးပေါ် ၁၀ ရက်စာ (စာမျက်နှာ ၁), 10 = ပြီးခဲ့သော ၁၀ ရက်စာ (စာမျက်နှာ ၂)
-const calcLimit = 10;      // တစ်ခါပြလျှင် ၁၀ ရက်စာ တိကျစွာ သတ်မှတ်ခြင်း
+let currentCalcOffset = 0; // 0 = အသစ်ဆုံး ၁၀ ရက်စာ (စာမျက်နှာ ၁), 10 = အဟောင်းဆုံး ၁၀ ရက်စာ (စာမျက်နှာ ၂)
+const calcLimit = 10;      
 
-// 🔼 အပေါ်ခလုတ်နှိပ်လျှင် (စာမျက်နှာ ၂ သို့ သွားမည်၊ သို့မဟုတ် စာမျက်နှာ ၁ သို့ ပြန်လာမည်)
+// 🔼 အပေါ်ခလုတ်နှိပ်လျှင် (အဟောင်းဆုံး ၁၀ ရက်စာ / စာမျက်နှာ ၂ သို့ သွားမည်)
 const prevBtn = document.getElementById('calcPrevDaysBtn');
 if (prevBtn) {
     prevBtn.addEventListener('click', () => {
-        // လက်ရှိအခြေအနေအပေါ်မူတည်၍ အပြန်အလှန် ပြောင်းလဲပေးခြင်း (Toggle)
-        currentCalcOffset = currentCalcOffset === 0 ? 10 : 0;
+        currentCalcOffset = 10; // အဟောင်းဆုံး ၁၀ ရက်စာ
         loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
     });
 }
 
-// 🔽 အောက်ခလုတ်နှိပ်လျှင်လည်း ထို့အတူ အပြန်အလှန် ပြောင်းလဲပေးခြင်း
+// 🔽 အောက်ခလုတ်နှိပ်လျှင် (အသစ်ဆုံး ၁၀ ရက်စာ / စာမျက်နှာ ၁ သို့ ပြန်လာမည်)
 const nextBtn = document.getElementById('calcNextDaysBtn');
 if (nextBtn) {
     nextBtn.addEventListener('click', () => {
-        currentCalcOffset = currentCalcOffset === 0 ? 10 : 0;
+        currentCalcOffset = 0; // အသစ်ဆုံး ၁၀ ရက်စာ
         loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
     });
 }
@@ -1442,7 +1441,7 @@ if (nextBtn) {
 // 💡 ဇယားကွက်ဒေတာကို API မှ offset နှင့် limit ဖြင့် တိကျစွာ ဆွဲထုတ်ပြသခြင်း
 async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
     try {
-        // 1. ဇယားကွက်အသစ် မပြောင်းမီ ကင်းဗတ်စ်ပေါ်ရှိ ခဲတံရေးခြစ်ချက်များကို Temporary Snapshot အဖြစ် သိမ်းမည်
+        // 1. ကင်းဗတ်စ်ပေါ်ရှိ ခဲတံရေးခြစ်ချက်များ မပျက်စေရန် Snapshot သိမ်းမည်
         const canvas = document.getElementById('drawingCanvas');
         let tempCanvasImage = null;
         if (canvas) {
@@ -1458,8 +1457,9 @@ async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
         let html = '';
         const records = (data && data.success && data.history) ? data.history : [];
         
-        // အစဉ်လိုက် မှန်ကန်စေရန် ပြန်လှန်ခြင်း
-        const displayRecords = [...records].reverse();
+        // ⚠️ အရေးကြီးသည်: အသစ်ဆုံးကို အပေါ်ဆုံးတွင် ပြသရန် (offset 0 အတွက်) နှင့် အစဉ်လိုက်မှန်ကန်စေရန်
+        // offset 0 (အသစ်ဆုံး ၁၀ ရက်) ဖြစ်လျှင် တစ်မျိုး၊ offset 10 (အဟောင်းဆုံး ၁၀ ရက်) ဖြစ်လျှင် တစ်မျိုး စီစဥ်မည်
+        const displayRecords = offset === 0 ? [...records].reverse() : records;
 
         for (let i = 0; i < displayRecords.length; i++) {
             const rec = displayRecords[i] || {};
@@ -1490,12 +1490,10 @@ async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
             `;
         }
 
-        // ဇယားကွက်အကွက်တွင် ထို ၁၀ ရက်စာကိုသာ အတိအကျ ဖော်ပြမည်
         container.innerHTML = html;
         
         setTimeout(() => {
             resizeCanvas();
-            // 2. သိမ်းထားသော ခဲတံရေးခြစ်ချက်များကို ကင်းဗတ်စ်ပေါ်သို့ ပြန်လည်ဖော်ပြမည်
             if (canvas && tempCanvasImage) {
                 const ctx = canvas.getContext('2d');
                 const img = new Image();
@@ -1512,7 +1510,7 @@ async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
     }
 }
 
-// 🚀 စာမျက်နှာ စတင်ဝင်ရောက်လာသည်နှင့် နောက်ဆုံးပေါ် ၁၀ ရက်စာ (စာမျက်နှာ ၁) ကို အလိုအလျောက် တင်ပြပေးမည်
+// 🚀 စာမျက်နှာ စတင်ဝင်ရောက်လာသည်နှင့် အသစ်ဆုံး ၁၀ ရက်စာ (စာမျက်နှာ ၁) ကို အလိုအလျောက် တင်ပြမည်
 loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
 
 // Canvas Resize Function (မူလအတိုင်း လုံးဝမပြောင်းပါ)
