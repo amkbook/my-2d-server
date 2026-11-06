@@ -1404,10 +1404,10 @@ document.getElementById('calcResetBtn')?.addEventListener('click', () => {
     const canvas = document.getElementById('drawingCanvas');
     if (canvas) {
         const ctx = canvas.getContext('2d');
-        // ကင်းဗတ်စ်တစ်ခုလုံးရှိ ပုံဆွဲထားသမျှ Pixel များကို ရှင်းလင်းဖျက်ဆီးသည်
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 });
+
 // 💡 စုစုပေါင်း ၂၀ ရက်စာကို ၁၀ ရက်စီ ၂ မျက်နှာခွဲ၍ ပြသရန် Pagination Logic
 let currentCalcOffset = 0; // 0 = နောက်ဆုံးပေါ် ၁၀ ရက်စာ (စာမျက်နှာ ၁), 10 = ပြီးခဲ့သော ၁၀ ရက်စာ (စာမျက်နှာ ၂)
 const calcLimit = 10;      // တစ်ခါပြလျှင် ၁၀ ရက်စာ တိကျစွာ သတ်မှတ်ခြင်း
@@ -1434,9 +1434,16 @@ if (nextBtn) {
     });
 }
 
-// 💡 ဇယားကွက်ဒေတာကို API မှ ဆွဲထုတ်ပြီး မျက်နှာပြင်ပေါ်တင်ပေးသော Function
+// 💡 ဇယားကွက်ဒေတာကို API မှ ဆွဲထုတ်ပြီး ခဲတံရေးခြစ်ချက်များ မပျက်စေဘဲ တင်ပြပေးမည့် Function အသစ်
 async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
     try {
+        // 1. ဇယားကွက်အသစ် မပြောင်းမီ လက်ရှိ ကင်းဗတ်စ်ပေါ်ရှိ ရေးခြစ်ချက်များကို Temporary Snapshot အဖြစ် သိမ်းမည်
+        const canvas = document.getElementById('drawingCanvas');
+        let tempCanvasImage = null;
+        if (canvas) {
+            tempCanvasImage = canvas.toDataURL();
+        }
+
         const response = await fetch(`/api/history?offset=${offset}&limit=${limit}`);
         const data = await response.json();
 
@@ -1478,9 +1485,23 @@ async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
             `;
         }
 
-        // ဇယားကွက်ကိုသာ innerHTML ဖြင့် အသစ်တင်မည် (ညာဘက်ခြမ်း Canvas ရေးခြစ်ထားသည်များ လုံးဝ မပျက်ပါ)
+        // ဇယားကွက်ကို innerHTML ဖြင့် အသစ်တင်မည်
         container.innerHTML = html;
-        setTimeout(resizeCanvas, 100);
+        
+        setTimeout(() => {
+            resizeCanvas();
+            // 2. ဇယားကွက်အသစ် ရောက်လာပြီးနောက် သိမ်းထားသော ခဲတံလက်ရာများကို ကင်းဗတ်စ်ပေါ်သို့ ပြန်လည်ဖော်ပြမည်
+            if (canvas && tempCanvasImage) {
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                img.onload = function() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = tempCanvasImage;
+            }
+        }, 100);
+
     } catch (err) {
         console.error("Error loading calculator grid:", err);
     }

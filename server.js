@@ -916,57 +916,68 @@ app.get('/api/history', async (req, res) => {
 });
 
 // --------------------------------------------------
-// 📌 2D တွက်ရန် ဇယားကွက် API (စနေ/တနင်္ဂနွေ ပယ်ဖယ်ပြီး 20 ရက်စာ ယူရန်)
+// 📌 2D တွက်ရန်နှင့် မှတ်တမ်းအတွက် ပေါင်းစပ်ထားသော Pagination API
 // --------------------------------------------------
-const ThreeDCalculatorSchema = new mongoose.Schema({
-    dateStr: { type: String, required: true, unique: true },
-    sessions: {
-        morning: {
-            modern: { type: String, default: "--" },
-            internet: { type: String, default: "--" },
-            result: { type: String, default: "--" }
-        },
-        evening: {
-            modern: { type: String, default: "--" },
-            internet: { type: String, default: "--" },
-            result: { type: String, default: "--" }
-        }
-    }
-});
 
-// Model အမည် ထပ်နေမှု မရှိစေရန် စစ်ဆေးခြင်း
-const ThreeDCalculatorData = mongoose.models.ThreeDCalculatorData || mongoose.model('ThreeDCalculatorData', ThreeDCalculatorSchema);
-
-// 💡 အလုပ်လုပ်ရက် (Working Days) များကို offset နှင့် limit ဖြင့် တိကျစွာ pagination လုပ်ပေးမည့် API
 app.get('/api/history', async (req, res) => {
     try {
         const offset = parseInt(req.query.offset) || 0;
-        const limit = parseInt(req.query.limit) || 10; // တစ်ခါပြလျှင် ၁၀ ရက်စာ တိကျစွာ သတ်မှတ်ခြင်း
+        const limit = parseInt(req.query.limit) || 10; // တစ်ခါပြလျှင် ၁၀ ရက်စာ
 
-        // ဒေတာဘေ့စ်မှ အသစ်ဆုံးကို အရင်စဥ်၍ လုံလောက်သော အရေအတွက်ကို ဆွဲထုတ်မည်
-        const rawRecords = await ThreeDCalculatorData.find().sort({ _id: -1 }).limit(100);
+        // 💡 ThreeDCalculatorData အစား DayData ကို တိုက်ရိုက်သုံးမည်
+        // စနေ၊ တနင်္ဂနွေ ပိတ်ရက်များကို ထည့်တွက်ရန် limit ကို ၄၀ အထိ ဆွဲထုတ်မည်
+        const rows = await DayData.find()
+            .sort({ _id: -1 })
+            .limit(40)
+            .lean();
 
         let workingDaysRecords = [];
         
-        for (let rec of rawRecords) {
-            if (!rec.dateStr) continue;
-            const [d, m, y] = rec.dateStr.split('/');
-            const recDate = new Date(`${y}-${m}-${d}`);
+        for (let item of rows) {
+            if (!item.dateStr) continue;
+            let recDate;
+            if (item.dateStr.includes('/')) {
+                const [d, m, y] = item.dateStr.split('/');
+                recDate = new Date(`${y}-${m}-${d}`);
+            } else {
+                recDate = new Date(item.dateStr);
+            }
+
             const dWeek = recDate.getDay(); // 0 = တနင်္ဂနွေ, 6 = စနေ
 
             // စနေ၊ တနင်္ဂနွေ မဟုတ်သော အလုပ်လုပ်ရက်များကိုသာ စုဆောင်းမည်
             if (dWeek !== 0 && dWeek !== 6) {
-                workingDaysRecords.push(rec);
+                const rawSchedule = item.schedule || {};
+                const midday = rawSchedule['12:01 PM'] || { modern: '--', internet: '--', tw: '--' };
+                const close = rawSchedule['04:30 PM'] || { modern: '--', internet: '--', tw: '--' };
+
+                const t1201 = item.t1201 && item.t1201 !== '--' ? item.t1201 : (midday.modern || '--');
+                const t430 = item.t430 && item.t430 !== '--' ? item.t430 : (close.modern || '--');
+
+                workingDaysRecords.push({
+                    ...item,
+                    t1201,
+                    t430,
+                    schedule: {
+                        t0930: rawSchedule['09:30 AM'] || { modern: '--', internet: '--', tw: '--' },
+                        t1201: midday,
+                        t1400: rawSchedule['02:00 PM'] || { modern: '--', internet: '--', tw: '--' },
+                        t1630: close
+                    }
+                });
             }
         }
 
-        // 💡 စုစုပေါင်း ၂၀ ရက်စာ (သို့မဟုတ် အထက်) ထဲမှ offset နှင့် limit (၁၀ ရက်စာ) ကို အတိအကျ ဖြတ်ယူခြင်း
+        // 💡 offset နှင့် limit အတိုင်း အတိအကျ ဖြတ်ယူခြင်း (ဥပမာ: 0-10 သို့မဟုတ် 10-20)
         const paginatedRecords = workingDaysRecords.slice(offset, offset + limit);
 
-        res.json({ success: true, history: paginatedRecords });
+        return res.json({ 
+            success: true, 
+            history: paginatedRecords 
+        });
     } catch (err) {
         console.error("API error:", err.message);
-        res.status(500).json({ success: false, error: err.message });
+        return res.status(500).json({ success: false, error: err.message });
     }
 });
 
