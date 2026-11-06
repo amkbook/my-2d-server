@@ -421,7 +421,7 @@
     box-sizing: border-box;
 }
 
-/* ⚠️ ခဲတံဆွဲပါက စာမျက်နှာ အပေါ်အောက် ရွေ့မသွားစေရန် (လုံးဝ မပြောင်းလဲထားပါ) */
+/* ⚠️ ခဲတံဆွဲပါက စာမျက်နှာ အပေါ်အောက် ရွေ့မသွားစေရန် */
 #calcWrapper {
     position: relative;
     width: 100%;
@@ -433,26 +433,28 @@
     flex-direction: column;
     gap: 10px; /* ဇယားကွက်တွေ ကြီးလာတဲ့အတွက် အနည်းငယ် ချဲပေးထားသည် */
     width: 100%;
+    max-height: 540px; /* 👈 အလွန်အမင်း ရှည်မသွားစေဘဲ ၁၀ ရက်စာတိတိပေါ်မည့် အမြင့်ကို သတ်မှတ်ခြင်း */
+    overflow-y: auto;  /* 👈 မျက်နှာပြင်အတွင်း သေသပ်စွာ ထိန်းချုပ်ပေးခြင်း */
 }
 
-/* ဇယားကွက်တန်း အလှပုံစံ (အရွယ်အစား 30% ပိုကြီးလာစေရန် အချိုးကျ တွက်ချက်ထားသည်) */
+/* ဇယားကွက်တန်း အလှပုံစံ */
 .calc-row-item {
     display: flex;
     gap: 8px;
-    width: 182px; /* မူလ 140px မှ 30% အတိအကျ တိုးထားသည် */
+    width: 182px;
 }
+
 /* 3D ဖောင်းကြွ ခရမ်းရောင်ဘောင်နှင့် ကျစ်လစ်သော Box အရွယ်အစား */
 .calc-sub-box {
     flex: 1;
-    height: 48px; /* 👈 စာသား ၂ လိုင်းစာအတွက် အမြင့်ကို သေသပ်စွာ ပြန်ညှိထားသည် (၁၀ စုံလုံး ဖုန်းမျက်နှာပြင်တွင် အပြည့်အစုံပေါ်စေရန်) */
+    height: 48px;
     border: 1px solid #d8b4fe;
     border-radius: 8px;
-    background: linear-gradient(145deg, #ffffff, #f3e8ff); /* 3D နောက်ခံ */
-    /* Neumorphism (3D ဖောင်းကြွအရိပ်စနစ်) */
+    background: linear-gradient(145deg, #ffffff, #f3e8ff);
     box-shadow: 3px 3px 6px rgba(168, 85, 247, 0.25), 
                -3px -3px 6px rgba(255, 255, 255, 1),
-               inset 1px 1px 2px rgba(255, 255, 255, 1),
-               inset -1px -1px 2px rgba(168, 85, 247, 0.1);
+                inset 1px 1px 2px rgba(255, 255, 255, 1),
+                inset -1px -1px 2px rgba(168, 85, 247, 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -461,9 +463,8 @@
     box-sizing: border-box;
 }
 
-/* Modern နှင့် Internet ဂဏန်းများ (အရွယ်အစား 25% တိုးပြီး 3D ဖောင်းကြွ) */
 .calc-top-text {
-    font-size: 13px !important; /* မူလ 10px မှ 25% ကျော် တိုးထားသည် */
+    font-size: 13px !important;
     font-weight: 800;
     color: #1f2937;
     letter-spacing: 0.5px;
@@ -471,27 +472,25 @@
     margin-bottom: 2px;
 }
 
-/* Result အဝါရင့်ရောင် ဂဏန်းကြီးများ (အရွယ်အစား 25% တိုးပြီး 3D ဖောင်းကြွ) */
 .calc-result-text {
-    font-size: 20px !important; /* မူလ 16px မှ 25% တိုးထားသည် */
+    font-size: 20px !important;
     font-weight: 900;
-    color: #b45309; /* အဝါရင့်/ရွှေညိုရောင်သို့ ပြောင်းလဲထားသည် */
+    color: #b45309;
     text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9), 0 2px 2px rgba(0, 0, 0, 0.2);
     letter-spacing: 1.5px;
 }
 
-/* ထင်ရှားသော အနီရောင် 3D ဖောင်းကြွ ခေါင်းစဉ်စတိုင် */
 .calc-header-red-3d {
     font-size: 14px;
     font-weight: 900;
-    color: #dc2626; /* ထင်ရှားသော အနီရောင် */
-    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9), 0 2px 3px rgba(0, 0, 0, 0.3); /* 3D ဖောင်းကြွအရိပ် */
+    color: #dc2626;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9), 0 2px 3px rgba(0, 0, 0, 0.3);
     text-align: center;
     letter-spacing: 1px;
     margin-bottom: 6px;
 }
 
-/* ⚠️ Canvas ကို မျက်နှာပြင်ပေါ်တွင် တည်ငြိမ်စွာ ငြိမ်နေစေခြင်း (လုံးဝ မပြောင်းလဲထားပါ) */
+
 #drawingCanvas {
     position: absolute;
     top: 0;
@@ -1421,25 +1420,22 @@ document.getElementById('calcResetBtn')?.addEventListener('click', () => {
 let currentCalcOffset = 0; // 0 = နောက်ဆုံးပေါ် ၁၀ ရက်စာ (စာမျက်နှာ ၁), 10 = ပြီးခဲ့သော ၁၀ ရက်စာ (စာမျက်နှာ ၂)
 const calcLimit = 10;      // တစ်ခါပြလျှင် ၁၀ ရက်စာ တိကျစွာ သတ်မှတ်ခြင်း
 
-// 🔼 အပေါ်ခလုတ်နှိပ်လျှင် (အဟောင်း ၁၀ ရက်စာ / စာမျက်နှာ ၂ သို့ သွားမည်)
+// 🔼 အပေါ်ခလုတ်နှိပ်လျှင် (စာမျက်နှာ ၂ သို့ သွားမည်၊ သို့မဟုတ် စာမျက်နှာ ၁ သို့ ပြန်လာမည်)
 const prevBtn = document.getElementById('calcPrevDaysBtn');
 if (prevBtn) {
     prevBtn.addEventListener('click', () => {
-        if (currentCalcOffset === 0) {
-            currentCalcOffset = 10; 
-            loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
-        }
+        // လက်ရှိအခြေအနေအပေါ်မူတည်၍ အပြန်အလှန် ပြောင်းလဲပေးခြင်း (Toggle)
+        currentCalcOffset = currentCalcOffset === 0 ? 10 : 0;
+        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
     });
 }
 
-// 🔽 အောက်ခလုတ်နှိပ်လျှင် (ယခုနောက်ဆုံး ၁၀ ရက်စာ / စာမျက်နှာ ၁ သို့ ပြန်လာမည်)
+// 🔽 အောက်ခလုတ်နှိပ်လျှင်လည်း ထို့အတူ အပြန်အလှန် ပြောင်းလဲပေးခြင်း
 const nextBtn = document.getElementById('calcNextDaysBtn');
 if (nextBtn) {
     nextBtn.addEventListener('click', () => {
-        if (currentCalcOffset > 0) {
-            currentCalcOffset = 0; 
-            loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
-        }
+        currentCalcOffset = currentCalcOffset === 0 ? 10 : 0;
+        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
     });
 }
 
