@@ -626,39 +626,39 @@
 <!-- 📌 တတိယစာမျက်နှာ: 2D တွက်ရန် ဇယားကွက်နှင့် တည်ငြိမ်သော Canvas စနစ် -->
 <div id="page-threed-calculator" class="tab-content">
     
-   <!-- Header & Pencil Control Row -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-    <!-- 🧮 2D တွက်ရန် ဇယားကွက် ခေါင်းစဉ်နှင့်အတူ ဘယ်ဘက်ခြမ်းတွင် "အသစ်စရန်" မျှားအကွေး ခလုတ်ကို ထည့်မည် -->
-    <div style="display: flex; flex-direction: column; gap: 6px;">
-        <h3 style="color: #d97706; font-size: 16px; margin: 0; font-weight: bold;">🧮 2D တွက်ရန် ဇယားကွက်</h3>
-        <button id="calcResetBtn" style="background: #ef4444; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; color: #fff; font-size: 12px; font-weight: bold; width: fit-content; display: flex; align-items: center; gap: 4px;">
-            <span>↺</span> အသစ်စရန်
-        </button>
-    </div>
-<!-- 🔼🔽 အပေါ်/အောက် ရက်စွဲပြောင်း ခလုတ်များ -->
-<div style="display: flex; flex-direction: column; gap: 4px; align-items: center; margin: 0 10px;">
-    <button id="calcPrevDaysBtn" style="background: #d97706; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="နောက်ထပ် ၁၀ ရက်စာ (အဟောင်းသို့)">🔼</button>
-    <button id="calcNextDaysBtn" style="background: #d97706; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="ယခုနောက်ဆုံး စာမျက်နှာသို့">🔽</button>
-</div>
-    <!-- ညာဘက်ခြမ်းရှိ ခဲတံနှင့် အရောင်အတုံးများ -->
-    <div style="display: flex; flex-direction: column; align-items: flex-end;">
-        <button id="calcPencilBtn" style="background: #2563eb; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #fff; font-size: 13px; font-weight: bold;">✏️ ခဲတံ</button>
-        <div id="calcColorRow" style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; margin-top: 4px;">
-            <div class="calc-color" data-color="#000000" style="width: 14px; height: 14px; background: #000000; border-radius: 50%; cursor: pointer; border: 2px solid #000;"></div>
-            <div class="calc-color" data-color="#ef4444" style="width: 14px; height: 14px; background: #ef4444; border-radius: 50%; cursor: pointer;"></div>
-            <div class="calc-color" data-color="#16a34a" style="width: 14px; height: 14px; background: #16a34a; border-radius: 50%; cursor: pointer;"></div>
-            <div class="calc-color" data-color="#2563eb" style="width: 14px; height: 14px; background: #2563eb; border-radius: 50%; cursor: pointer;"></div>
-            <div class="calc-color" data-color="#d97706" style="width: 14px; height: 14px; background: #d97706; border-radius: 50%; cursor: pointer;"></div>
+    <!-- Header & Pencil Control Row -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+            <h3 style="color: #d97706; font-size: 16px; margin: 0; font-weight: bold;">🧮 2D တွက်ရန် ဇယားကွက်</h3>
+            <button id="calcResetBtn" style="background: #ef4444; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; color: #fff; font-size: 12px; font-weight: bold; width: fit-content; display: flex; align-items: center; gap: 4px;">
+                <span>↺</span> အသစ်စရန်
+            </button>
+        </div>
+
+        <!-- 🔼🔽 အပေါ်/အောက် ရက်စွဲပြောင်း ခလုတ်များ -->
+        <div style="display: flex; flex-direction: column; gap: 4px; align-items: center; margin: 0 10px;">
+            <button id="calcPrevDaysBtn" style="background: #d97706; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="နောက်ထပ် ၁၀ ရက်စာ (အဟောင်းသို့)">🔼</button>
+            <button id="calcNextDaysBtn" style="background: #d97706; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="ယခုနောက်ဆုံး စာမျက်နှာသို့">🔽</button>
+        </div>
+
+        <!-- ညာဘက်ခြမ်းရှိ ခဲတံနှင့် အရောင်အတုံးများ -->
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+            <button id="calcPencilBtn" style="background: #2563eb; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #fff; font-size: 13px; font-weight: bold;">✏️ ခဲတံ</button>
+            <div id="calcColorRow" style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; margin-top: 4px;">
+                <div class="calc-color" data-color="#000000" style="width: 14px; height: 14px; background: #000000; border-radius: 50%; cursor: pointer; border: 2px solid #000;"></div>
+                <div class="calc-color" data-color="#ef4444" style="width: 14px; height: 14px; background: #ef4444; border-radius: 50%; cursor: pointer;"></div>
+                <div class="calc-color" data-color="#16a34a" style="width: 14px; height: 14px; background: #16a34a; border-radius: 50%; cursor: pointer;"></div>
+                <div class="calc-color" data-color="#2563eb" style="width: 14px; height: 14px; background: #2563eb; border-radius: 50%; cursor: pointer;"></div>
+                <div class="calc-color" data-color="#d97706" style="width: 14px; height: 14px; background: #d97706; border-radius: 50%; cursor: pointer;"></div>
+            </div>
         </div>
     </div>
-</div>
+
     <!-- ဇယားကွက်နှင့် Canvas Wrapper -->
     <div id="calcWrapper">
-        <!-- ⚠️ အပြင်ဘက်မှ ထပ်နေသော အချိန်ခေါင်းစဉ် အတန်းကို ဖြုတ်ထုတ်လိုက်ပါပြီ (ဇယားကွက်အတွင်းတွင် 3D ဖြင့် ပါပြီးသားဖြစ်၍) -->
-
-        <!-- ၁၀ ရက်စာ ဇယားကွက် Container -->
+        <!-- 💡 ဤနေရာတွင် Static HTML ဇယားကွက်တန်းများကို လုံးဝမထည့်ဘဲ JavaScript မှ API ဖြင့် ၁၀ ရက်စာကိုသာ အတိအကျ ဖြည့်သွင်းပေးမည် -->
         <div id="calcGridContainer">
-            <!-- JavaScript မှ ဇယားကွက်တန်းများကို ဖြည့်ပေးမည် -->
+            <!-- JavaScript မှ t0930, t1201, t1400, t1630 ဒေတာများကို ဤနေရာသို့ ၁၀ ရက်စာ တိကျစွာ ထည့်သွင်းမည် -->
         </div>
 
         <!-- လွတ်လပ်စွာ ရေးခြစ်နိုင်သော တည်ငြိမ် Canvas Layer -->
