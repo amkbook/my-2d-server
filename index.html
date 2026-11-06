@@ -951,6 +951,7 @@
       audio.play().catch(e => console.log(e));
     }
 
+    
     const moneyImages = [
       './images/Myanmar-5-26-sm-removebg-preview.png',
       './images/myanmar-money-10000-kyats-high-260nw-2445695....png'
@@ -1038,11 +1039,11 @@
           playAnnouncement('min3');
         }
 
-        // 12:01 PM result ကို server.js က Myanmar Time 12:01:05 AM/PM boundary မှာ capture/lock လုပ်သည်။
+        // 12:01 PM result ကို server.js က Myanmar Time 12:01:00 AM/PM boundary မှာ capture/lock လုပ်သည်။
         // Front-end က live value ကို ခန့်မှန်းပြီး history result အဖြစ် မသိမ်းပါ။
-       if (hours === 12 && minutes === 1 && seconds === 5 && !announcedTimes['m1201']) {
-            announcedTimes['m1201'] = true;
-            startMoneyRain();
+        if (hours === 12 && minutes === 1 && seconds === 0 && !announcedTimes['m1201']) {
+          announcedTimes['m1201'] = true;
+          startMoneyRain();
         }
 
         if (hours === 16 && minutes === 15 && seconds === 0 && !announcedTimes['e1615']) {
@@ -1054,11 +1055,11 @@
           playAnnouncement('min3');
         }
 
-        // 4:30 PM result ကို server.js က Myanmar Time 16:30:05 boundary မှာ capture/lock လုပ်သည်။
+        // 4:30 PM result ကို server.js က Myanmar Time 16:30:00 boundary မှာ capture/lock လုပ်သည်။
         // Front-end က live value ကို ခန့်မှန်းပြီး history result အဖြစ် မသိမ်းပါ။
-       if (hours === 16 && minutes === 30 && seconds === 5 && !announcedTimes['e1630']) {
-            announcedTimes['e1630'] = true;
-            startMoneyRain();
+        if (hours === 16 && minutes === 30 && seconds === 0 && !announcedTimes['e1630']) {
+          announcedTimes['e1630'] = true;
+          startMoneyRain();
         }
 
       } else {
@@ -1071,13 +1072,13 @@
           else if (hours === 16 && minutes === 30 && seconds <= 5) {
               document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
           }
-          else if ((hours === 12 && (minutes > 1 || (minutes === 1 && seconds >= 5)) && totalSeconds < afternoonStart)) {
+          else if ((hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
               const statusEl = document.getElementById('marketStatus');
               statusEl.className = 'status-indicator status-paused';
               statusEl.innerHTML = '<span>✔ နေ့လည်ပိုင်းစျေးကွက်အနားယူချိန်</span>';
               document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
           }
-          else if (((hours === 16 && (minutes > 30 || (minutes === 30 && seconds >= 5))) || hours > 16)) {
+          else if ((hours === 16 && minutes >= 30) || hours > 16) {
               const statusEl = document.getElementById('marketStatus');
               statusEl.className = 'status-indicator status-closed';
               statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
