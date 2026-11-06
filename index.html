@@ -1145,8 +1145,15 @@
             document.getElementById('t0930_tw').innerText = s0930.tw !== "--" ? s0930.tw : "--";
           }
           const s1201 = data.adminResults["12:01 PM"];
-          const saved1201 = data.t1201 && data.t1201 !== '--' ? data.t1201 : (s1201?.modern || '--');
-          if (saved1201 !== '--') document.getElementById('t1201_modern').innerText = extractBoundary2D(saved1201);
+          let saved1201 = data.t1201 && data.t1201 !== '--' ? data.t1201 : (s1201?.modern || '--');
+          
+          if ((saved1201 === '--' || !saved1201) && document.getElementById('t1201_modern').innerText !== '--') {
+              saved1201 = document.getElementById('t1201_modern').innerText;
+          }
+
+          if (saved1201 !== '--') {
+              document.getElementById('t1201_modern').innerText = extractBoundary2D(saved1201);
+          }
           const s1400 = data.adminResults["02:00 PM"];
           if (s1400) {
             document.getElementById('t1400_modern').innerText = s1400.modern !== "--" ? s1400.modern : "--";
