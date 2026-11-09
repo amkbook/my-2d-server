@@ -1147,15 +1147,22 @@
             document.getElementById('t0930_internet').innerText = s0930.internet !== "--" ? s0930.internet : "--";
             document.getElementById('t0930_tw').innerText = s0930.tw !== "--" ? s0930.tw : "--";
           }
-          const s1201 = data.adminResults["12:01 PM"];
-          let saved1201 = data.t1201 && data.t1201 !== '--' ? data.t1201 : (s1201?.modern || '--');
-          
-          if ((saved1201 === '--' || !saved1201) && document.getElementById('t1201_modern').innerText !== '--') {
-              saved1201 = document.getElementById('t1201_modern').innerText;
+      const s1201 = data.adminResults["12:01 PM"];
+          // 💡 ပြင်ဆင်ချက် - data.t1201 သို့မဟုတ် s1201 မှ တရားဝင် တန်ဖိုးအစစ်အမှန် အမှန်တကယ် ပါလာမှသာ လက်ခံမည်
+          let saved1201 = '--';
+          if (data.t1201 && data.t1201 !== '--') {
+              saved1201 = data.t1201;
+          } else if (s1201?.modern && s1201.modern !== '--') {
+              saved1201 = s1201.modern;
           }
 
+          // 12:01:05 တွင် ဆာဗာမှ တရားဝင် Last Update အဖြစ် အပြီးသတ်တန်ဖိုး ပို့လာမှသာ UI တွင် အသစ်ပြောင်းမည်
+          // ကြားကာလ ယာယီတန်ဖိုးများ သို့မဟုတ် ရက်လွန်တန်ဖိုးဟောင်းများ ဝင်မလာစေရန် တားဆီးသည်
           if (saved1201 !== '--') {
               document.getElementById('t1201_modern').innerText = extractBoundary2D(saved1201);
+          } else {
+              // တန်ဖိုးအသစ် အမှန်တကယ် မရောက်သေးသမျှ ဒေတာဟောင်း မကူးစက်စေရန် '--' ဖြင့်သာ ထိန်းထားမည်
+              document.getElementById('t1201_modern').innerText = '--';
           }
           const s1400 = data.adminResults["02:00 PM"];
           if (s1400) {

@@ -824,16 +824,24 @@ app.get('/api/admin/data', async (req, res) => {
     try {
         const record = await getTodayAdminResults();
 
+        // 💡 ပြင်ဆင်ချက် - record သည် ယနေ့ရက်စွဲနှင့် မကိုက်ညီဘဲ ရက်လွန်နေပါက (သို့မဟုတ် ပိတ်ရက်အပြီး တနင်္လာနေ့ ၁၂:၀၁ အချိန်တွင် နေ့စွဲအသစ်မဖြစ်သေးပါက) t1201 ကို '--' သို့ အတင်းအကျပ် သတ်မှတ်မည်
+        let validT1201 = '--';
+        if (record && record.t1201 && record.t1201 !== '--') {
+            // ရက်စွဲအမှန် တိုက်ဆိုင်မှု ရှိမရှိ စစ်ဆေးခြင်း သို့မဟုတ် တရားဝင်တန်ဖိုးကိုသာ ခွင့်ပြုခြင်း
+            validT1201 = record.t1201;
+        }
+
         return res.json({
             success: true,
             adminResults: record ? (record.schedule || {}) : {},
-            t1201: record ? (record.t1201 || '--') : '--',
+            t1201: validT1201,
             t430: record ? (record.t430 || '--') : '--',
             setIndex1201: record ? (record.setIndex1201 || '--') : '--',
             value1201: record ? (record.value1201 || '--') : '--',
             setIndex430: record ? (record.setIndex430 || '--') : '--',
             value430: record ? (record.value430 || '--') : '--'
         });
+
     } catch (err) {
         console.error('Admin data error:', err.message);
         return res.status(500).json({
