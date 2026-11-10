@@ -1112,19 +1112,22 @@ async function applyFrozenSnapshot(record, phase) {
     const nowTime = getMyanmarTime();
     
     
-    // 💡 တနင်္ဂနွေ (သို့) စနေ ပိတ်ရက်များတွင် နောက်ဆုံးထွက်ထားသော တရားဝင်ရလဒ် (သောကြာနေ့) ကို အမြဲတမ်း ယူသုံးရန်
-const isWeekend = typeof isWeekendMyanmar === 'function' ? isWeekendMyanmar() : (getMyanmarTime().getDay() === 0 || getMyanmarTime().getDay() === 6);
+    // 💡 ပြင်ဆင်ချက် - ပိတ်ရက် (Weekend) ဖြစ်မှသာ activeRecord မရှိလျှင် (သို့မဟုတ် တန်ဖိုးမရှိလျှင်) အရင်ရက်ဟောင်းကို လိုက်ရှာမည်။
+    // အလုပ်ဖွင့်ရက် (Weekday) တွင် နေ့လည် ၁၂:၀၁ တန်ဖိုး မထွက်လာသေးပါက အရင်ရက်ဟောင်းကို လုံးဝ မဆွဲယူရပါ!
+    const isWeekend = typeof isWeekendMyanmar === 'function' ? isWeekendMyanmar() : (getMyanmarTime().getDay() === 0 || getMyanmarTime().getDay() === 6);
     
-    if (!activeRecord || (activeRecord.t430 === '--' && activeRecord.t1201 === '--') || isWeekend) {
-        const latestRecord = await DayData.findOne({ 
-            $or: [
-                { t430: { $ne: '--' } },
-                { t1201: { $ne: '--' } }
-            ]
-        }).sort({ _id: -1 }).lean();
-        
-        if (latestRecord) {
-            activeRecord = latestRecord;
+    if (isWeekend) {
+        if (!activeRecord || (activeRecord.t430 === '--' && activeRecord.t1201 === '--')) {
+            const latestRecord = await DayData.findOne({ 
+                $or: [
+                    { t430: { $ne: '--' } },
+                    { t1201: { $ne: '--' } }
+                ]
+            }).sort({ _id: -1 }).lean();
+            
+            if (latestRecord) {
+                activeRecord = latestRecord;
+            }
         }
     }
 
