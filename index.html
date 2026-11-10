@@ -1251,6 +1251,17 @@ async function fetchLiveData() {
         }
       }
       if (data.live2D && data.live2D !== "--") {
+        // 💡 နေ့လည် ၁၂:၀၁ အကူးအပြောင်းကာလ (12:01:00 - 12:01:05) တွင် မနေ့က တန်ဖိုးဟောင်း ဝင်မလာစေရန် တားဆီးခြင်း
+        const liveCheckNow = new Date();
+        const liveMMTime = new Date(liveCheckNow.getTime() + (liveCheckNow.getTimezoneOffset() * 60000) + (3600000 * 6.5));
+        const isMiddayTransitionWindow = liveMMTime.getHours() === 12 && liveMMTime.getMinutes() === 1 && liveMMTime.getSeconds() <= 8;
+
+        // အကယ်၍ အကူးအပြောင်းကာလအတွင်း ဖြစ်နေပြီး ဆာဗာ၏ Last Update အချိန်မှာ 12:01:00 မဖြစ်သေးပါက တန်ဖိုးဟောင်းကို ကျော်လွန်မည်
+        if (isMiddayTransitionWindow && data.time && !data.time.includes("12:01:00") && !data.time.includes("12:01:01") && !data.time.includes("12:01:02") && !data.time.includes("12:01:03") && !data.time.includes("12:01:04") && !data.time.includes("12:01:05")) {
+             // တန်ဖိုးအသစ်အစစ်အမှန် မရောက်သေးသမျှ တန်ဖိုးဟောင်းပြခြင်းကို တားဆီးမည်
+             return;
+        }
+
         document.getElementById('updateTime').innerText = "Last Update: " + data.time;
 
         const live2DVal = data.live2D; 
