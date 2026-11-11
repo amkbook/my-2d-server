@@ -154,7 +154,10 @@ app.get('/', (req, res) => {
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
-
+// Privacy Policy Page Route
+app.get('/privacy-policy', (req, res) => {
+    res.sendFile(__dirname + '/privacy.html');
+});
 
 // --------------------------------------------------
 // Live Chatbox
