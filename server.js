@@ -1,16 +1,18 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
 
-const http = require('http');
-const { Server } = require('socket.io');
+const app = express(); // 👈 app ကို ဦးစွာ တည်ဆောက်ပါ
 
+// 👈 ပြီးမှ server နှင့် socket.io ကို တည်ဆောက်ပါ
 const server = http.createServer(app);
 const io = new Server(server);
-const app = express();
+
 app.use(cors());
 app.use(express.json({ limit: '16kb' }));
 app.use(express.static(__dirname));
