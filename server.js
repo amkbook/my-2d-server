@@ -5,6 +5,11 @@ const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
 
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server);
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '16kb' }));
@@ -1734,13 +1739,22 @@ app.post('/api/chat', async (req, res) => {
 });
 
 
-// --------------------------------------------------
-// Start server
-// --------------------------------------------------
+// 🟢 Real-time Online Viewer Counter Socket Logic
+let onlineViewersCount = 0;
 
-app.listen(PORT, () => {
+io.on('connection', (socket) => {
+    onlineViewersCount++;
+    io.emit('updateViewerCount', onlineViewersCount);
+
+    socket.on('disconnect', () => {
+        onlineViewersCount = Math.max(0, onlineViewersCount - 1);
+        io.emit('updateViewerCount', onlineViewersCount);
+    });
+});
+
+// ⚠️ မူလ app.listen အစား server.listen ဖြင့် အစားထိုးပါ
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log('Myanmar Timezone: Asia/Yangon');
-    console.log('Morning boundary: 12:01:00 PM Myanmar Time');
-    console.log('Afternoon boundary: 04:30:00 PM Myanmar Time');
+    console.log('Real-time Viewer Counter (Socket.io) is active.');
 });

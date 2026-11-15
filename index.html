@@ -503,6 +503,33 @@
     z-index: 10;
     pointer-events: none;
 }
+.live-viewer-badge-real {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1.5px solid #10b981; /* စိမ်းနုရောင် ဘောင် */
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin: 0 auto 8px auto;
+  color: #ffffff !important; /* အဖြူရောင် တောက်ပစေရန် */
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.live-viewer-badge-real .view-label,
+.live-viewer-badge-real .bracket,
+.live-viewer-badge-real #realViewerCount {
+  color: #ffffff !important; /* လုံးဝ မမှေးမှိန်ဘဲ တောက်ပစေရန် */
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.live-viewer-badge-real .viewer-icon {
+  color: #10b981; /* မျက်လုံးပုံစံ အစိမ်းနုရောင် */
+  font-size: 15px;
+}
   </style>
 </head>
 <body>
@@ -515,7 +542,12 @@
 
       <div class="card">
         <div class="live-title-container">
-          <div class="live-title">LIVE 2D RESULT</div>
+          <!-- 🟢 တကယ့်အမှန် ကြည့်ရှုနေသူဦးရေ ပြသသည့် Badge (စိမ်းနုရောင်ဘောင်နှင့် တောက်ပသော အဖြူရောင်စာသား) -->
+<div class="live-viewer-badge-real">
+  <span class="view-label">ကြည့်ရှု့နေသည်</span>
+  <i class="fa-solid fa-eye viewer-icon"></i>
+  <span class="bracket">(</span><span id="realViewerCount">--</span><span class="bracket">)</span>
+</div>
           <div id="marketStatus" class="status-indicator status-closed">
             <span>✔ စျေးကွက်ပိတ်ချိန်</span>
           </div>
@@ -1627,6 +1659,15 @@ if (canvas) {
     canvas.addEventListener('touchend', endPosition);
     canvas.addEventListener('touchmove', draw, { passive: false });
 }
+// 🟢 Server ထံမှ တကယ့် Online လူဦးရေကို လက်ခံရယူပြီး ဖော်ပြခြင်း
+const socket = io();
+const realViewerCountEl = document.getElementById('realViewerCount');
+
+socket.on('updateViewerCount', (count) => {
+    if (realViewerCountEl) {
+        realViewerCountEl.textContent = count;
+    }
+});
 
     function toggleSound() {
       soundEnabled = !soundEnabled;
