@@ -19,5 +19,8 @@
     "express": "^5.2.1",
     "mongoose": "^9.11.0",
     "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0"
   }
 }

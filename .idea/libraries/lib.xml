@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="lib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/node_modules/@trapezedev/gradle-parse/lib/groovy-3.0.9.jar!/" />
+      <root url="jar://$PROJECT_DIR$/node_modules/@trapezedev/gradle-parse/lib/json-20260814.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
