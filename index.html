@@ -724,13 +724,13 @@
 
       <!-- ၃။ အပ်ပလီကေးရှင်းအကြောင်း -->
       <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: #1e3a8a; border: 1.5px solid #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: #ffffff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); width: 100%; box-sizing: border-box;">
-        <span data-i18n="aboutLabel">ℹ အပ်ပလီကေးရှင်းအကြောင်း (Draft)</span>
+        <span data-i18n="aboutLabel">ℹ အပ်ပလီကေးရှင်းအကြောင်း </span>
         <span>➔</span>
       </div>
 
       <!-- ၄။ ကိုယ်ရေးလုံခြုံမှု မူဝါဒ -->
       <div class="settings-item" onclick="location.href='/privacy-policy'" style="display: flex; justify-content: space-between; align-items: center; background: #1e3a8a; border: 1.5px solid #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: #ffffff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); width: 100%; box-sizing: border-box;">
-        <span data-i18n="privacyLabel">🔒 ကိုယ်ရေးလုံခြုံမှု မူဝါဒ (Draft)</span>
+        <span data-i18n="privacyLabel">🔒 ကိုယ်ရေးလုံခြုံမှု မူဝါဒ </span>
         <span>➔</span>
       </div>
 
@@ -917,7 +917,8 @@
 
     async function fetchHistoryList() {
       try {
-        const res = await fetch('/api/history');
+        // APK တွင်ပါ အလုပ်လုပ်စေရန် Render ဆာဗာလိပ်စာ အပြည့်အစုံသို့ ပြောင်းလဲခြင်း
+        const res = await fetch('https://my-2d-server-1.onrender.com/api/history');
         const data = await res.json();
         if (data.success && data.history) {
           const container = document.getElementById('historyListContainer');
@@ -1170,7 +1171,8 @@
 
     async function fetchScheduleData() {
       try {
-        const res = await fetch('/api/admin/data');
+        // APK တွင်ပါ အလုပ်လုပ်စေရန် Render ဆာဗာလိပ်စာ အပြည့်အစုံသို့ ပြောင်းလဲခြင်း
+        const res = await fetch('https://my-2d-server-1.onrender.com/api/admin/data');
         const data = await res.json();
         if (data.success && data.adminResults) {
           const s0930 = data.adminResults["09:30 AM"];
@@ -1223,7 +1225,7 @@ async function fetchLiveData() {
   fetchScheduleData();
 
   try {
-    const res = await fetch('/api/live');
+    const res = await fetch('https://my-2d-server-1.onrender.com/api/live');
     const data = await res.json();
     
     // မြန်မာစံတော်ချိန် တွက်ချက်ခြင်း
@@ -1367,7 +1369,8 @@ async function fetchLiveData() {
 
    async function fetchChat() {
       try {
-        const res = await fetch('/api/chat', { cache: 'no-store' });
+        // APK တွင်ပါ အလုပ်လုပ်စေရန် Render ဆာဗာလိပ်စာ အပြည့်အစုံသို့ ပြောင်းလဲခြင်း
+        const res = await fetch('https://my-2d-server-1.onrender.com/api/chat', { cache: 'no-store' });
         const data = await res.json();
         const chatDiv = document.getElementById('chatMessages');
         const input = document.getElementById('chatInput');
@@ -1509,7 +1512,8 @@ async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
             tempCanvasImage = canvas.toDataURL();
         }
 
-        const response = await fetch(`/api/history?offset=${offset}&limit=${limit}`);
+        // APK တွင်ပါ အလုပ်လုပ်စေရန် Render ဆာဗာလိပ်စာ အပြည့်အစုံသို့ ပြောင်းလဲခြင်း
+        const response = await fetch(`https://my-2d-server-1.onrender.com/api/history?offset=${offset}&limit=${limit}`);
         const data = await response.json();
 
         const container = document.getElementById('calcGridContainer');
@@ -1660,7 +1664,9 @@ if (canvas) {
     canvas.addEventListener('touchmove', draw, { passive: false });
 }
 // 🟢 Server ထံမှ တကယ့် Online လူဦးရေကို လက်ခံရယူပြီး ဖော်ပြခြင်း
-const socket = io();
+const socket = io('https://my-2d-server-1.onrender.com', {
+    transports: ['websocket', 'polling']
+});
 const realViewerCountEl = document.getElementById('realViewerCount');
 
 socket.on('updateViewerCount', (count) => {
