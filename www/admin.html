@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D & Gold Admin Control Panel</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="w-full max-w-md bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-700">
+        <h1 class="text-2xl font-bold text-center mb-6 text-yellow-400">Admin Control Panel</h1>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-1">Admin Password</label>
+                <input type="password" id="passwordInput" placeholder="စကားဝှက်ထည့်ပါ" 
+                    class="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-yellow-400 text-white">
+            </div>
+            <button onclick="adminLogin()" 
+                class="w-full bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-bold py-2 rounded-lg transition">
+                လော့ဂ်အင်ဝင်မည်
+            </button>
+            <p id="loginError" class="text-red-400 text-sm text-center hidden">စကားဝှက် မှားယွင်းနေပါသည်။</p>
+        </div>
+
+        <!-- Control Panel Form (Login ပြီးမှ ပေါ်မည်) -->
+        <div id="controlSection" class="hidden space-y-6">
+            
+            <!-- 2D Control Section -->
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+                <h2 class="text-lg font-semibold text-yellow-400 mb-3">2D ဇယားကွက် ဂဏန်းများ ထိန်းချုပ်ရန်</h2>
+                
+                <div class="mb-4">
+                    <label class="block text-sm text-slate-300 mb-1">အချိန်အကွက် (Session)</label>
+                    <select id="sessionSelect" onchange="onSessionChange()" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
+                        <option value="09:30 AM">09:30 AM</option>
+                        <option value="02:00 PM">02:00 PM</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm text-slate-300 mb-1">Modern ဂဏန်း</label>
+                    <input type="text" id="modernInput" placeholder="ဥပမာ - 45" 
+                        class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm text-slate-300 mb-1">Internet ဂဏန်း</label>
+                    <input type="text" id="internetInput" placeholder="ဥပမာ - 78" 
+                        class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
+                </div>
+
+                <!-- Modern & Internet (Joint Lock) -->
+                <button id="saveModernInternetBtn" onclick="saveModernInternetData()" 
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2 rounded-lg transition mb-2">
+                    Modern & Internet သိမ်းဆည်းမည်
+                </button>
+                <p id="lockNotice" class="text-orange-400 text-xs text-center mb-3 hidden">⚠️ Modern & Internet အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
+
+                <!-- TW (Independent Lock) -->
+                <div class="mb-3 mt-4 pt-3 border-t border-slate-800">
+                    <label class="block text-sm text-slate-300 mb-1">TW ဂဏန်း (သီးသန့် လော့ခ်စနစ်)</label>
+                    <input type="text" id="twInput" placeholder="ဥပမာ - 12" 
+                        class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400">
+                </div>
+
+                <button id="saveTwBtn" onclick="saveTwData()" 
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-slate-950 font-bold py-2 rounded-lg transition">
+                    TW အချက်အလက် သိမ်းဆည်းမည်
+                </button>
+                <p id="twLockNotice" class="text-orange-400 text-xs text-center mt-2 hidden">⚠️ TW အကွက်အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
+            </div>
+
+            <!-- Admin Panel Hot 2D Control Box (အသစ် - Lock စနစ်ပါရှိသည်) -->
+<div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6">
+    <h2 class="text-lg font-semibold text-yellow-400 mb-3">🔥 ဟော့ထိပ် 2D ထိန်းချုပ်ရန်</h2>
+    
+    <div class="mb-3">
+        <label class="block text-sm text-slate-300 mb-1">ဟော့ထိပ် 12:01 PM (ဥပမာ- 2-3-4)</label>
+        <div class="flex gap-2">
+            <input type="text" id="hotMorningInput" placeholder="2-3-4" 
+                class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400 text-sm">
+            <button id="saveMorningBtn" onclick="saveHotNumber('morning')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg transition text-sm whitespace-nowrap">သိမ်းမည်</button>
+        </div>
+        <p id="hotMorningLockNotice" class="text-orange-400 text-xs mt-1 hidden">⚠️ ဤမနက်ပိုင်း ဟော့ထိပ်အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
+    </div>
+    <!-- Admin Panel Holiday Notice Control Box -->
+<div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6">
+    <h2 class="text-lg font-semibold text-yellow-400 mb-3">📢 ဈေးကွက်ပိတ်ရက် သတိပေးစာတန်း ထိန်းချုပ်ရန်</h2>
+    
+    <div class="mb-3">
+        <label class="block text-sm text-slate-300 mb-1">ကြိုတင်သတိပေးစာတန်း (ဥပမာ - 📅 ဥပမာ ပိတ်ရက် 10.10.2026)</label>
+        <div class="flex gap-2">
+            <input type="text" id="holidayNoticeInput" placeholder="ကြေညာချက်စာတန်း ရေးရန်..." 
+                class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400 text-sm">
+            <button onclick="saveHolidayNotice()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg transition text-sm whitespace-nowrap">သိမ်းမည်</button>
+        </div>
+    </div>
+</div>
+
+    <div class="mb-2">
+        <label class="block text-sm text-slate-300 mb-1">ဟော့ထိပ် 4:30 PM (ဥပမာ- 7-8-9)</label>
+        <div class="flex gap-2">
+            <input type="text" id="hotEveningInput" placeholder="7-8-9" 
+                class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-yellow-400 text-sm">
+            <button id="saveEveningBtn" onclick="saveHotNumber('evening')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg transition text-sm whitespace-nowrap">သိမ်းမည်</button>
+        </div>
+        <p id="hotEveningLockNotice" class="text-orange-400 text-xs mt-1 hidden">⚠️ ဤညနေပိုင်း ဟော့ထိပ်အတွက် သိမ်းဆည်းပြီးပါပြီ (Locked)။</p>
+    </div>
+</div>
+          
+           
+            <p id="saveStatus" class="text-green-400 text-sm text-center hidden"></p>
+            
+            <div class="text-center">
+                <a href="/" target="_blank" class="text-blue-400 hover:underline text-sm">ပင်မ 2D Live စာမျက်နှာသို့ သွားရန် →</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPassword = "";
+        let cachedAdminData = null;
+        let cachedGoldData = null;
+
+        async function adminLogin() {
+            const pwd = document.getElementById('passwordInput').value.trim();
+            const errorText = document.getElementById('loginError');
+            errorText.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    currentPassword = pwd;
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('controlSection').classList.remove('hidden');
+                    
+                    // လော့ဂ်အင် အောင်မြင်မှသာ Data များကို စတင်ခေါ်ယူမည်
+                    loadAdminData();
+                    loadAdminGoldData();
+                    loadAdminHotNumbers();
+                    loadAdminHolidayNotice();
+                } else {
+                    errorText.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorText.innerText = "ဆာဗာသို့ ချိတ်ဆက်၍ မရပါ။";
+                errorText.classList.remove('hidden');
+            }
+        }
+
+        async function loadAdminData() {
+            try {
+                const response = await fetch('/api/admin/data');
+                const data = await response.json();
+                if (data.success) {
+                    cachedAdminData = data.adminResults;
+                    updateFormFields();
+                }
+            } catch (err) {
+                console.error("Data load error:", err);
+            }
+        }
+
+        function updateFormFields() {
+            if (!cachedAdminData) return;
+            const session = document.getElementById('sessionSelect').value;
+            const sessionData = cachedAdminData[session] || { modern: "--", internet: "--", tw: "--", isLocked: false, isTwLocked: false };
+
+            const modernInput = document.getElementById('modernInput');
+            const internetInput = document.getElementById('internetInput');
+            const twInput = document.getElementById('twInput');
+            const saveModernInternetBtn = document.getElementById('saveModernInternetBtn');
+            const saveTwBtn = document.getElementById('saveTwBtn');
+            const lockNotice = document.getElementById('lockNotice');
+            const twLockNotice = document.getElementById('twLockNotice');
+
+            modernInput.value = sessionData.modern !== "--" ? sessionData.modern : "";
+            internetInput.value = sessionData.internet !== "--" ? sessionData.internet : "";
+            twInput.value = sessionData.tw !== "--" ? sessionData.tw : "";
+
+            if (sessionData.isLocked) {
+                modernInput.disabled = true;
+                internetInput.disabled = true;
+                saveModernInternetBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                saveModernInternetBtn.disabled = true;
+                lockNotice.classList.remove('hidden');
+            } else {
+                modernInput.disabled = false;
+                internetInput.disabled = false;
+                saveModernInternetBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                saveModernInternetBtn.disabled = false;
+                lockNotice.classList.add('hidden');
+            }
+
+            if (sessionData.isTwLocked) {
+                twInput.disabled = true;
+                saveTwBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                saveTwBtn.disabled = true;
+                twLockNotice.classList.remove('hidden');
+            } else {
+                twInput.disabled = false;
+                saveTwBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                saveTwBtn.disabled = false;
+                twLockNotice.classList.add('hidden');
+            }
+        }
+
+        async function onSessionChange() {
+            await loadAdminData();
+        }
+
+        async function saveModernInternetData() {
+            const session = document.getElementById('sessionSelect').value;
+            const modern = document.getElementById('modernInput').value;
+            const internet = document.getElementById('internetInput').value;
+            const statusText = document.getElementById('saveStatus');
+
+            try {
+                const response = await fetch('/api/admin/save-modern-internet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        password: currentPassword,
+                        session: session,
+                        modern: modern,
+                        internet: internet
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    cachedAdminData = data.adminResults;
+                    updateFormFields();
+                    statusText.innerText = data.message;
+                    statusText.classList.remove('hidden');
+                    setTimeout(() => statusText.classList.add('hidden'), 4000);
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('Modern & Internet သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိသွားပါသည်။');
+            }
+        }
+
+        async function saveTwData() {
+            const session = document.getElementById('sessionSelect').value;
+            const tw = document.getElementById('twInput').value;
+            const statusText = document.getElementById('saveStatus');
+
+            try {
+                const response = await fetch('/api/admin/save-tw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        password: currentPassword,
+                        session: session,
+                        tw: tw
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    cachedAdminData = data.adminResults;
+                    updateFormFields();
+                    statusText.innerText = data.message;
+                    statusText.classList.remove('hidden');
+                    setTimeout(() => statusText.classList.add('hidden'), 4000);
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('TW သိမ်းဆည်းရာတွင် အမှားအယွင်း ရှိသွားပါသည်။');
+            }
+        }
+        
+        
+        
+        async function saveHotNumber(type) {
+            const inputId = type === 'morning' ? 'hotMorningInput' : 'hotEveningInput';
+            const inputVal = document.getElementById(inputId).value.trim();
+            
+            if (!inputVal) {
+                alert("ကျေးဇူးပြု၍ ဂဏန်းထည့်ပါ။");
+                return;
+            }
+
+            if (!currentPassword) {
+                currentPassword = prompt("Admin စကားဝှက် ထည့်ပါ:");
+                if (!currentPassword) return;
+            }
+
+            try {
+                const payload = { password: currentPassword };
+                if (type === 'morning') {
+                    payload.morning = inputVal;
+                } else {
+                    payload.evening = inputVal;
+                }
+
+                const res = await fetch('/api/admin/hot-numbers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    loadAdminHotNumbers(); 
+                } else {
+                    alert(data.message || "သိမ်းဆည်းမှု မအောင်မြင်ပါ။");
+                }
+            } catch (err) {
+                console.error('Save hot number error:', err);
+                alert("ဆာဗာချိတ်ဆက်မှုတွင် အမှားအယွင်းရှိပါသည်။");
+            }
+        }
+
+        async function loadAdminHotNumbers() {
+            try {
+                const response = await fetch('/api/admin/hot-numbers');
+                const data = await response.json();
+                
+                if (data.success && data.hotNumbers) {
+                    const morningInput = document.getElementById('hotMorningInput');
+                    const eveningInput = document.getElementById('hotEveningInput');
+                    const saveMorningBtn = document.getElementById('saveMorningBtn');
+                    const saveEveningBtn = document.getElementById('saveEveningBtn');
+                    const morningNotice = document.getElementById('hotMorningLockNotice');
+                    const eveningNotice = document.getElementById('hotEveningLockNotice');
+                    
+                    const mData = data.hotNumbers.morning || { number: "--", isLocked: false };
+                    const eData = data.hotNumbers.evening || { number: "--", isLocked: false };
+
+                    if (morningInput) morningInput.value = mData.number !== "--" ? mData.number : "";
+                    if (mData.isLocked === true || mData.isLocked === 'true') {
+                        if (morningInput) morningInput.disabled = true;
+                        if (saveMorningBtn) {
+                            saveMorningBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                            saveMorningBtn.disabled = true;
+                        }
+                        if (morningNotice) morningNotice.classList.remove('hidden');
+                    } else {
+                        if (morningInput) morningInput.disabled = false;
+                        if (saveMorningBtn) {
+                            saveMorningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            saveMorningBtn.disabled = false;
+                        }
+                        if (morningNotice) morningNotice.classList.add('hidden');
+                    }
+
+                    if (eveningInput) eveningInput.value = eData.number !== "--" ? eData.number : "";
+                    if (eData.isLocked === true || eData.isLocked === 'true') {
+                        if (eveningInput) eveningInput.disabled = true;
+                        if (saveEveningBtn) {
+                            saveEveningBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                            saveEveningBtn.disabled = true;
+                        }
+                        if (eveningNotice) eveningNotice.classList.remove('hidden');
+                    } else {
+                        if (eveningInput) eveningInput.disabled = false;
+                        if (saveEveningBtn) {
+                            saveEveningBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            saveEveningBtn.disabled = false;
+                        }
+                        if (eveningNotice) eveningNotice.classList.add('hidden');
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load hot numbers for admin:', err);
+            }
+        }
+
+        async function saveHolidayNotice() {
+            const noticeText = document.getElementById('holidayNoticeInput').value.trim();
+            
+            if (!currentPassword) {
+                currentPassword = prompt("Admin စကားဝှက် ထည့်ပါ:");
+                if (!currentPassword) return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/holiday-notice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: currentPassword, noticeText })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    loadAdminHolidayNotice();
+                } else {
+                    alert(data.message || "သိမ်းဆည်းမှု မအောင်မြင်ပါ။");
+                }
+            } catch (err) {
+                console.error('Save holiday notice error:', err);
+                alert("ဆာဗာချိတ်ဆက်မှုတွင် အမှားအယွင်းရှိပါသည်။");
+            }
+        }
+
+        async function loadAdminHolidayNotice() {
+            try {
+                const response = await fetch('/api/admin/holiday-notice');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const noticeInput = document.getElementById('holidayNoticeInput');
+                    if (noticeInput) {
+                        noticeInput.value = data.holidayNotice || "";
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load holiday notice for admin:', err);
+            }
+        }
+    </script>
+</body>
+</html> 

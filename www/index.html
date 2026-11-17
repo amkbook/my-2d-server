@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2D Live Market App - Full Version</title>
+ <style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  .row-time-label.green-label {
+    color: #10b981 !important;
+  }
+    body { background-color: var(--bg-color) !important; color: var(--text-color) !important; display: block; min-height: 100vh; padding: 10px 0; padding-bottom: 90px; overflow-x: hidden; }
+.container { width: 100% !important; max-width: 100% !important; box-sizing: border-box; padding: 0 16px !important; display: flex; flex-direction: column; gap: 15px; margin: 0; }
+    
+    .tab-content {
+    display: none !important;
+}
+.tab-content.active {
+    display: block !important;
+}
+
+    .card { background: #1e293b; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #334155; }
+    .notice { background: #0284c7; color: white; padding: 10px; border-radius: 8px; font-size: 14px; text-align: center; }
+    
+    .live-title-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px; }
+    .live-title { font-size: 16px; color: #94a3b8; }
+    
+    .status-indicator { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: bold; }
+    .status-live { color: #ef4444; display: inline-flex; align-items: center; gap: 4px; }
+    .status-paused { color: #f59e0b; display: inline-flex; align-items: center; gap: 4px; }
+    .spinner { width: 10px; height: 10px; border: 2px solid #ef4444; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
+    .status-closed { color: #10b981; display: inline-flex; align-items: center; gap: 4px; }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .live-2d { font-size: 72px; font-weight: bold; color: #f59e0b; text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); margin: 10px 0; }
+    .time-badge { background: #334155; color: #ffffff; font-weight: bold; padding: 4px 12px; border-radius: 20px; font-size: 12px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    
+    .set-info { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid #334155; }
+    .set-box { text-align: center; flex: 1; }
+    .set-label { 
+      font-size: 12px; 
+      color: #00FF7F !important; 
+      font-weight: bold; 
+    }
+    .set-value { font-size: 16px; font-weight: bold; color: #e2e8f0; margin-top: 2px; }
+
+   .source-digit {
+      color: #ffd700; /* ပင်မ 2D ဂဏန်းကြီး၏ တောက်ပသောရွှေရောင်နှင့် ထပ်တူကျစေရန် */
+      text-shadow: 
+          1px 1px 0px #b8860b,
+          2px 2px 0px #664200,
+          0px 2px 5px rgba(0, 0, 0, 0.5);
+      font-weight: bold;
+      /* ၂၅% ကြီးခြင်းနှင့် Gradient ကို ပယ်ဖျက်ပြီး သာမာန်စာသားအရွယ်အစားသို့ ပြန်ပြောင်းသည် */
+    }
+    .green-val {
+      color: #10b981 !important;
+      text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    }
+
+    .audio-btn { background: #10b981; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 10px; cursor: pointer; }
+    
+    .schedule-table-container { background: #1e293b; border-radius: 12px; padding: 12px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .table-header-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 13px; font-weight: bold; color: #38bdf8; padding-bottom: 6px; border-bottom: 1px solid #334155; }
+    
+    .table-row-group { display: flex; flex-direction: column; gap: 8px; }
+    .market-row-item { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; background: #0f172a; border-radius: 8px; padding: 10px 8px; align-items: center; text-align: center; border: 1px solid #334155; }
+    .row-time-label { font-size: 13px; font-weight: bold; color: #facc15; text-align: left; padding-left: 6px; }
+    .row-time-label.green-label { color: #10b981 !important; }
+    .row-val { font-size: 18px; font-weight: bold; color: #facc15; }
+
+    .chat-box { background: #1e293b; border-radius: 16px; padding: 15px; border: 1px solid #334155; display: flex; flex-direction: column; height: 260px; }
+    .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; padding-right: 5px; }
+    .msg { background: #334155; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
+    .msg-user { color: #38bdf8; font-weight: bold; margin-right: 5px; }
+    .chat-input-row { display: flex; gap: 8px; }
+    .chat-input-row input { flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; padding: 8px 12px; outline: none; }
+    .chat-input-row button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+    .history-list-container { display: flex; flex-direction: column; gap: 20px; }
+    .history-card { background: #1e3a8a; border-radius: 14px; padding: 15px; border: 2px solid #3b82f6; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 12px; }
+    .history-date-badge { background: #000000; color: #f8fafc; text-align: center; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; border: 1px solid #334155; align-self: center; margin-bottom: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+    
+    .history-top-results { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .history-res-box { background: #1e40af; border: 2px solid #60a5fa; border-radius: 10px; text-align: center; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .history-res-title { font-size: 12px; color: #bfdbfe; font-weight: bold; }
+    .history-res-val { font-size: 32px; font-weight: bold; color: #ffffff; }
+    .history-res-sub { display: flex; justify-content: space-around; background: #1e3a8a; border-radius: 6px; padding: 4px; font-size: 11px; color: #e2e8f0; border-top: 1px solid #3b82f6; }
+
+    .history-sub-table { background: #1e40af; border: 2px solid #60a5fa; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .history-sub-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 12px; font-weight: bold; color: #bfdbfe; border-bottom: 1px solid #3b82f6; padding-bottom: 4px; }
+    .history-sub-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; text-align: center; font-size: 14px; font-weight: bold; color: #ffffff; align-items: center; padding: 2px 0; }
+    .history-sub-label { text-align: left; padding-left: 6px; font-size: 12px; color: #facc15; }
+
+    .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+    .gallery-item { background: #0f172a; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
+    .gallery-item img { width: 100%; height: 120px; object-fit: cover; }
+
+   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: space-around; padding: 10px 0; max-width: 450px; margin: 0 auto; z-index: 100; }
+    
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: #ffffff; font-size: 11px; cursor: pointer; text-decoration: none; border: none; background: none; flex: 1; } /* #94a3b8 ကို #ffffff သို့ ပြောင်းလိုက်ပါ */
+    
+    .nav-item.active { color: #38bdf8; font-weight: bold; } /* active ဖြစ်နေချိန်တွင် အပြာရောင်အတိုင်း ဆက်ရှိနေမည် */
+    
+    .nav-icon { font-size: 18px; margin-bottom: 2px; }
+
+    .falling-money {
+      position: fixed;
+      top: -60px;
+      width: 55px;
+      height: auto;
+      z-index: 9999;
+      pointer-events: none;
+      animation: fallDown 4s linear infinite;
+    }
+    @keyframes fallDown {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(105vh) rotate(360deg); opacity: 0.85; }
+    }
+    /* ပင်မ 2D ရလဒ် ဂဏန်းကြီးများအတွက် စတိုင်လ် */
+#live2D {
+  font-size: 80px; /* လက်ရှိ 65px ထက် ၂၅% ခန့် ပိုကြီးစေရန် */
+  font-weight: bold;
+  color: #ffd700; /* တောက်ပသော မူလရွှေရောင် */
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  line-height: 1;
+  
+  /* ရွှေရောင် 3D ဖောင်းကြွအရိပ်စနစ် */
+  text-shadow: 
+      1px 1px 0px #b8860b,
+      2px 2px 0px #996515,
+      3px 3px 0px #664200,
+      0px 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* ရှေ့ဂဏန်း */
+.first-digit {
+  display: inline-block;
+}
+
+/* 🟢 Live Pulse / Heartbeat Wave Effect */
+@keyframes livePulseWave {
+  0% { transform: scale(1); opacity: 1; }
+  30% { transform: scale(1.12); opacity: 0.92; }
+  60% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.market-breathing {
+  animation: livePulseWave 1.2s ease-in-out infinite;
+  display: inline-block;
+}
+/* Hot 2D Layout Container */
+.live-2d-row-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 10px 0;
+}
+
+/* ဘယ်/ညာ Hot 2D Box တစ်ခုချင်းစီ၏ ဒီဇိုင်း */
+.hot-2d-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+}
+
+/* အပေါ်ခေါင်းစဉ်အကွက် (အဝါရောင် ဘောင်ဒီဇိုင်း) */
+.hot-title-badge {
+  border: 1.5px solid #facc15;
+  border-radius: 18px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 6px;
+  background: rgba(250, 204, 21, 0.05);
+  line-height: 1.3;
+}
+
+/* အောက် Hot ဂဏန်းအကွက် (အနီရောင် ဘောင်ဒီဇိုင်း) */
+.hot-number-card {
+  border: 1.5px solid #ef4444;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+  background: rgba(239, 68, 68, 0.08);
+  min-width: 80px;
+  letter-spacing: 1px;
+}
+/* Market Holiday Notice Ticker Box - Soft Red BG with Glowing White Text */
+.holiday-ticker-card {
+  background: #1e3a8a; /* အပြာရောင်ရင့်ရင့် အပြည့်အောက်ခံ */
+  border: 1.5px solid #ef4444; /* လက်ရှိ အနီရောင် ဘောင် အတိုင်း */
+  border-radius: 12px;
+  padding: 10px 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+}
+
+.holiday-ticker-track {
+  display: inline-block;
+  white-space: nowrap;
+  animation: tickerScroll 18s linear infinite;
+  font-size: 15px;
+  font-weight: 800; /* စာသားကို ပိုမိုထင်ရှားစေရန် ပုံစံထူ */
+  color: #ffffff; /* ရှင်းလင်းတောက်ပသော အဖြူရောင် */
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6); /* စာသားတောက်ပစေရန် အလင်းပေးခြင်း */
+}
+
+@keyframes tickerScroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+/* 🟢 Default Light Mode (ပထမဆုံးစဖွင့်ချိန် အဖြူရောင် အောက်ခံ) */
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+      --nav-bg: #ffffff;
+      --input-bg: #f1f5f9;
+      --row-bg: #f8fafc;
+    }
+
+    /* 🌙 Dark Mode (ညကြည့်စတိုင် ဖွင့်ထားစဉ်) */
+    .dark-mode {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --nav-bg: #1e293b;
+      --input-bg: #0f172a;
+      --row-bg: #0f172a;
+    }
+
+    body {
+      background-color: var(--bg-color) !important;
+      color: var(--text-color) !important;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Toggle Switch Style */
+    .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #3b82f6; }
+    input:checked + .slider:before { transform: translateX(24px); }
+    /* Chat input placeholders များကို အဖြူရောင်ရင့်ရင့် တောက်ပစေရန် */
+#chatName::placeholder,
+#chatInput::placeholder {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+/* 🟢 Settings Card & Toggle Switch Fixes (Fixed Size & Stable Layout) */
+    .settings-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e3a8a;
+  border: 1.5px solid #ef4444;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  height: 54px !important;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+    /* Language Slider Toggle Switch Container */
+    .lang-toggle-container {
+      display: flex;
+      align-items: center;
+      background: #0f172a;
+      border: 1px solid #ef4444;
+      border-radius: 20px;
+      padding: 3px;
+      position: relative;
+      width: 110px;
+      height: 36px;
+      cursor: pointer;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .lang-opt {
+      flex: 1;
+      text-align: center;
+      font-size: 13px;
+      font-weight: bold;
+      color: #94a3b8;
+      z-index: 2;
+      transition: color 0.3s ease;
+      line-height: 28px;
+    }
+
+    .lang-opt.active {
+      color: #ffffff;
+    }
+
+    /* အနီရောင် ရွေ့လျားသည့် Slider တုန်းလေး */
+    .lang-slider-bg {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 52px;
+      height: 28px;
+      background: #ef4444;
+      border-radius: 16px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1;
+    }
+
+    /* ENG ဘက်သို့ ရွေ့သွားသောအခါ */
+    .lang-toggle-container.eng-mode .lang-slider-bg {
+      transform: translateX(52px);
+    }
+    /* 🟢 SET Index နှင့် Value ဂဏန်းများအတွက် ၁.၃ စက္ကန့်စာ 3D Flip Animation */
+    @keyframes metricFlipAnim {
+      0% {
+        transform: perspective(400px) rotateX(90deg);
+        opacity: 0;
+      }
+      50% {
+        transform: perspective(400px) rotateX(-20deg);
+        opacity: 0.7;
+      }
+      100% {
+        transform: perspective(400px) rotateX(0deg);
+        opacity: 1;
+      }
+    }
+
+    .number-flip-animate {
+      animation: metricFlipAnim 1.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      display: inline-block;
+      transform-origin: top center;
+    }
+    /* 🟢 ခေတ်မီ 3D ဖောင်းကြွအဝိုင်းပုံစံ ဇယားကွက်များအတွက် စတိုင်လ် */
+.circular-grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 15px 5px;
+  justify-items: center;
+}
+
+@media (min-width: 400px) {
+  .circular-grid-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.circle-3d-btn {
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+  box-shadow: 
+    0 8px 20px rgba(0, 0, 0, 0.4), 
+    inset 0 2px 4px rgba(255, 255, 255, 0.4), 
+    inset 0 -4px 6px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 2px solid #60a5fa;
+  user-select: none;
+  padding: 8px;
+  line-height: 1.3;
+}
+
+.circle-3d-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 12px 25px rgba(59, 130, 246, 0.5), 
+    inset 0 2px 5px rgba(255, 255, 255, 0.5), 
+    inset 0 -4px 6px rgba(0, 0, 0, 0.4);
+}
+
+.circle-3d-btn:active {
+  transform: scale(0.95) translateY(0);
+  box-shadow: 
+    0 4px 10px rgba(0, 0, 0, 0.4), 
+    inset 0 2px 2px rgba(0, 0, 0, 0.4);
+}
+   /* 📌 တတိယစာမျက်နှာ - နောက်ခံအဖြူရောင်နှင့် တည်ငြိမ်သော ဇယားကွက်ဒီဇိုင်းအသစ် */
+#page-threed-calculator {
+    background: #ffffff !important;
+    color: #000000 !important;
+    min-height: 80vh;
+    padding: 12px;
+    box-sizing: border-box;
+}
+
+/* ⚠️ ခဲတံဆွဲပါက စာမျက်နှာ အပေါ်အောက် ရွေ့မသွားစေရန် */
+#calcWrapper {
+    position: relative;
+    width: 100%;
+    touch-action: none; 
+}
+
+#calcGridContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* ဇယားကွက်တွေ ကြီးလာတဲ့အတွက် အနည်းငယ် ချဲပေးထားသည် */
+    width: 100%;
+    max-height: 540px; /* 👈 အလွန်အမင်း ရှည်မသွားစေဘဲ ၁၀ ရက်စာတိတိပေါ်မည့် အမြင့်ကို သတ်မှတ်ခြင်း */
+    overflow-y: auto;  /* 👈 မျက်နှာပြင်အတွင်း သေသပ်စွာ ထိန်းချုပ်ပေးခြင်း */
+}
+
+/* ဇယားကွက်တန်း အလှပုံစံ */
+.calc-row-item {
+    display: flex;
+    gap: 8px;
+    width: 182px;
+}
+
+/* 3D ဖောင်းကြွ ခရမ်းရောင်ဘောင်နှင့် ကျစ်လစ်သော Box အရွယ်အစား */
+.calc-sub-box {
+    flex: 1;
+    height: 48px;
+    border: 1px solid #d8b4fe;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #ffffff, #f3e8ff);
+    box-shadow: 3px 3px 6px rgba(168, 85, 247, 0.25), 
+               -3px -3px 6px rgba(255, 255, 255, 1),
+                inset 1px 1px 2px rgba(255, 255, 255, 1),
+                inset -1px -1px 2px rgba(168, 85, 247, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+.calc-top-text {
+    font-size: 13px !important;
+    font-weight: 800;
+    color: #1f2937;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 1), -1px -1px 1px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2px;
+}
+
+.calc-result-text {
+    font-size: 20px !important;
+    font-weight: 900;
+    color: #b45309;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9), 0 2px 2px rgba(0, 0, 0, 0.2);
+    letter-spacing: 1.5px;
+}
+
+.calc-header-red-3d {
+    font-size: 14px;
+    font-weight: 900;
+    color: #dc2626;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9), 0 2px 3px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+
+#drawingCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+}
+.live-viewer-badge-real {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1.5px solid #10b981; /* စိမ်းနုရောင် ဘောင် */
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin: 0 auto 8px auto;
+  color: #ffffff !important; /* အဖြူရောင် တောက်ပစေရန် */
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.live-viewer-badge-real .view-label,
+.live-viewer-badge-real .bracket,
+.live-viewer-badge-real #realViewerCount {
+  color: #ffffff !important; /* လုံးဝ မမှေးမှိန်ဘဲ တောက်ပစေရန် */
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.live-viewer-badge-real .viewer-icon {
+  color: #10b981; /* မျက်လုံးပုံစံ အစိမ်းနုရောင် */
+  font-size: 15px;
+}
+  </style>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- PAGE 1: Home (2D Live) -->
+    <div id="page-home" class="tab-content active">
+      <div id="notice" class="notice">2D Live မှ ကြိုဆိုပါသည်။</div>
+
+      <div class="card">
+        <div class="live-title-container">
+          <!-- 🟢 တကယ့်အမှန် ကြည့်ရှုနေသူဦးရေ ပြသသည့် Badge (စိမ်းနုရောင်ဘောင်နှင့် တောက်ပသော အဖြူရောင်စာသား) -->
+<div class="live-viewer-badge-real">
+  <span class="view-label">ကြည့်ရှု့နေသည်</span>
+  <i class="fa-solid fa-eye viewer-icon"></i>
+  <span class="bracket">(</span><span id="realViewerCount">--</span><span class="bracket">)</span>
+</div>
+          <div id="marketStatus" class="status-indicator status-closed">
+            <span>✔ စျေးကွက်ပိတ်ချိန်</span>
+          </div>
+        </div>
+
+        <!-- Live 2D & Hot Numbers Wrapper -->
+        <div class="live-2d-row-wrapper">
+          <!-- မနက် ဟော့ထိပ် (ဘယ်ဘက်) -->
+          <div class="hot-2d-box">
+            <div class="hot-title-badge">ဟော့ထိပ်<br>12:01 PM</div>
+            <div class="hot-number-card" id="hotMorningDisplay">--</div>
+          </div>
+
+          <!-- အလယ် Live 2D ဂဏန်းကြီး (မူရင်း ID & Class မပျက်စေရန် ထိန်းသိမ်းထားပါသည်) -->
+          <div class="main-live-2d">
+            <div id="live2D" class="live-2d">--</div>
+          </div>
+
+          <!-- ညနေ ဟော့ထိပ် (ညာဘက်) -->
+          <div class="hot-2d-box">
+            <div class="hot-title-badge">ဟော့ထိပ်<br>4:30 PM</div>
+            <div class="hot-number-card" id="hotEveningDisplay">--</div>
+          </div>
+        </div>
+        <div id="updateTime" class="time-badge">Market Closed</div>
+
+        <div class="set-info">
+          <div class="set-box">
+            <div class="set-label">SET Index</div>
+            <div id="setIndex" class="set-value">----.--</div>
+          </div>
+          <div class="set-box">
+            <div class="set-label">Value(M.Bath)</div>
+            <div id="setValue" class="set-value">----.--</div>
+          </div>
+        </div>
+
+        <button id="audio-btn" class="audio-btn" onclick="toggleSound()">🔊 အသံဖွင့်ထားသည်</button>
+      </div>
+      <!-- 🔴 Marquee Ticker ဇယားကွက်အသစ် -->
+<div id="holidayTickerContainer" class="holiday-ticker-card" style="display: none;">
+  <div class="holiday-ticker-track" id="holidayTickerText">--</div>
+</div>
+
+     <div class="chat-box">
+        <div class="live-title" style="margin-bottom: 8px; color: #10b981; font-weight: bold;" data-i18n="chatTitle">Live Chatbox</div>
+        <div id="chatMessages" class="chat-messages">
+          <div class="msg" style="color: #facc15; font-weight: 650; line-height: 1.5;">
+            Chat ကို မြန်မာစံတော်ချိန်<br>
+            နေ့လည် 11:00 မှ 12:10 နှင့်<br>
+            ညနေ 3:30 မှ 4:40 အတွင်းသာ<br>
+            အသုံးပြုနိုင်ပါသည်။
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chatName" maxlength="30" placeholder="အမည် (မဖြည့်လည်းရ)" style="max-width: 115px; min-width: 0; color: #ffffff;" aria-label="Chat display name">
+          <input type="text" id="chatInput" maxlength="500" placeholder="စကားပြောရန် စာရိုက်ပါ..." onkeypress="handleKeyPress(event)" style="color: #ffffff;" aria-label="Chat message">
+          <button onclick="sendMessage()" data-i18n="sendBtn">ပို့မည်</button>
+        </div>
+      </div>
+
+      <div class="schedule-table-container">
+        <div class="table-header-row">
+          <div></div>
+          <div>Modern</div>
+          <div>Internet</div>
+          <div>TW</div>
+        </div>
+        
+        <div class="table-row-group">
+          <div class="market-row-item">
+            <div class="row-time-label">09:30 AM</div>
+            <div id="t0930_modern" class="row-val">--</div>
+            <div id="t0930_internet" class="row-val">--</div>
+            <div id="t0930_tw" class="row-val">--</div>
+          </div>
+          
+          <div class="market-row-item">
+            <div class="row-time-label green-label">12:01 PM</div>
+            <div id="t1201_modern" class="row-val green-val" style="grid-column: span 3;">--</div>
+          </div>
+
+          <div class="market-row-item">
+            <div class="row-time-label">02:00 PM</div>
+            <div id="t1400_modern" class="row-val">--</div>
+            <div id="t1400_internet" class="row-val">--</div>
+            <div id="t1400_tw" class="row-val">--</div>
+          </div>
+
+          <div class="market-row-item">
+            <div class="row-time-label green-label">04:30 PM</div>
+            <div id="t1630_modern" class="row-val green-val" style="grid-column: span 3;">--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+ <!-- PAGE 3: 2D History -->
+    <div id="page-2d-history" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;">
+        <span style="font-size: 20px; font-weight: bold; color: #ffffff; cursor: pointer;" onclick="switchTab('page-home', document.querySelector('.nav-item'))">←</span>
+        <div class="live-title" style="font-size: 18px; font-weight: bold; color: #ffffff;">2D Calendar</div>
+        <span style="font-size: 18px; color: #ffffff; cursor: pointer;">🔍</span>
+      </div>
+      
+      <div id="historyListContainer" class="history-list-container"></div>
+    </div>
+
+
+<!-- 📌 တတိယစာမျက်နှာ: 2D တွက်ရန် ဇယားကွက်နှင့် တည်ငြိမ်သော Canvas စနစ် -->
+<div id="page-threed-calculator" class="tab-content">
+    
+    <!-- Header & Pencil Control Row -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+            <h3 style="color: #d97706; font-size: 16px; margin: 0; font-weight: bold;">🧮 2D တွက်ရန် ဇယားကွက်</h3>
+            <button id="calcResetBtn" style="background: #ef4444; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; color: #fff; font-size: 12px; font-weight: bold; width: fit-content; display: flex; align-items: center; gap: 4px;">
+                <span>↺</span> အသစ်စရန်
+            </button>
+        </div>
+
+        <!-- 🔼🔽 အပေါ်/အောက် ရက်စွဲပြောင်း ခလုတ်များ -->
+        <div style="display: flex; flex-direction: column; gap: 4px; align-items: center; margin: 0 10px;">
+            <button id="calcPrevDaysBtn" style="background: #d97706; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="နောက်ထပ် ၁၀ ရက်စာ (အဟောင်းသို့)">🔼</button>
+            <button id="calcNextDaysBtn" style="background: #d97706; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;" title="ယခုနောက်ဆုံး စာမျက်နှာသို့">🔽</button>
+        </div>
+
+        <!-- ညာဘက်ခြမ်းရှိ ခဲတံနှင့် အရောင်အတုံးများ -->
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+            <button id="calcPencilBtn" style="background: #2563eb; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #fff; font-size: 13px; font-weight: bold;">✏️ ခဲတံ</button>
+            <div id="calcColorRow" style="display: flex; gap: 6px; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; margin-top: 4px;">
+                <div class="calc-color" data-color="#000000" style="width: 14px; height: 14px; background: #000000; border-radius: 50%; cursor: pointer; border: 2px solid #000;"></div>
+                <div class="calc-color" data-color="#ef4444" style="width: 14px; height: 14px; background: #ef4444; border-radius: 50%; cursor: pointer;"></div>
+                <div class="calc-color" data-color="#16a34a" style="width: 14px; height: 14px; background: #16a34a; border-radius: 50%; cursor: pointer;"></div>
+                <div class="calc-color" data-color="#2563eb" style="width: 14px; height: 14px; background: #2563eb; border-radius: 50%; cursor: pointer;"></div>
+                <div class="calc-color" data-color="#d97706" style="width: 14px; height: 14px; background: #d97706; border-radius: 50%; cursor: pointer;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ဇယားကွက်နှင့် Canvas Wrapper -->
+    <div id="calcWrapper">
+        <!-- 💡 ဤနေရာတွင် Static HTML ဇယားကွက်တန်းများကို လုံးဝမထည့်ဘဲ JavaScript မှ API ဖြင့် ၁၀ ရက်စာကိုသာ အတိအကျ ဖြည့်သွင်းပေးမည် -->
+        <div id="calcGridContainer">
+            <!-- JavaScript မှ t0930, t1201, t1400, t1630 ဒေတာများကို ဤနေရာသို့ ၁၀ ရက်စာ တိကျစွာ ထည့်သွင်းမည် -->
+        </div>
+
+        <!-- လွတ်လပ်စွာ ရေးခြစ်နိုင်သော တည်ငြိမ် Canvas Layer -->
+        <canvas id="drawingCanvas"></canvas>
+    </div>
+</div>
+
+    <!-- PAGE 5: Settings / More -->
+<div id="page-more" class="tab-content">
+  <div class="card" style="background: transparent !important; box-shadow: none !important; border: none !important; padding: 0;">
+    <h2 style="color: var(--text-color); margin-bottom: 15px;" data-i18n="settingsTitle">⚙ Settings</h2>
+    
+    <div class="settings-list" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+      
+  <!-- ၁။ ဘာသာစကား ဆက်တင်တန်း (Language Sub-menu Trigger) -->
+     <div class="settings-item" onclick="switchTab('page-language', document.querySelector('.nav-item'))" style="cursor: pointer;">
+       <span data-i18n="langLabel">🌐 ဘာသာစကား (Language)</span>
+       <span>➔</span>
+     </div>
+
+      <!-- ၂။ Dark Mode Toggle -->
+      <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: #1e3a8a; border: 1.5px solid #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: #ffffff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); width: 100%; box-sizing: border-box;">
+        <span data-i18n="darkModeLabel">🌙 ညကြည့်စတိုင် (Dark Mode)</span>
+        <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 26px;">
+          <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this)" style="opacity: 0; width: 0; height: 0;">
+          <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
+        </label>
+      </div>
+
+      <!-- ၃။ အပ်ပလီကေးရှင်းအကြောင်း -->
+      <div class="settings-item" style="display: flex; justify-content: space-between; align-items: center; background: #1e3a8a; border: 1.5px solid #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: #ffffff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); width: 100%; box-sizing: border-box;">
+        <span data-i18n="aboutLabel">ℹ အပ်ပလီကေးရှင်းအကြောင်း (Draft)</span>
+        <span>➔</span>
+      </div>
+
+      <!-- ၄။ ကိုယ်ရေးလုံခြုံမှု မူဝါဒ -->
+      <div class="settings-item" onclick="location.href='/privacy-policy'" style="display: flex; justify-content: space-between; align-items: center; background: #1e3a8a; border: 1.5px solid #ef4444; padding: 12px 16px; border-radius: 12px; font-size: 15px; font-weight: 500; color: #ffffff; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); width: 100%; box-sizing: border-box;">
+        <span data-i18n="privacyLabel">🔒 ကိုယ်ရေးလုံခြုံမှု မူဝါဒ (Draft)</span>
+        <span>➔</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- PAGE: Language Selection -->
+  <div id="page-language" class="tab-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;">
+      <span style="font-size: 20px; font-weight: bold; color: #ffffff; cursor: pointer;" onclick="switchTab('page-more', document.querySelector('.nav-item:last-child'))">←</span>
+      <div class="live-title" style="font-size: 18px; font-weight: bold; color: #ffffff;" data-i18n="langPageTitle">Change Language</div>
+      <span></span>
+    </div>
+
+    <div class="card" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+      <!-- Myanmar Option -->
+      <div class="settings-item" onclick="setAppLanguage('my')" style="cursor: pointer; justify-content: space-between;">
+        <span>မြန်မာ (Myanmar)</span>
+        <input type="radio" name="langRadio" id="radioMy" style="width: 18px; height: 18px; accent-color: #ef4444; cursor: pointer;">
+      </div>
+
+      <!-- English Option -->
+      <div class="settings-item" onclick="setAppLanguage('en')" style="cursor: pointer; justify-content: space-between;">
+        <span>English</span>
+        <input type="radio" name="langRadio" id="radioEng" style="width: 18px; height: 18px; accent-color: #ef4444; cursor: pointer;">
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('page-home', this)"><span class="nav-icon">🏠</span><span>Home</span></button>
+    <button class="nav-item" onclick="switchTab('page-2d-history', this)"><span class="nav-icon">📅</span><span>2D မှတ်တမ်း</span></button>
+<button class="nav-item" onclick="switchTab('page-threed-calculator', this)"><span class="nav-icon">✍️</span><span>2D တွက်ရန်</span></button>
+    <button class="nav-item" onclick="switchTab('page-more', this)"><span class="nav-icon">⚙</span><span>More</span></button>
+  </div>
+
+  <script>
+    
+    function initLanguageUI() {
+      const toggleBtn = document.getElementById('langToggleBtn');
+      const optMy = document.getElementById('optMy');
+      const optEng = document.getElementById('optEng');
+
+      if (!toggleBtn) return;
+
+      if (currentLang === 'en') {
+        toggleBtn.classList.add('eng-mode');
+        optMy.classList.remove('active');
+        optEng.classList.add('active');
+      } else {
+        toggleBtn.classList.remove('eng-mode');
+        optEng.classList.remove('active');
+        optMy.classList.add('active');
+      }
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'my' ? 'en' : 'my';
+      localStorage.setItem('app_lang', currentLang);
+      initLanguageUI();
+      updateLanguageTexts();
+    }
+    let currentLang = localStorage.getItem('app_lang') || 'my';
+
+    // 🌙 Dark Mode initialization (Default က Light Mode ဖြစ်ပြီး User ကဖွင့်မှ Dark ဖြစ်မည်)
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedDarkMode = localStorage.getItem('dark_mode');
+      const toggleEl = document.getElementById('darkModeToggle');
+      
+      if (savedDarkMode === 'true') {
+        document.documentElement.classList.add('dark-mode');
+        if (toggleEl) toggleEl.checked = true;
+      } else {
+        document.documentElement.classList.remove('dark-mode');
+        if (toggleEl) toggleEl.checked = false;
+      }
+      updateLanguageUIState();
+      updateLanguageTexts();
+    });
+
+    function toggleDarkMode(checkbox) {
+      if (checkbox.checked) {
+        document.documentElement.classList.add('dark-mode');
+        localStorage.setItem('dark_mode', 'true');
+      } else {
+        document.documentElement.classList.remove('dark-mode');
+        localStorage.setItem('dark_mode', 'false');
+      }
+    }
+
+    // 🌐 Multi-language Support (Myanmar & English)
+    const translations = {
+    my: {
+      settingsTitle: "⚙ Settings",
+      langLabel: "🌐 ဘာသာစကား (Language)",
+      darkModeLabel: "🌙 ညကြည့်စတိုင် (Dark Mode)",
+      aboutLabel: "ℹ အပ်ပလီကေးရှင်းအကြောင်း (Draft)",
+      privacyLabel: "🔒 ကိုယ်ရေးလုံခြုံမှု မူဝါဒ (Draft)",
+      langPageTitle: "ဘာသာစကားပြောင်းရန်"
+    },
+    en: {
+      settingsTitle: "⚙ Settings",
+      langLabel: "🌐 Language",
+      darkModeLabel: "🌙 Dark Mode",
+      aboutLabel: "ℹ About App (Draft)",
+      privacyLabel: "🔒 Privacy Policy (Draft)",
+      langPageTitle: "Change Language"
+    }
+  };
+
+    // ဘာသာစကားအသစ် သတ်မှတ်ခြင်းနှင့် Radio Button များကို ထိန်းချုပ်ခြင်း
+    function setAppLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('app_lang', currentLang);
+      updateLanguageUIState();
+      updateLanguageTexts();
+      // ရွေးချယ်ပြီးပါက Settings စာမျက်နှာ (More) သို့ ပြန်သွားရန်
+      switchTab('page-more', document.querySelectorAll('.nav-item')[4]);
+    }
+
+    function updateLanguageUIState() {
+      const radioMy = document.getElementById('radioMy');
+      const radioEng = document.getElementById('radioEng');
+      if (!radioMy || !radioEng) return;
+
+      if (currentLang === 'en') {
+        radioEng.checked = true;
+        radioMy.checked = false;
+      } else {
+        radioMy.checked = true;
+        radioEng.checked = false;
+      }
+    }
+
+    function updateLanguageTexts() {
+      const t = translations[currentLang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.innerText = t[key];
+      });
+    }
+    let current2D = "--";
+  let announcedTimes = {};
+  let soundEnabled = true;
+  let isLiveActive = false;
+
+  // 🔴 4:15 မှ 4:30 အတွင်း ၁ မိနစ်လျှင် အနည်းဆုံး ၁ ကြိမ် အသံထွက်စေရန်အတွက် ခြေရာခံဗေဒင်
+  let lastAudioAnnounceTime = 0;
+
+    function switchTab(pageId, btn) {
+      document.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      
+      const targetPage = document.getElementById(pageId);
+      if (targetPage) {
+        targetPage.classList.add('active');
+      }
+      
+      if (btn) {
+        btn.classList.add('active');
+      }
+
+      if (pageId === 'page-2d-history') {
+        fetchHistoryList();
+      }
+
+      if (pageId === 'page-threed-calculator') {
+        loadThreeDCalculatorGrid();
+      }
+    }
+    
+
+    function extractBoundary2D(value) {
+      if (value === undefined || value === null) return '--';
+      const text = String(value).trim();
+      if (!text || text === '--') return '--';
+      // Backward compatibility: old records like "85 / 14" are displayed as the actual 12:01/4:30 result: "14".
+      if (text.includes('/')) {
+        const parts = text.split('/').map(v => v.trim()).filter(Boolean);
+        return parts.length ? parts[parts.length - 1] : '--';
+      }
+      return text;
+    }
+
+    async function fetchHistoryList() {
+      try {
+        const res = await fetch('/api/history');
+        const data = await res.json();
+        if (data.success && data.history) {
+          const container = document.getElementById('historyListContainer');
+          if (data.history.length === 0) {
+            container.innerHTML = `<div class="card" style="color: #94a3b8; padding: 30px;">ယခုထိ သိမ်းဆည်းထားသော မှတ်တမ်း မရှိသေးပါ။ နေ့လည် 12:01 နှင့် ညနေ 4:30 ချိန်များတွင် အလိုအလျောက် မှတ်တမ်းဝင်ပါမည်။</div>`;
+            return;
+          }
+
+          container.innerHTML = data.history.map(item => `
+            <div class="history-card">
+              <div class="history-date-badge">${item.dateFormatted || 'နေ့စွဲ'}</div>
+              <div class="history-top-results">
+                <div class="history-res-box">
+                  <div class="history-res-title">12:01 PM</div>
+                  <div class="history-res-val green-val">${extractBoundary2D(item.t1201 && item.t1201 !== '--' ? item.t1201 : item.schedule?.t1201?.modern) || '--'}</div>
+                  <div class="history-res-sub"><span>${item.setIndex1201 || item.setIndex || '--'}</span><span>${item.value1201 || item.value || '--'}</span></div>
+                </div>
+                <div class="history-res-box">
+                  <div class="history-res-title">4:30 PM</div>
+                  <div class="history-res-val green-val">${extractBoundary2D(item.t430 && item.t430 !== '--' ? item.t430 : item.schedule?.t1630?.modern) || '--'}</div>
+                  <div class="history-res-sub"><span>${item.setIndex430 || item.setIndex || '--'}</span><span>${item.value430 || item.value || '--'}</span></div>
+                </div>
+              </div>
+              <div class="history-sub-table">
+                <div class="history-sub-header">
+                  <div></div><div>Modern</div><div>Internet</div><div>TW</div>
+                </div>
+                <div class="history-sub-row">
+                  <div class="history-sub-label">09:30 AM</div>
+                  <div>${item.schedule?.t0930?.modern || '--'}</div>
+                  <div>${item.schedule?.t0930?.internet || '--'}</div>
+                  <div>${item.schedule?.t0930?.tw || '--'}</div>
+                </div>
+                <div class="history-sub-row">
+                  <div class="history-sub-label">02:00 PM</div>
+                  <div>${item.schedule?.t1400?.modern || '--'}</div>
+                  <div>${item.schedule?.t1400?.internet || '--'}</div>
+                  <div>${item.schedule?.t1400?.tw || '--'}</div>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (e) {}
+    }
+
+    function speak2D() {
+      if (current2D !== "--" && current2D.length === 2) {
+        if (!soundEnabled) return;
+        let d1 = current2D[0];
+        let d2 = current2D[1];
+
+        let audio1 = new Audio(`./sounds/${d1}.mp3`);
+        let audio2 = new Audio(`./sounds/${d2}.mp3`);
+
+        audio1.play().catch(e => console.log(e));
+        audio1.onended = function() {
+          audio2.play().catch(e => console.log(e));
+        };
+      }
+    }
+
+    function playAnnouncement(filename) {
+      if (!soundEnabled) return;
+      let audio = new Audio(`./sounds/${filename}.mp3`);
+      audio.play().catch(e => console.log(e));
+    }
+
+    
+    const moneyImages = [
+      './images/Myanmar-5-26-sm-removebg-preview.png',
+      './images/myanmar-money-10000-kyats-high-260nw-2445695....png'
+    ];
+
+    function startMoneyRain() {
+      if (window.isMoneyRainActive) return;
+      window.isMoneyRainActive = true;
+
+      const rainInterval = setInterval(() => {
+        const img = document.createElement('img');
+        const randomImg = moneyImages[Math.floor(Math.random() * moneyImages.length)];
+        img.src = randomImg;
+        img.classList.add('falling-money');
+        img.style.left = Math.random() * window.innerWidth + 'px';
+        document.body.appendChild(img);
+
+        setTimeout(() => {
+          img.remove();
+        }, 4000);
+      }, 250);
+
+      setTimeout(() => {
+        clearInterval(rainInterval);
+        window.isMoneyRainActive = false;
+      }, 15000);
+    }
+
+    function updateMarketUI(status) {
+      const statusEl = document.getElementById('marketStatus');
+      if (status === 'live') {
+        statusEl.className = 'status-indicator status-live';
+        statusEl.innerHTML = '<span class="spinner"></span> <span>Live</span>';
+      } else if (status === 'paused') {
+        statusEl.className = 'status-indicator status-paused';
+        statusEl.innerHTML = '<span>✔ နေ့လည်ပိုင်းစျေးကွက်အနားယူချိန်</span>'; 
+      } else {
+        statusEl.className = 'status-indicator status-closed';
+        statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
+      }
+    }
+
+    function checkMarketSchedule() {
+      const now = new Date();
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const myanmarTime = new Date(utc + (3600000 * 6.5));
+      const day = myanmarTime.getDay();
+      
+      if (day === 0 || day === 6) {
+        isLiveActive = false;
+        updateMarketUI('closed');
+        document.getElementById('notice').innerText = "စနေ/တနင်္ဂနွေ ပိတ်ရက် ဖြစ်ပါသည်။";
+        return;
+      }
+
+      const hours = myanmarTime.getHours();
+      const minutes = myanmarTime.getMinutes();
+      const seconds = myanmarTime.getSeconds();
+      const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+
+      const morningStart = 9 * 3600 + 30 * 60;
+      const morningEnd = 12 * 3600 + 1 * 60;
+      const afternoonStart = 14 * 3600;
+      const afternoonEnd = 16 * 3600 + 30 * 60;
+
+      let inMorningLive = (totalSeconds >= morningStart && totalSeconds <= morningEnd);
+      let inAfternoonLive = (totalSeconds >= afternoonStart && totalSeconds <= afternoonEnd);
+
+      if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
+        updateMarketUI('paused');
+      } else if (totalSeconds > afternoonEnd || totalSeconds < morningStart) {
+        updateMarketUI('closed');
+      }
+
+      if (inMorningLive || inAfternoonLive) {
+        isLiveActive = true;
+        updateMarketUI('live');
+
+        if (hours === 11 && minutes === 45 && seconds === 0 && !announcedTimes['m1145']) {
+          announcedTimes['m1145'] = true;
+          playAnnouncement('min15');
+        }
+        if (hours === 11 && minutes === 58 && seconds === 0 && !announcedTimes['m1158']) {
+          announcedTimes['m1158'] = true;
+          playAnnouncement('min3');
+        }
+
+        // 12:01 PM result ကို server.js က Myanmar Time 12:01:00 AM/PM boundary မှာ capture/lock လုပ်သည်။
+        // Front-end က live value ကို ခန့်မှန်းပြီး history result အဖြစ် မသိမ်းပါ။
+        if (hours === 12 && minutes === 1 && seconds === 0 && !announcedTimes['m1201']) {
+          announcedTimes['m1201'] = true;
+          startMoneyRain();
+        }
+
+        if (hours === 16 && minutes === 15 && seconds === 0 && !announcedTimes['e1615']) {
+          announcedTimes['e1615'] = true;
+          playAnnouncement('min15');
+        }
+        if (hours === 16 && minutes === 27 && seconds === 0 && !announcedTimes['e1627']) {
+          announcedTimes['e1627'] = true;
+          playAnnouncement('min3');
+        }
+
+        // 4:30 PM result ကို server.js က Myanmar Time 16:30:00 boundary မှာ capture/lock လုပ်သည်။
+        // Front-end က live value ကို ခန့်မှန်းပြီး history result အဖြစ် မသိမ်းပါ။
+        if (hours === 16 && minutes === 30 && seconds === 0 && !announcedTimes['e1630']) {
+          announcedTimes['e1630'] = true;
+          startMoneyRain();
+        }
+
+      } else {
+          isLiveActive = false;
+          
+          // 12:01 PM နှင့် 4:30 PM အတိရောက်ချိန်တွင် အချက်ပြမှုများ ချောမွေ့စေရန် (5-Second Buffer Support)
+          if (hours === 12 && minutes === 1 && seconds <= 5) {
+              document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
+          }
+          else if (hours === 16 && minutes === 30 && seconds <= 5) {
+              document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
+          }
+          else if ((hours === 12 && minutes >= 1 && totalSeconds < afternoonStart)) {
+              const statusEl = document.getElementById('marketStatus');
+              statusEl.className = 'status-indicator status-paused';
+              statusEl.innerHTML = '<span>✔ နေ့လည်ပိုင်းစျေးကွက်အနားယူချိန်</span>';
+              document.getElementById('updateTime').innerText = "Last Update: 12:01:00 PM";
+          }
+          else if ((hours === 16 && minutes >= 30) || hours > 16) {
+              const statusEl = document.getElementById('marketStatus');
+              statusEl.className = 'status-indicator status-closed';
+              statusEl.innerHTML = '<span>✔ စျေးကွက်ပိတ်ချိန်</span>';
+              document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
+          } else {
+              if (totalSeconds > morningEnd && totalSeconds < afternoonStart) {
+                  updateMarketUI('paused');
+              } else {
+                  updateMarketUI('closed');
+              }
+          }
+      }
+
+      if (hours === 9 && minutes === 0 && seconds === 0 && !announcedTimes['reset_0900']) {
+        announcedTimes = { 'reset_0900': true };
+        document.getElementById('t0930_modern').innerText = "--";
+        document.getElementById('t0930_internet').innerText = "--";
+        document.getElementById('t0930_tw').innerText = "--";
+        document.getElementById('t1201_modern').innerText = "--";
+        document.getElementById('t1400_modern').innerText = "--";
+        document.getElementById('t1400_internet').innerText = "--";
+        document.getElementById('t1400_tw').innerText = "--";
+        document.getElementById('t1630_modern').innerText = "--";
+      } else if (hours !== 9) {
+        announcedTimes['reset_0900'] = false;
+      }
+    }
+
+    function formatSourceHighlight(rawText, type) {
+      if (!rawText) return rawText;
+      let textStr = String(rawText).trim();
+      let cleanText = textStr.replace(/,/g, '');
+      if (!cleanText.includes('.')) return textStr;
+
+      let parts = cleanText.split('.');
+      let intPart = parts[0];
+      let decPart = parts[1];
+
+      if (type === 'index') {
+        if (decPart && decPart.length > 0) {
+          let lastDigit = decPart.slice(-1);
+          let restDec = decPart.slice(0, -1);
+          return `${intPart}.${restDec}<span class="source-digit">${lastDigit}</span>`;
+        }
+      } else if (type === 'value') {
+        if (intPart && intPart.length > 0) {
+          let lastIntDigit = intPart.slice(-1);
+          let restInt = intPart.slice(0, -1);
+          return `${restInt}<span class="source-digit">${lastIntDigit}</span>.${decPart}`;
+        }
+      }
+      return textStr;
+    }
+
+    async function fetchScheduleData() {
+      try {
+        const res = await fetch('/api/admin/data');
+        const data = await res.json();
+        if (data.success && data.adminResults) {
+          const s0930 = data.adminResults["09:30 AM"];
+          if (s0930) {
+            document.getElementById('t0930_modern').innerText = s0930.modern !== "--" ? s0930.modern : "--";
+            document.getElementById('t0930_internet').innerText = s0930.internet !== "--" ? s0930.internet : "--";
+            document.getElementById('t0930_tw').innerText = s0930.tw !== "--" ? s0930.tw : "--";
+          }
+      const s1201 = data.adminResults["12:01 PM"];
+          // 💡 ပြင်ဆင်ချက် - data.t1201 သို့မဟုတ် s1201 မှ တရားဝင် တန်ဖိုးအစစ်အမှန် အမှန်တကယ် ပါလာမှသာ လက်ခံမည်
+          let saved1201 = '--';
+          if (data.t1201 && data.t1201 !== '--') {
+              saved1201 = data.t1201;
+          } else if (s1201?.modern && s1201.modern !== '--') {
+              saved1201 = s1201.modern;
+          }
+
+          // 12:01:05 တွင် ဆာဗာမှ တရားဝင် Last Update အဖြစ် အပြီးသတ်တန်ဖိုး ပို့လာမှသာ UI တွင် အသစ်ပြောင်းမည်
+          // ကြားကာလ ယာယီတန်ဖိုးများ သို့မဟုတ် ရက်လွန်တန်ဖိုးဟောင်းများ ဝင်မလာစေရန် တားဆီးသည်
+          if (saved1201 !== '--') {
+              document.getElementById('t1201_modern').innerText = extractBoundary2D(saved1201);
+          } else {
+              // တန်ဖိုးအသစ် အမှန်တကယ် မရောက်သေးသမျှ ဒေတာဟောင်း မကူးစက်စေရန် '--' ဖြင့်သာ ထိန်းထားမည်
+              document.getElementById('t1201_modern').innerText = '--';
+          }
+          const s1400 = data.adminResults["02:00 PM"];
+          if (s1400) {
+            document.getElementById('t1400_modern').innerText = s1400.modern !== "--" ? s1400.modern : "--";
+            document.getElementById('t1400_internet').innerText = s1400.internet !== "--" ? s1400.internet : "--";
+            document.getElementById('t1400_tw').innerText = s1400.tw !== "--" ? s1400.tw : "--";
+          }
+          const s1630 = data.adminResults["04:30 PM"];
+      let saved1630 = data.t430 && data.t430 !== '--' ? data.t430 : (s1630?.modern || '--');
+      
+      // ညသန်းခေါင် ၁၂:၀၀ ကျော်လွန်သွား၍ ဆာဗာမှ '--' ပို့လာလျှင်သော်လည်းကောင်း၊ 
+      // ဒေတာအသစ်မရှိတော့လျှင်သော်လည်းကောင်း ယခင် ညနေ ၄:၃၀ က ရလဒ်ဟောင်းကို ဆက်လက်ထိန်းသိမ်းမည်
+      if ((saved1630 === '--' || !saved1630) && document.getElementById('t1630_modern').innerText !== '--') {
+          saved1630 = document.getElementById('t1630_modern').innerText;
+      }
+
+      if (saved1630 !== '--') document.getElementById('t1630_modern').innerText = extractBoundary2D(saved1630);
+          
+        }
+      } catch (e) {
+        console.error("Schedule fetch error:", e);
+      }
+    }
+
+async function fetchLiveData() {
+  fetchScheduleData();
+
+  try {
+    const res = await fetch('/api/live');
+    const data = await res.json();
+    
+    // မြန်မာစံတော်ချိန် တွက်ချက်ခြင်း
+    const now = new Date();
+    const myanmarTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (3600000 * 6.5));
+    const currentHour = myanmarTime.getHours();
+    const currentMin = myanmarTime.getMinutes();
+    const currentSec = myanmarTime.getSeconds();
+    const totalSec = currentHour * 3600 + currentMin * 60 + currentSec;
+
+    const morningStart = 9 * 3600 + 30 * 60;       // မနက် ၉:၃၀
+    const morningEnd = 12 * 3600 + 1 * 60;         // နေ့လည် ၁၂:၀၁
+    const afternoonStart = 14 * 3600;              // ညနေ ၂:၀၀
+    const marketClose = 16 * 3600 + 30 * 60;       // ညနေ ၄:၃၀
+
+    if(data.success) {
+      // Hot Numbers အချက်အလက်များ တိုက်ရိုက် ပြသရန်
+      if (data.hotNumbers) {
+        const morningEl = document.getElementById('hotMorningDisplay');
+        const eveningEl = document.getElementById('hotEveningDisplay');
+        if (morningEl) morningEl.innerText = (data.hotNumbers.morning && data.hotNumbers.morning.number) ? data.hotNumbers.morning.number : '--';
+        if (eveningEl) eveningEl.innerText = (data.hotNumbers.evening && data.hotNumbers.evening.number) ? data.hotNumbers.evening.number : '--';
+      }
+      if (data.holidayNotice && data.holidayNotice.trim() !== "") {
+        const tickerContainer = document.getElementById('holidayTickerContainer');
+        const tickerText = document.getElementById('holidayTickerText');
+        if (tickerContainer && tickerText) {
+            tickerContainer.style.display = 'block';
+            tickerText.innerText = data.holidayNotice;
+        }
+    } else {
+        const tickerContainer = document.getElementById('holidayTickerContainer');
+        if (tickerContainer) tickerContainer.style.display = 'none';
+    }
+   // SET Index ဂဏန်းများအတွက် သီးသန့် အန်နီမေးရှင်းထိန်းချုပ်ခြင်း
+      if (data.setIndex) {
+        const setIndexEl = document.getElementById('setIndex');
+        const formattedIndex = formatSourceHighlight(data.setIndex, 'index');
+        if (setIndexEl.innerHTML !== formattedIndex) {
+          setIndexEl.innerHTML = formattedIndex;
+          setIndexEl.classList.remove('number-flip-animate');
+          void setIndexEl.offsetWidth; // Trigger reflow to restart animation
+          setIndexEl.classList.add('number-flip-animate');
+        }
+      }
+
+      // Value(M.Bath) ဂဏန်းများအတွက် သီးသန့် အန်နီမေးရှင်းထိန်းချုပ်ခြင်း
+      const valToDisplay = data.setValue || data.value || data.marketValue;
+      if (valToDisplay) {
+        const setValueEl = document.getElementById('setValue');
+        const formattedValue = formatSourceHighlight(valToDisplay, 'value');
+        if (setValueEl.innerHTML !== formattedValue) {
+          setValueEl.innerHTML = formattedValue;
+          setValueEl.classList.remove('number-flip-animate');
+          void setValueEl.offsetWidth; // Trigger reflow to restart animation
+          setValueEl.classList.add('number-flip-animate');
+        }
+      }
+      if (data.live2D && data.live2D !== "--") {
+        // 💡 နေ့လည် ၁၂:၀၁ အကူးအပြောင်းကာလ (12:01:00 - 12:01:05) တွင် မနေ့က တန်ဖိုးဟောင်း ဝင်မလာစေရန် တားဆီးခြင်း
+        const liveCheckNow = new Date();
+        const liveMMTime = new Date(liveCheckNow.getTime() + (liveCheckNow.getTimezoneOffset() * 60000) + (3600000 * 6.5));
+        const isMiddayTransitionWindow = liveMMTime.getHours() === 12 && liveMMTime.getMinutes() === 1 && liveMMTime.getSeconds() <= 8;
+
+        // အကယ်၍ အကူးအပြောင်းကာလအတွင်း ဖြစ်နေပြီး ဆာဗာ၏ Last Update အချိန်မှာ 12:01:00 မဖြစ်သေးပါက တန်ဖိုးဟောင်းကို ကျော်လွန်မည်
+        if (isMiddayTransitionWindow && data.time && !data.time.includes("12:01:00") && !data.time.includes("12:01:01") && !data.time.includes("12:01:02") && !data.time.includes("12:01:03") && !data.time.includes("12:01:04") && !data.time.includes("12:01:05")) {
+             // တန်ဖိုးအသစ်အစစ်အမှန် မရောက်သေးသမျှ တန်ဖိုးဟောင်းပြခြင်းကို တားဆီးမည်
+             return;
+        }
+
+        document.getElementById('updateTime').innerText = "Last Update: " + data.time;
+
+        const live2DVal = data.live2D; 
+        const live2DEl = document.getElementById('live2D');
+        const firstDigit = live2DVal.length >= 2 ? live2DVal.slice(0, -1) : "";
+        const lastDigit = live2DVal.length >= 2 ? live2DVal.slice(-1) : live2DVal;
+
+        // ၁။ မနက်ပိုင်း (၉:၃၀ - ၁၂:၀၁) နှင့် ညနေပိုင်း (၂:၀၀ - ၄:၃၀) အထိ -> Live Pulse / Heartbeat Wave Effect ဆက်တိုက်ပြသမည်
+        if ((totalSec >= morningStart && totalSec < morningEnd) || (totalSec >= afternoonStart && totalSec <= marketClose)) {
+          if (live2DVal.length >= 2) {
+            live2DEl.innerHTML = `<span class="first-digit market-breathing">${firstDigit}</span><span class="market-breathing" style="margin-left: 6px;">${lastDigit}</span>`;
+          } else {
+            live2DEl.innerText = live2DVal;
+          }
+        } 
+        // ၂။ အခြားဈေးပိတ်ချိန်များ
+        else {
+          live2DEl.innerText = live2DVal;
+        }
+
+       // 🔴 အသံထွက်စနစ် ထိန်းချုပ်မှု အသစ် (ညနေ 4:15 မှ 4:30 အထိ အထူးသီးသန့် စနစ်)
+          const currentTimeMs = now.getTime();
+          const range415 = 16 * 3600 + 15 * 60; // ညနေ 4:15 စတင်သည့် စက္ကန့်တန်ဖိုး
+          const isInSpecialRange = (totalSec >= range415 && totalSec <= marketClose);
+
+          if (isInSpecialRange) {
+            // 1. ဂဏန်းအသစ်သို့ ပြောင်းသွားပါက ချက်ချင်းအသံထွက်မည်၊ တိုင်ပတ်အချိန်ကိုလည်း အသစ်တင်မည်
+            if (current2D !== data.live2D) {
+              current2D = data.live2D;
+              speak2D();
+              lastAudioAnnounceTime = currentTimeMs;
+            } 
+            // 2. ဂဏန်းမပြောင်းဘဲ ငြိမ်နေသော်လည်း ၁ မိနစ် (60,000 ms) ပြည့်သွားပါက လက်ရှိဂဏန်းကို ထပ်မံအသံထွက်ပေးမည်
+            else if (currentTimeMs - lastAudioAnnounceTime >= 60000) {
+              speak2D();
+              lastAudioAnnounceTime = currentTimeMs;
+            }
+          } else {
+            // 4:15 မတိုင်မီ ပုံမှန်အတိုင်း ဂဏန်းအပြောင်းအလဲရှိမှသာ အသံထွက်သည့်စနစ်
+            if (current2D !== data.live2D) {
+              current2D = data.live2D;
+              speak2D();
+            }
+          }
+      } else {
+        // 💡 ညသန်းခေါင် ၁၂:၀၀ ကျော်၍ ဆာဗာမှ '--' ပို့လာချိန်တွင် ညနေ ၄:၃၀ က ဂဏန်းဟောင်းကို ဆက်ထိန်းရန်
+        if ((totalSec > marketClose || totalSec < morningStart) && document.getElementById('live2D').innerText !== '--') {
+          document.getElementById('updateTime').innerText = "Last Update: 04:30:00 PM";
+        } else {
+          document.getElementById('live2D').innerText = "--";
+        }
+      }
+    }
+  } catch(e) {
+  }
+}
+    function getChatGuestId() {
+      const key = '2dLiveMarketChatGuestId';
+      let id = '';
+      try { id = localStorage.getItem(key) || ''; } catch (e) {}
+      if (!/^[A-Za-z0-9_-]{12,80}$/.test(id)) {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+          id = 'g_' + window.crypto.randomUUID().replace(/-/g, '');
+        } else {
+          id = 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 18);
+        }
+        try { localStorage.setItem(key, id); } catch (e) {}
+      }
+      return id;
+    }
+
+   async function fetchChat() {
+      try {
+        const res = await fetch('/api/chat', { cache: 'no-store' });
+        const data = await res.json();
+        const chatDiv = document.getElementById('chatMessages');
+        const input = document.getElementById('chatInput');
+        const button = document.querySelector('.chat-input-row button');
+        if (!data.success) return;
+        
+        chatDiv.replaceChildren();
+        
+        // 🛑 Chat ပိတ်ထားချိန် (အဝါရောင် သတိပေးချက် ၄ တန်းနှင့် တောက်ပသော အရောင်များ)
+        if (!data.open) {
+          const notice = document.createElement('div');
+          notice.className = 'msg';
+          notice.style.cssText = "color: #facc15; font-weight: 650; line-height: 1.5;";
+          notice.innerHTML = `Chat ကို မြန်မာစံတော်ချိန်<br>နေ့လည် 11:00 မှ 12:10 နှင့်<br>ညနေ 3:30 မှ 4:40 အတွင်းသာ<br>အသုံးပြုနိုင်ပါသည်။`;
+          chatDiv.appendChild(notice);
+          
+          input.disabled = true;
+          if (button) button.disabled = true;
+          input.placeholder = 'Chat ပိတ်ထားပါသည်';
+          input.style.color = "#ffffff"; // အဖြူရောင်ရင့်ရင့်
+          return;
+        }
+        
+        // ✅ Chat ဖွင့်ချိန်
+        input.disabled = false;
+        if (button) button.disabled = false;
+        input.placeholder = 'စကားပြောရန် စာရိုက်ပါ...';
+        input.style.color = "#ffffff";
+        
+        (data.messages || []).forEach(m => {
+          const line = document.createElement('div');
+          line.className = 'msg';
+          line.style.color = "#ffffff";
+          const name = document.createElement('span');
+          name.className = 'msg-user';
+          name.textContent = String(m.user || 'Guest') + ': ';
+          line.appendChild(name);
+          line.appendChild(document.createTextNode(String(m.text || '')));
+          chatDiv.appendChild(line);
+        });
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+      } catch(e) { console.error('Chat fetch error:', e); }
+    }
+
+    async function sendMessage() {
+      const int = document.getElementById('chatInput');
+      const nameInput = document.getElementById('chatName');
+      const text = int.value.trim();
+      if(!text) return;
+      if(text.length > 500) {
+        alert('စာသားသည် အများဆုံး 500 လုံးအထိသာ ရပါမည်။');
+        return;
+      }
+      const sendButton = document.querySelector('.chat-input-row button');
+      if (sendButton) sendButton.disabled = true;
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            guestId: getChatGuestId(),
+            user: (nameInput.value.trim() || 'Guest').slice(0, 30),
+            text
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          int.value = '';
+          await fetchChat();
+        } else if (data.message) {
+          alert(data.message);
+        }
+      } catch(e) {
+        alert('Chat server သို့ ချိတ်ဆက်မရပါ။ ထပ်မံကြိုးစားပါ။');
+      } finally {
+        if (sendButton) sendButton.disabled = false;
+      }
+    }
+
+    function handleKeyPress(e) { if(e.key === 'Enter') sendMessage(); }
+
+    checkMarketSchedule();
+    fetchScheduleData();
+    fetchLiveData();
+    fetchChat();
+
+    setInterval(checkMarketSchedule, 1000);
+    setInterval(fetchLiveData, 3000);
+    setInterval(fetchChat, 2000);
+    setInterval(fetchScheduleData, 5000);
+
+    // 💡 အသစ်စရန် (Reset) ခလုတ် နှိပ်လိုက်သည့်အခါ ကင်းဗတ်စ်ပေါ်ရှိ ရေးခြစ်ချက်များကို ရှင်းလင်းခြင်း
+document.getElementById('calcResetBtn')?.addEventListener('click', () => {
+    const canvas = document.getElementById('drawingCanvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+});
+
+// 💡 အသစ်စရန် (Reset) ခလုတ် နှိပ်လိုက်သည့်အခါ ကင်းဗတ်စ်ပေါ်ရှိ ရေးခြစ်ချက်များကို ရှင်းလင်းခြင်း
+document.getElementById('calcResetBtn')?.addEventListener('click', () => {
+    const canvas = document.getElementById('drawingCanvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+});
+
+// 💡 စုစုပေါင်း ၂၀ ရက်စာကို ၁၀ ရက်စီ ၂ မျက်နှာခွဲ၍ ပြသရန် Pagination Logic
+let currentCalcOffset = 0; // 0 = အသစ်ဆုံး ၁၀ ရက်စာ (စာမျက်နှာ ၁), 10 = အဟောင်းဆုံး ၁၀ ရက်စာ (စာမျက်နှာ ၂)
+const calcLimit = 10;      
+
+// 🔼 အပေါ်ခလုတ်နှိပ်လျှင် (အဟောင်းဆုံး ၁၀ ရက်စာ / စာမျက်နှာ ၂ သို့ သွားမည်)
+const prevBtn = document.getElementById('calcPrevDaysBtn');
+if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+        currentCalcOffset = 10; // အဟောင်းဆုံး ၁၀ ရက်စာ
+        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
+    });
+}
+
+// 🔽 အောက်ခလုတ်နှိပ်လျှင် (အသစ်ဆုံး ၁၀ ရက်စာ / စာမျက်နှာ ၁ သို့ ပြန်လာမည်)
+const nextBtn = document.getElementById('calcNextDaysBtn');
+if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+        currentCalcOffset = 0; // အသစ်ဆုံး ၁၀ ရက်စာ
+        loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
+    });
+}
+
+// 💡 ဇယားကွက်ဒေတာကို API မှ offset နှင့် limit ဖြင့် တိကျစွာ ဆွဲထုတ်ပြသခြင်း
+async function loadThreeDCalculatorGrid(offset = 0, limit = 10) {
+    try {
+        // 1. ကင်းဗတ်စ်ပေါ်ရှိ ခဲတံရေးခြစ်ချက်များ မပျက်စေရန် Snapshot သိမ်းမည်
+        const canvas = document.getElementById('drawingCanvas');
+        let tempCanvasImage = null;
+        if (canvas) {
+            tempCanvasImage = canvas.toDataURL();
+        }
+
+        const response = await fetch(`/api/history?offset=${offset}&limit=${limit}`);
+        const data = await response.json();
+
+        const container = document.getElementById('calcGridContainer');
+        if (!container) return;
+
+        let html = '';
+        const records = (data && data.success && data.history) ? data.history : [];
+        
+        // ⚠️ အရေးကြီးသည်: အသစ်ဆုံးကို အပေါ်ဆုံးတွင် ပြသရန် (offset 0 အတွက်) နှင့် အစဉ်လိုက်မှန်ကန်စေရန်
+        // offset 0 (အသစ်ဆုံး ၁၀ ရက်) ဖြစ်လျှင် တစ်မျိုး၊ offset 10 (အဟောင်းဆုံး ၁၀ ရက်) ဖြစ်လျှင် တစ်မျိုး စီစဥ်မည်
+        const displayRecords = offset === 0 ? [...records].reverse() : records;
+
+        for (let i = 0; i < displayRecords.length; i++) {
+            const rec = displayRecords[i] || {};
+            const sched = rec.schedule || {};
+            
+            const t0930 = sched.t0930 || {}; 
+            const t1201 = sched.t1201 || {}; 
+            const t1400 = sched.t1400 || {}; 
+            const t1630 = sched.t1630 || {}; 
+
+            const mTop = `${t0930.modern || '--'} / ${t0930.internet || '--'}`;
+            const mRes = rec.t1201 && rec.t1201 !== '--' ? rec.t1201 : (t1201.modern || '--');
+
+            const eTop = `${t1400.modern || '--'} / ${t1400.internet || '--'}`;
+            const eRes = rec.t430 && rec.t430 !== '--' ? rec.t430 : (t1630.modern || '--');
+
+            html += `
+                <div class="calc-row-item">
+                    <div class="calc-sub-box">
+                        <div class="calc-top-text">${mTop}</div>
+                        <div class="calc-result-text">${mRes}</div>
+                    </div>
+                    <div class="calc-sub-box">
+                        <div class="calc-top-text">${eTop}</div>
+                        <div class="calc-result-text">${eRes}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+        
+        setTimeout(() => {
+            resizeCanvas();
+            if (canvas && tempCanvasImage) {
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                img.onload = function() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = tempCanvasImage;
+            }
+        }, 100);
+
+    } catch (err) {
+        console.error("Error loading calculator grid:", err);
+    }
+}
+
+// 🚀 စာမျက်နှာ စတင်ဝင်ရောက်လာသည်နှင့် အသစ်ဆုံး ၁၀ ရက်စာ (စာမျက်နှာ ၁) ကို အလိုအလျောက် တင်ပြမည်
+loadThreeDCalculatorGrid(currentCalcOffset, calcLimit);
+
+// Canvas Resize Function (မူလအတိုင်း လုံးဝမပြောင်းပါ)
+function resizeCanvas() {
+    const canvas = document.getElementById('drawingCanvas');
+    const wrapper = document.getElementById('calcWrapper');
+    if (canvas && wrapper) {
+        canvas.width = wrapper.offsetWidth;
+        canvas.height = wrapper.offsetHeight;
+    }
+}
+
+// ခဲတံ/ကင်းဗတ်စ် Drawing Logic (မူလအတိုင်း လုံးဝမပြောင်းပါ)
+let isDrawingActive = false;
+let currentDrawingColor = '#000000';
+
+document.getElementById('calcPencilBtn')?.addEventListener('click', () => {
+    isDrawingActive = !isDrawingActive;
+    const canvas = document.getElementById('drawingCanvas');
+    if (isDrawingActive) {
+        canvas.style.pointerEvents = 'auto';
+        document.getElementById('calcPencilBtn').style.background = '#16a34a';
+        document.getElementById('calcPencilBtn').innerText = '✍️ ရေးခြစ်နေသည်';
+    } else {
+        canvas.style.pointerEvents = 'none';
+        document.getElementById('calcPencilBtn').style.background = '#2563eb';
+        document.getElementById('calcPencilBtn').innerText = '✏️ ခဲတံ';
+    }
+});
+
+// အရောင်ရွေးချယ်မှု
+document.querySelectorAll('.calc-color').forEach(item => {
+    item.addEventListener('click', (e) => {
+        currentDrawingColor = e.target.getAttribute('data-color');
+        document.querySelectorAll('.calc-color').forEach(opt => opt.style.border = 'none');
+        e.target.style.border = '2px solid #000';
+    });
+});
+
+// Canvas Freehand Drawing Events (Touch Support - မူလအတိုင်း လုံးဝမပြောင်းပါ)
+const canvas = document.getElementById('drawingCanvas');
+if (canvas) {
+    const ctx = canvas.getContext('2d');
+    let painting = false;
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
+    }
+
+    function startPosition(e) {
+        if (!isDrawingActive) return;
+        painting = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+    }
+
+    function endPosition() {
+        painting = false;
+        ctx.beginPath();
+    }
+
+    function draw(e) {
+        if (!painting || !isDrawingActive) return;
+        e.preventDefault(); // ဖုန်း မျက်နှာပြင် Scroll မသွားအောင် တားဆီးခြင်း
+        const pos = getPos(e);
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = currentDrawingColor;
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+    }
+
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.addEventListener('mouseup', endPosition);
+    canvas.addEventListener('mousemove', draw);
+
+    canvas.addEventListener('touchstart', startPosition, { passive: false });
+    canvas.addEventListener('touchend', endPosition);
+    canvas.addEventListener('touchmove', draw, { passive: false });
+}
+// 🟢 Server ထံမှ တကယ့် Online လူဦးရေကို လက်ခံရယူပြီး ဖော်ပြခြင်း
+const socket = io();
+const realViewerCountEl = document.getElementById('realViewerCount');
+
+socket.on('updateViewerCount', (count) => {
+    if (realViewerCountEl) {
+        realViewerCountEl.textContent = count;
+    }
+});
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('audio-btn'); 
+      if (btn) {
+        if (soundEnabled) {
+            btn.innerHTML = "🔊 အသံဖွင့်ထားသည်";
+        } else {
+            btn.innerHTML = "🔇 အသံပိတ်ထားသည်";
+        }
+      }
+    }
+ 
+  </script>
+</body>
+</html>
