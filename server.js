@@ -23,6 +23,9 @@ app.use(cors());
 app.use(express.json({ limit: '16kb' }));
 app.use(express.static(__dirname));
 
+// 🔊 အသံဖိုင်များ ထည့်ထားသည့် sounds ဖိုဒါကို Public Static အဖြစ် ချိတ်ဆက်ခြင်း
+app.use('/sounds', express.static(path.join(__dirname, 'sounds')));
+
 const PORT = process.env.PORT || 3000;
 const LIVE_FETCH_INTERVAL_MS = 5000;
 
