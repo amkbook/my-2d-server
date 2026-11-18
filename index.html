@@ -1667,8 +1667,11 @@ if (canvas) {
 }
 // 🟢 Server ထံမှ တကယ့် Online လူဦးရေကို လက်ခံရယူပြီး ဖော်ပြခြင်း
 const socket = io('https://my-2d-server-1.onrender.com', {
-    transports: ['websocket', 'polling']
+    transports: ['polling', 'websocket'], // Polling ကို အရင်စတင်ရန် (APK WebView အတွက် အရေးကြီးသည်)
+    secure: true,
+    rejectUnauthorized: false
 });
+
 const realViewerCountEl = document.getElementById('realViewerCount');
 
 socket.on('updateViewerCount', (count) => {
