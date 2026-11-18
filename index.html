@@ -971,26 +971,28 @@
         let d1 = current2D[0];
         let d2 = current2D[1];
 
-        let audio1 = new Audio(`./sounds/${d1}.mp3`);
-        let audio2 = new Audio(`./sounds/${d2}.mp3`);
+        // 🛠️ Render ဆာဗာ၏ URL အပြည့်အစုံဖြင့် ချိတ်ဆက်ခြင်း
+        let audio1 = new Audio(`https://my-2d-server-1.onrender.com/sounds/${d1}.mp3`);
+        let audio2 = new Audio(`https://my-2d-server-1.onrender.com/sounds/${d2}.mp3`);
 
-        audio1.play().catch(e => console.log(e));
+        audio1.play().catch(e => console.log("Audio 1 Error:", e));
         audio1.onended = function() {
-          audio2.play().catch(e => console.log(e));
+          audio2.play().catch(e => console.log("Audio 2 Error:", e));
         };
       }
     }
 
     function playAnnouncement(filename) {
       if (!soundEnabled) return;
-      let audio = new Audio(`./sounds/${filename}.mp3`);
-      audio.play().catch(e => console.log(e));
+      // 🛠️ Render ဆာဗာ၏ URL အပြည့်အစုံဖြင့် ချိတ်ဆက်ခြင်း
+      let audio = new Audio(`https://my-2d-server-1.onrender.com/sounds/${filename}.mp3`);
+      audio.play().catch(e => console.log("Announcement Error:", e));
     }
 
     
     const moneyImages = [
-      './images/Myanmar-5-26-sm-removebg-preview.png',
-      './images/myanmar-money-10000-kyats-high-260nw-2445695....png'
+      'https://my-2d-server-1.onrender.com/images/Myanmar-5-26-sm-removebg-preview.png',
+      'https://my-2d-server-1.onrender.com/images/myanmar-money-10000-kyats-high-260nw-2445695....png'
     ];
 
     function startMoneyRain() {

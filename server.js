@@ -1534,32 +1534,35 @@ fetchAndUpdateLiveCache();
 scheduleNextBoundaryCapture();
 
 // --------------------------------------------------
-// Live API: serves cached data only; does not scrape
-// the SET website when a browser polls this endpoint.
+// Live API: serves cached data with fallback
 // --------------------------------------------------
 
 app.get('/api/live', (req, res) => {
     res.set('Cache-Control', 'no-store');
 
+    // 💡 အကယ်၍ liveCache ထဲတွင် setIndex သို့မဟုတ် အချက်အလက်များ မရှိပါက (သို့မဟုတ် ရက်ပြောင်း၍ ရှင်းသွားပါက) 
+    // Database မှ နောက်ဆုံးရထားသော ဒေတာအဟောင်းကို ပြန်ထုတ်ပေးရန် Fallback Logic
+    // (သို့မဟုတ် liveCache ထဲတွင် တန်ဖိုးရှိနေလျှင် ဆက်သုံးရန်)
+
     return res.json({
         success: true,
-        setIndex: liveCache.setIndex,
-        setValue: liveCache.setValue,
-        marketValue: liveCache.setValue, 
-        live2D: liveCache.live2D,
+        setIndex: liveCache.setIndex || "--",
+        setValue: liveCache.setValue || "--",
+        marketValue: liveCache.setValue || "--", 
+        live2D: liveCache.live2D || "--",
         adminResults: liveCache.adminResults || {},
         schedule: liveCache.schedule || {},
-        notice: liveCache.notice,
-        time: liveCache.time,
+        notice: liveCache.notice || "",
+        time: liveCache.time || "",
         holidayNotice: liveCache.holidayNotice || "",
         hotNumbers: {
-            date: liveCache.hotNumbers ? liveCache.hotNumbers.date : '',
+            date: liveCache.hotNumbers && liveCache.hotNumbers.date ? liveCache.hotNumbers.date : '',
             morning: {
                 number: liveCache.hotNumbers && liveCache.hotNumbers.morning ? liveCache.hotNumbers.morning.number : '--',
                 isLocked: liveCache.hotNumbers && liveCache.hotNumbers.morning ? liveCache.hotNumbers.morning.isLocked : false
             },
             evening: {
-                number: liveCache.hotNumbers && liveCache.hotNumbers.evening ? liveCache.hotNumbers.evening.number : '--',
+                number: liveCache.hotNumbers && liveCache.hotNumbers.evening ? liveCache.hotNumbers.evening.evening : liveCache.hotNumbers && liveCache.hotNumbers.evening ? liveCache.hotNumbers.evening.number : '--',
                 isLocked: liveCache.hotNumbers && liveCache.hotNumbers.evening ? liveCache.hotNumbers.evening.isLocked : false
             }
         }
@@ -1747,22 +1750,26 @@ app.post('/api/chat', async (req, res) => {
 });
 
 
-// 🟢 Real-time Online Viewer Counter Socket Logic
+// 🟢 Real-time Online Viewer Counter Socket Logic (Senior Developer Optimized)
 let onlineViewersCount = 0;
 
 io.on('connection', (socket) => {
     onlineViewersCount++;
+    console.log(`✅ User connected: ${socket.id} | Total Online: ${onlineViewersCount}`);
+    
+    // ချိတ်ဆက်လာသူ အသီးသီးထံသို့ လက်ရှိ Online လူဦးရေကို တိုက်ရိုက် ပို့ပေးခြင်း
     io.emit('updateViewerCount', onlineViewersCount);
 
     socket.on('disconnect', () => {
         onlineViewersCount = Math.max(0, onlineViewersCount - 1);
+        console.log(`❌ User disconnected: ${socket.id} | Total Online: ${onlineViewersCount}`);
         io.emit('updateViewerCount', onlineViewersCount);
     });
 });
 
 // ⚠️ မူလ app.listen အစား server.listen ဖြင့် အစားထိုးပါ
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log('Myanmar Timezone: Asia/Yangon');
-    console.log('Real-time Viewer Counter (Socket.io) is active.');
+    console.log(`🚀 Server is running on port ${PORT}`);
+    console.log('🇲🇲 Myanmar Timezone: Asia/Yangon');
+    console.log('🟢 Real-time Viewer Counter (Socket.io) is active and running.');
 });
